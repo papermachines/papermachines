@@ -16,7 +16,7 @@ Zotero.PaperMachines = {
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
-	processors: ["wordcloud", "largewordcloud", "phrasenet", "mallet"], // "geodict"
+	processors: ["wordcloud", "largewordcloud", "phrasenet", "mallet", "geodict"],
 	processNames: {"wordcloud": "Word Cloud",
 		"largewordcloud": "Word Cloud",
 		"phrasenet": "Phrase Net",
