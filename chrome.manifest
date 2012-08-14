@@ -1,0 +1,5 @@
+content	papermachines				chrome/content/papermachines/
+locale	papermachines	en-US		chrome/locale/en-US/papermachines/
+skin	papermachines	default		chrome/skin/default/papermachines/
+
+overlay	chrome://zotero/content/zoteroPane.xul	chrome://papermachines/content/overlay.xul

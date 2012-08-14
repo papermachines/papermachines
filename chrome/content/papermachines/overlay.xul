@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://papermachines/skin/overlay.css" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://papermachines/locale/papermachines.dtd">
+
+<overlay id="papermachines-overlay"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	
+	<stringbundleset id="papermachines-stringbundleset">
+		<stringbundle id="papermachines-strings"
+			src="chrome://papermachines/locale/papermachines.properties"/>
+	</stringbundleset>
+	
+	<menupopup id="zotero-collectionmenu">
+		<menuseparator hidden="false"/>
+		<menuitem label="&papermachines.collectionmenu.extract_text;"
+			oncommand="Zotero.PaperMachines.extractText()"/>
+		<menuitem id="wordcloud" label="&papermachines.collectionmenu.wordcloud;"
+			hidden="true"
+			disabled="true"
+			oncommand="Zotero.PaperMachines.runProcess('wordcloud')"/>
+		<menuitem id="largewordcloud" label="&papermachines.collectionmenu.wordcloud;"
+			disabled="true"
+			oncommand="Zotero.PaperMachines.runProcess('largewordcloud')"/>
+		<menu id="phrasenet" label="&papermachines.collectionmenu.phrasenet;" disabled="true">
+			<menupopup id="phrasenet-menu">
+				<menuitem label="x and y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x and y')"/>
+				<menuitem label="x or y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x or y')"/>
+				<menuitem label="x of the y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x of the y')"/>
+				<menuitem label="x a y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x a y')"/>
+				<menuitem label="x the y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x the y')"/>
+				<menuitem label="x at y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x at y')"/>
+				<menuitem label="x is y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x is y')"/>
+				<menuitem label="x [space] y"
+					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x y')"/>
+			</menupopup>
+		</menu>
+		<menuitem id="geodict" label="&papermachines.collectionmenu.geodict;"
+			disabled="true"
+			oncommand="Zotero.PaperMachines.runProcess('geodict')"/>
+		<menuitem id="mallet" label="&papermachines.collectionmenu.mallet;"
+			disabled="true"
+			oncommand="Zotero.PaperMachines.runProcess('mallet')"/>
+		<menuseparator hidden="false"/>
+		<menuitem id="reset-output" label="&papermachines.collectionmenu.reset_output;"
+			oncommand="Zotero.PaperMachines.resetOutput()"/>
+	</menupopup>
+	<menupopup id="zotero-itemmenu">
+		<menuseparator hidden="false"/>
+		<menuitem id="mallet-highlight" label="&papermachines.itemmenu.text_in_topic_view;"
+			disabled="true"
+			oncommand="Zotero.PaperMachines.showTextInTopicView()"/>
+		<menuitem id="map-highlight" label="&papermachines.itemmenu.text_in_map_view;"
+			disabled="true"
+			oncommand="Zotero.PaperMachines.locateTextInMapView()"/>
+	</menupopup>
+
+	<!-- Include the main extension logic -->
+	<script src="chrome://zotero/content/include.js"/>
+	<script src="chrome://papermachines/content/include.js"/>
+</overlay>
