@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, logging, tempfile, time, subprocess, math, re, urllib, json, traceback
+import sys, os, logging, tempfile, time, subprocess, math, re, urllib, json, codecs, csv, traceback
 import xml.etree.ElementTree as et
 from itertools import izip
 import textprocessor
@@ -21,9 +21,6 @@ class MalletLDA(textprocessor.TextProcessor):
 		ybar = sum(Y) / n
 		return (1.0/(n-1.0)) * sum([((x-xbar) * (y-ybar)) for x, y in zip(X, Y)])
 
-	# def _cor(self, X, Y):
-	# 	return self._cov(X, Y)/(self._stdev(X) * self._stdev(Y))
-
 	def _find_proportions(self, topics, total_docs):
 		self.proportions = {}
 		for i in range(len(topics)):
@@ -40,14 +37,41 @@ class MalletLDA(textprocessor.TextProcessor):
 			for j in range(i+1,len(topics)):
 				self.correlations[str(i) + ',' + str(j)] = self._cov(topics[i], topics[j]) / (self.stdevs[i] * self.stdevs[j])
 
+	def _import_dfr(self, dfr_dir):
+		citation_file = os.path.join(dfr_dir, "citations.CSV")
+		citations = {}
+		for rowdict in self.parse_csv(citation_file):
+			doi = rowdict.pop("id")
+			citations[doi] = rowdict
+			
+		wordcounts_dir = os.path.join(dfr_dir, "wordcounts")
+		for doi in citations.keys():
+			try:
+				this_text = ''		
+				for rowdict in self.parse_csv(os.path.join(wordcounts_dir, "wordcounts_" + doi.replace('/','_') + ".CSV")):
+					word = rowdict["WORDCOUNTS"]
+					count = int(rowdict["WEIGHT"])
+					if word in self.stopwords:
+						continue
+					this_text += (word + u' ') * count
+				if len(this_text) < 20:
+					continue
+				self.metadata[doi] = {'title': citations[doi].get("title", ""), 'year': citations[doi].get('pubdate','')[0:4], 'itemID': -1}
+				yield doi, this_text
+			except:
+				logging.error(doi)
+				logging.error(traceback.format_exc())
+
 	def _import_files(self):
-		with file(self.texts_file, 'w') as f:
+		with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
 			for filename in self.files:
-				with file(filename) as input_file:
+				with codecs.open(filename, 'r', encoding='utf-8') as input_file:
 					text = input_file.read()
-					text = re.sub("""[^\w,.'" ]+""", '', text.replace("\n", " "))
-					# f.write('\t'.join([filename.replace(" ","_"), self.collection, text]) + '\n')
-					f.write('\t'.join([filename.replace(" ","_"), self.collection, text]) + '\n')
+					text = re.sub(u"""[^\w,.'" ]+""", u'', text.replace(u"\n", u" "))
+					f.write(u'\t'.join([filename.replace(u" ",u"_"), self.collection, text]) + u'\n')
+			if len(self.extra_args) > 0:
+				for doi, text in self._import_dfr(self.extra_args[0]):
+					f.write(u'\t'.join([doi, self.collection, text]) + u'\n')
 
 	def process(self):
 		"""
@@ -61,7 +85,7 @@ class MalletLDA(textprocessor.TextProcessor):
 			os.makedirs(self.lda_out_dir)
 
 		self.stoplist = os.path.join(self.cwd, "stopwords.txt")
-		self.stopwords = file(self.stoplist).read()
+		self.stopwords = codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()
 
 		self.instance_file = os.path.join(self.lda_out_dir, self.collection + ".mallet")
 		self.mallet_cp_dir = os.path.join(self.cwd, "lib", "mallet-2.0.7", "dist")

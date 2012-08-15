@@ -17,12 +17,7 @@ class TextProcessor:
 		self.collection = os.path.basename(csv_file).replace(".csv","")
 		self.metadata = {}
 
-		# parse CSV
-		csv_rows = csv.reader(file(csv_file, 'rb'))
-		header = csv_rows.next()
-
-		for row in csv_rows:
-			rowdict = dict(zip(header, row))
+		for rowdict in self.parse_csv(csv_file):
 			filename = rowdict.pop("filename")
 			self.metadata[filename] = rowdict
 
@@ -31,6 +26,20 @@ class TextProcessor:
 			self.track_progress = True
 			self.progress_initialized = False
 
+
+	def parse_csv(self, filename, dialect=csv.excel, **kwargs):
+		with file(filename, 'rb') as f:
+			csv_rows = self.unicode_csv_reader(f, dialect=dialect, **kwargs)
+			header = csv_rows.next()
+			for row in csv_rows:
+				if len(row) > 0:
+					rowdict = dict(zip(header, row))
+					yield rowdict
+
+	def unicode_csv_reader(self, utf8_data, dialect=csv.excel, **kwargs):
+		csv_reader = csv.reader(utf8_data, dialect=dialect, **kwargs)
+		for row in csv_reader:
+			yield [unicode(cell, 'utf-8') for cell in row]
 
 	def update_progress(self):
 		if self.track_progress:
