@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, csv, logging, tempfile, traceback
+import sys, os, csv, logging, tempfile, traceback, urllib
 
 class TextProcessor:
 	"""
@@ -11,8 +11,9 @@ class TextProcessor:
 		self.cwd = sysargs[1]
 		csv_file = sysargs[2]
 		self.out_dir = sysargs[3]
+		self.collection_name = sysargs[4]
 
-		self.extra_args = sysargs[4:]
+		self.extra_args = sysargs[5:]
 
 		self.collection = os.path.basename(csv_file).replace(".csv","")
 		self.metadata = {}
@@ -52,6 +53,22 @@ class TextProcessor:
 			self.count += 1
 			self.progress_file.write('<' + str(self.count*1000.0/float(self.total)) + '>\n')
 			self.progress_file.flush()
+
+	def write_html(self, params):
+		logging.info("writing HTML")
+		params.update({"COLLECTION_NAME": self.collection_name})
+		try:
+			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
+			additional_arg_str = "_" + "_".join([urllib.quote(x) for x in self.extra_args]) if len(self.extra_args) > 0 else ""
+			out_filename = getattr(self, "out_filename", os.path.join(self.out_dir, self.name + self.collection + additional_arg_str + ".html"))
+			with file(out_filename, 'w') as outfile:
+				with file(template_filename) as template:
+					template_str = template.read()
+					for k, v in params.iteritems():
+						template_str = template_str.replace(k, v)
+					outfile.write(template_str)
+		except:
+			logging.error(traceback.format_exc())
 
 	def process(self):
 		"""

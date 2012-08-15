@@ -88,16 +88,8 @@ class GeoDict(textprocessor.TextProcessor):
 		with file(data_filename, 'w') as data_file:
 			data_file.write(data)		
 
-		logging.info("writing HTML")
-
-		try:
-			with file(os.path.join(self.out_dir, self.name + self.collection + ".html"), 'w') as outfile:
-				with file(os.path.join(self.cwd, "templates", self.name + ".html")) as template:
-					template_str = template.read()
-					template_str = template_str.replace("DATA_FILE", os.path.basename(data_filename))
-					outfile.write(template_str)
-		except:
-			logging.error(traceback.format_exc())
+		params = {"DATA_FILE": os.path.basename(data_filename)}
+		self.write_html(params)
 
 		logging.info("finished")
 

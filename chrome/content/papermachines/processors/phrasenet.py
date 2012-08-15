@@ -55,8 +55,8 @@ class PhraseNet(textprocessor.TextProcessor):
 		# 	"x [space] y": wordregex + " " + wordregex
 		# }
 
-		if len(sys.argv) > 4:
-			pattern_str = sys.argv[4]
+		if len(self.extra_args) > 0:
+			pattern_str = self.extra_args[0]
 		else:
 			pattern_str = "x and y"
 
@@ -100,12 +100,8 @@ class PhraseNet(textprocessor.TextProcessor):
 		for node in used_nodes:
 			jsondata['nodes'].append({'index': nodeindex[node], 'name': node, 'freq': self.nodes[node]})
 
-		logging.info("writing HTML output")
-
-		with file(os.path.join(self.out_dir, self.name + self.collection + ".html"), 'w') as outfile:
-			with file(os.path.join(self.cwd, "templates", self.name + ".html")) as template:
-				template_str = template.read().replace("DATA", json.dumps(jsondata)).replace("PATTERN", pattern_str)
-				outfile.write(template_str)
+		params = {"DATA": json.dumps(jsondata), "PATTERN": pattern_str}
+		self.write_html(params)
 
 if __name__ == "__main__":
 	try:

@@ -21,8 +21,9 @@ class WordCloud(textprocessor.TextProcessor):
 			self.update_progress()
 
 	def _tokenizeAndStem(self, line):
-		# return [stem(word.strip('.,')) for word in line.split() if word.lower() not in self.stopwords]
-		return [word for word in line.split() if word.lower() not in self.stopwords and word.isalpha()]
+		# uncomment for Porter stemming (slower, but groups words with their plurals, etc.)
+		# return [stem(word.strip('.,')) for word in line.split() if word.lower() not in self.stopwords and len(word) > 3]
+		return [word.lower() for word in line.split() if word.lower() not in self.stopwords and word.isalpha()]
 
 	def process(self):
 		logging.info("starting to process")
@@ -51,17 +52,14 @@ class WordCloud(textprocessor.TextProcessor):
 				final_freqs.append({'text': word, 'value': freq})
 				
 
-		logging.info("writing HTML output")
+		params = {"DATA": json.dumps(final_freqs),
+				"WIDTH": self.width,
+				"HEIGHT": self.height,
+				"FONTSIZE": self.fontsize
+		}
 
-		with file(os.path.join(self.out_dir, self.name + self.collection + ".html"), 'w') as outfile:
-			with file(self.template_filename) as template:
-				template_str = template.read()
-				template_str = template_str.replace("DATA", json.dumps(final_freqs))
-				template_str = template_str.replace("WIDTH", self.width)
-				template_str = template_str.replace("HEIGHT", self.height)
-				template_str = template_str.replace("FONTSIZE", self.fontsize)
+		self.write_html(params)
 
-				outfile.write(template_str)
 
 if __name__ == "__main__":
 	try:

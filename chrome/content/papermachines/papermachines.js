@@ -16,12 +16,14 @@ Zotero.PaperMachines = {
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
-	processors: ["wordcloud", "largewordcloud", "phrasenet", "mallet", "geodict"],
+	processors: ["wordcloud", "largewordcloud", "phrasenet", "mallet", "geodict", "dbpedia"],
 	processNames: {"wordcloud": "Word Cloud",
 		"largewordcloud": "Word Cloud",
 		"phrasenet": "Phrase Net",
 		"geodict": "Geoparser",
-		"mallet": "Topic Modeling"
+		"mallet": "Topic Modeling",
+		"mallet_categorical": "Topic Modeling",
+		"dbpedia": "DBpedia Annotation"
 	},
 	progressWindows: [],
 	communicationObjects: {},
@@ -132,12 +134,7 @@ Zotero.PaperMachines = {
 			}
 		} catch (e) {}
 
-		// if(Zotero.isStandalone) {
-		// 	var appChrome = Components.classes["@mozilla.org/file/directory_service;1"]
-		// 		.getService(Components.interfaces.nsIProperties)
-		// 		.get("AChrom", Components.interfaces.nsIFile);
-		// 	Zotero.PaperMachines._updateBundledFilesCallback(appChrome.parent);
-		// } else {
+
 		Components.utils.import("resource://gre/modules/AddonManager.jsm");
 		AddonManager.getAddonByID("papermachines@chrisjr.org",
 			function(addon) {
@@ -258,13 +255,15 @@ Zotero.PaperMachines = {
 
 		var progressFile = Zotero.PaperMachines._getOrCreateFile(processor + thisID + "progress.html", Zotero.PaperMachines.out_dir);
 		var outFile = Zotero.PaperMachines.out_dir.clone();
-		outFile.append(processor + thisID + ".html");
+
+		var additional_args_str = additional_args.length > 0 ? "_" + encodeURIComponent(additional_args.join("_")) : "";
+		outFile.append(processor + thisID + additional_args_str + ".html");
 
 		var sql = "INSERT OR REPLACE INTO processed_collections (process_path, collection, processor, status, progressfile, outfile) " +
 			" values (?, ?, ?, ?, ?, ?);";
 		Zotero.PaperMachines.DB.query(sql, [processPath, thisID, processor, "running", progressFile.path, outFile.path]);
 
-		var args = [Zotero.PaperMachines.processors_dir.path, csv.path, Zotero.PaperMachines.out_dir.path];
+		var args = [Zotero.PaperMachines.processors_dir.path, csv.path, Zotero.PaperMachines.out_dir.path, collectionName];
 
 		args = args.concat(additional_args);
 
@@ -375,7 +374,7 @@ Zotero.PaperMachines = {
 		}
 
 		var csv_str = "";
-		var header = ["filename","itemID","key","year","place"];
+		var header = ["filename","itemID", "label", "key","year","place"];
 		csv_str += header.join(",") + "\n";
 
 		var query = "SELECT itemID, filename FROM doc_files WHERE itemID IN " +
@@ -399,6 +398,8 @@ Zotero.PaperMachines = {
 					val = this.getPlaceOfItem(item);
 				} else if (header[k] == "key") {
 					val = item.key;
+				} else if (header[k] == "label") {
+					val = this.getCollectionOfItem(item);
 				} else {
 					try {
 						val = item.getField(header[k]);
@@ -429,6 +430,7 @@ Zotero.PaperMachines = {
 					Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO collections (parent,child) VALUES (?,?)", [parentID, childID]);
 					thisCollection = Zotero.Collections.get(thisCollection.parent);
 				}
+				Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO collections (parent,child) VALUES (?,?)", [thisCollection.libraryID != null ? thisCollection.libraryID.toString() : "", childID]);
 			}
 		});
 	},
@@ -499,6 +501,9 @@ Zotero.PaperMachines = {
 	},
 	getYearOfItem: function (item) {
 		return item.getField("date", true, true).substring(0,4);
+	},
+	getCollectionOfItem: function (item) {
+		return this.DB.valueQuery("SELECT collection FROM collection_docs WHERE itemID = ?;", [item.id]);
 	},
 	findItemInDB: function (item) {
 		return this.DB.valueQuery("SELECT COUNT(*) FROM doc_files WHERE itemID = ?;",[item.id]);

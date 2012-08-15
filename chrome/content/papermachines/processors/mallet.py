@@ -9,6 +9,10 @@ class MalletLDA(textprocessor.TextProcessor):
 	Perform LDA using MALLET
 	"""
 
+	def _categorical(self):
+		self.categorical = False
+		self.template_name = "mallet"
+
 	def _stdev(self, X):
 		n = float(len(X))
 		xbar = float(sum(X)) / n
@@ -56,7 +60,7 @@ class MalletLDA(textprocessor.TextProcessor):
 					this_text += (word + u' ') * count
 				if len(this_text) < 20:
 					continue
-				self.metadata[doi] = {'title': citations[doi].get("title", ""), 'year': citations[doi].get('pubdate','')[0:4], 'itemID': -1}
+				self.metadata[doi] = {'title': citations[doi].get("title", ""), 'year': citations[doi].get('pubdate','')[0:4], 'label': "jstor", 'itemID': doi}
 				yield doi, this_text
 			except:
 				logging.error(doi)
@@ -68,26 +72,23 @@ class MalletLDA(textprocessor.TextProcessor):
 				with codecs.open(filename, 'r', encoding='utf-8') as input_file:
 					text = input_file.read()
 					text = re.sub(u"""[^\w,.'" ]+""", u'', text.replace(u"\n", u" "))
-					f.write(u'\t'.join([filename.replace(u" ",u"_"), self.collection, text]) + u'\n')
-			if len(self.extra_args) > 0:
+					f.write(u'\t'.join([filename.replace(u" ",u"_"), self.metadata[filename]["label"], text]) + u'\n')
+			if len(self.extra_args) > 0 and self.name == "mallet":
 				for doi, text in self._import_dfr(self.extra_args[0]):
-					f.write(u'\t'.join([doi, self.collection, text]) + u'\n')
+					f.write(u'\t'.join([doi, self.metadata[filename]["label"], text]) + u'\n')
 
-	def process(self):
-		"""
-		run LDA, creating an output file divided by time and one by place
-		"""
-		self.name = "mallet"
-		self.lda_out_dir = os.path.join(self.out_dir, self.name + self.collection)
-		self.dry_run = False
+	def _setup_mallet_instances(self):
+		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection)
 
-		if not os.path.exists(self.lda_out_dir):
-			os.makedirs(self.lda_out_dir)
+		self._categorical()
+
+		if not os.path.exists(self.mallet_out_dir):
+			os.makedirs(self.mallet_out_dir)
 
 		self.stoplist = os.path.join(self.cwd, "stopwords.txt")
-		self.stopwords = codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()
+		self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
 
-		self.instance_file = os.path.join(self.lda_out_dir, self.collection + ".mallet")
+		self.instance_file = os.path.join(self.mallet_out_dir, self.collection + ".mallet")
 		self.mallet_cp_dir = os.path.join(self.cwd, "lib", "mallet-2.0.7", "dist")
 
 		self.mallet_classpath = os.path.join(self.mallet_cp_dir, "mallet.jar") + ":" + os.path.join(self.mallet_cp_dir, "mallet-deps.jar")
@@ -99,13 +100,11 @@ class MalletLDA(textprocessor.TextProcessor):
 
 		self.progress_file = file(self.progress_filename, 'w')
 
-		self.topics = 50
-
 		logging.info("copying texts into single file")
 
-		self.texts_file = os.path.join(self.lda_out_dir, self.collection + ".txt")
+		self.texts_file = os.path.join(self.mallet_out_dir, self.collection + ".txt")
 
-		if not self.dry_run:
+		if not self.dry_run and not os.path.exists(self.texts_file):
 			self._import_files()
 
 		# import_args = self.mallet + ["cc.mallet.classify.tui.Csv2Vectors", 
@@ -115,18 +114,28 @@ class MalletLDA(textprocessor.TextProcessor):
 			"--stoplist", self.stoplist, 
 			"--input", self.texts_file,
 			"--prune-count", "3",
-			"--prune-doc-frequency", "0.9",
+			"--prune-doc-frequency", "0.5",
 			"--output", self.instance_file]
 
 		logging.info("beginning text import")
-		if not self.dry_run:
-			import_return = subprocess.call(import_args, stdout=self.progress_file)
+		if not self.dry_run and not os.path.exists(self.instance_file):
+			import_return = subprocess.call(import_args, stdout=self.progress_file)	
+	
+	def process(self):
+		"""
+		run LDA, creating an output file divided by time
+		"""
+		self.name = "mallet"
+		self.topics = 50
+		self.dry_run = False
 
-		self.mallet_files = {'state': os.path.join(self.lda_out_dir, "topic-state.gz"),
-			'doc-topics': os.path.join(self.lda_out_dir, "doc-topics.txt"),
-			'topic-keys': os.path.join(self.lda_out_dir, "topic-keys.txt"),
-			'word-topics': os.path.join(self.lda_out_dir, "word-topics.txt"),
-			'diagnostics-file': os.path.join(self.lda_out_dir, "diagnostics-file.txt")}
+		self._setup_mallet_instances()
+
+		self.mallet_files = {'state': os.path.join(self.mallet_out_dir, "topic-state.gz"),
+			'doc-topics': os.path.join(self.mallet_out_dir, "doc-topics.txt"),
+			'topic-keys': os.path.join(self.mallet_out_dir, "topic-keys.txt"),
+			'word-topics': os.path.join(self.mallet_out_dir, "word-topics.txt"),
+			'diagnostics-file': os.path.join(self.mallet_out_dir, "diagnostics-file.txt")}
 		process_args = self.mallet + ["cc.mallet.topics.tui.TopicTrainer",
 			"--input", self.instance_file,
 			"--num-topics", str(self.topics),
@@ -146,11 +155,13 @@ class MalletLDA(textprocessor.TextProcessor):
 
 		coherence = {}
 		wordProbs = {}
+		allocationRatios = {}
 		with file(self.mallet_files['diagnostics-file']) as diagnostics:
 			tree = et.parse(diagnostics)
 			for elem in tree.iter("topic"):
 				topic = elem.get("id")
 				coherence[topic] = float(elem.get("coherence"))
+				allocationRatios[topic] = float(elem.get("allocation_ratio"))
 				wordProbs[topic] = []
 				for word in elem.iter("word"):
 					wordProbs[topic].append({'text': word.text, 'prob': word.get("prob")})
@@ -158,7 +169,7 @@ class MalletLDA(textprocessor.TextProcessor):
 		xpartition = lambda seq, n=2: izip(*(iter(seq),) * n)
 
 
-		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]]} for x in [y.split() for y in file(self.mallet_files['topic-keys']).readlines()]} 
+		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in file(self.mallet_files['topic-keys']).readlines()]} 
 
 		years = set()
 		fname_to_year = {}
@@ -194,7 +205,7 @@ class MalletLDA(textprocessor.TextProcessor):
 				
 				freqs = {int(y[0]): float(y[1]) for y in xpartition(values)}
 				for i in freqs.keys():
-					weights_by_topic[i][fname_to_index[filename]]['y'].append({"title": os.path.basename(filename).replace(".txt",'').replace('_', ' '), "itemID": self.metadata[filename]["itemID"],"ratio": freqs[i]})
+					weights_by_topic[i][fname_to_index[filename]]['y'].append({"title": os.path.basename(filename).replace(".txt",'').replace('_', ' '), "itemID": self.metadata[filename]["itemID"], "label": self.metadata[filename]["label"], "ratio": freqs[i]})
 			except KeyboardInterrupt:
 				sys.exit(1)
 			except:
@@ -215,21 +226,18 @@ class MalletLDA(textprocessor.TextProcessor):
 		self._find_stdevs(topics_by_year)
 		self._find_correlations(topics_by_year)
 
-		logging.info("writing HTML")
-		try:
-			with file(os.path.join(self.out_dir, self.name + self.collection + ".html"), 'w') as outfile:
-				with file(os.path.join(self.cwd, "templates", self.name + ".html")) as template:
-					template_str = template.read()
-					template_str = template_str.replace("TOPICS_DOCS", json.dumps(weights_by_topic))
-					template_str = template_str.replace("TOPIC_LABELS", json.dumps(labels))
-					template_str = template_str.replace("TOPIC_COHERENCE", json.dumps(coherence))
-					template_str = template_str.replace("TOPIC_PROPORTIONS", json.dumps(self.proportions))
-					template_str = template_str.replace("TOPIC_STDEVS", json.dumps(self.stdevs))
-					template_str = template_str.replace("TOPIC_CORRELATIONS", json.dumps(self.correlations))
-					outfile.write(template_str)
-		except:
-			logging.error(traceback.format_exc())
+		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
 
+		params = {"CATEGORICAL": "true" if self.categorical else "false",
+				"TOPICS_DOCS": json.dumps(weights_by_topic),
+				"TOPIC_LABELS": json.dumps(labels),
+				"TOPIC_COHERENCE": json.dumps(coherence),
+				"TOPIC_PROPORTIONS": json.dumps(self.proportions),
+				"TOPIC_STDEVS": json.dumps(self.stdevs),
+				"TOPIC_CORRELATIONS": json.dumps(self.correlations)
+		}
+
+		self.write_html(params)
 
 if __name__ == "__main__":
 	try:

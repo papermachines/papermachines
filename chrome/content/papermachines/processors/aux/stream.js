@@ -26,7 +26,7 @@ var timeFilter = function() { return true;};
 var timeRanges;
 var searchN = 0;
 
-var gradientOpacity = d3.scale.pow().exponent(0.3).domain([0,2.5]).range([0,1]);
+var gradientOpacity = d3.scale.pow().exponent(0.5).range([1,0]);
 
 var legend, showLegend = true;
 var startDate, endDate;
@@ -34,8 +34,8 @@ var activeTopicLabels = [], inactiveTopicLabels = [];
 var graph = {};
 var streaming = true,
     my,
-    width = 1024,
-    height = 600,
+    width = 960,
+    height = 500,
     wordClouds = {};
 
 var maxStdDev = 2.5;
@@ -53,7 +53,7 @@ var origTopicTimeData,
 var dateParse = d3.time.format("%Y").parse;
 
 var offsetLeft = 0,
-    marginVertical = 100;
+    marginVertical = 0;
 
 var x = d3.time.scale()
     .range([0, width]);
@@ -71,8 +71,8 @@ var vis = d3.select("#chart")
 
 var defs = vis.append("svg:defs");
 
-vis = vis.append("svg:g")
-    .on("click", getDocs);
+vis = vis.append("svg:g");
+    // .on("click", getDocs);
 
 var graphGroup = vis.append("svg:g").attr("id", "graphGroup");
 var axesGroup = vis.append("svg:g").attr("id", "axesGroup");
@@ -102,13 +102,14 @@ area = d3.svg.area()
   .y0(function(d) { return y(d.y0); })
   .y1(function(d) { return y(d.y0 + d.y); });
 
-
-var layout = d3.layout.stack().offset("silhouette");
+var layout = d3.layout.stack().offset("zero");
 
 topicLabels = {};
 for (i in labels) {
-  topicLabels[i] = labels[i];
-  topicLabels[i]["active"] = true;
+  if (labels[i].allocation_ratio > 0.05) {
+    topicLabels[i] = labels[i];
+    topicLabels[i]["active"] = true;
+  }
 }
 
 xAxis = d3.svg.axis()
@@ -123,9 +124,10 @@ yAxis = d3.svg.axis()
   .ticks(5)
   .tickSize(width, width);
 
-  mostCoherentTopics(5);
+mostCoherentTopics(5);
 
-  setStartParameters();
+resetColors(true);
+setStartParameters();
 
 function transition(toggle) {
   if (toggle) streaming = !streaming;
@@ -152,12 +154,20 @@ function transition(toggle) {
   }
 
   x.domain([startDate, endDate]);
+
   if (!streaming) y.domain([-maxStdDev,maxStdDev])
 
   for (i in graph) {
-    updateGradients(i);
     createOrUpdateGraph(i);
   }
+  updateGradient();
+
+  graphGroup.select("#density").remove();
+  graphGroup.append("rect")
+    .attr("id", "density")
+    .style("fill", "url(#linearGradientDensity)")
+    .attr("width", width)
+    .attr("height", height);
 
   refreshAxes();
   updateLegend();
@@ -176,19 +186,19 @@ function shuffle(array) {
     return array;
 }
 
-function resetColors() {
+function resetColors(transitionNow) {
   for (i in graph) {
     // var newLabelColors = shuffle(activeTopicLabels.slice());
     var newLabelColors = activeTopicLabels.slice();
-    graph[i]['color'] = d3.scale.category20().domain(newLabelColors);
-    updateGradients(i);
+    graph[i]['color'] = d3.scale.category10().domain(newLabelColors);
   }
-  transition();
+  if (transitionNow) transition();
 }
 
 function sumUpData(graphIndex, origData) {
   graph[graphIndex].data = [];
   var firstRun = dataSummed.length == 0;
+  var minDocs = 0, maxDocs = 1;
 
   origData.forEach(function (d, i) {
     if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
@@ -234,7 +244,7 @@ function sumUpData(graphIndex, origData) {
           // not a normal one; is there some more appropriate way to do this?)
 
         } else {
-          e.y /= Math.sqrt(s);
+          e.y /= s;
         }
       });
     });
@@ -255,6 +265,7 @@ function showMore() {
   for (i in topicLabels) {
     topicLabels[i]["active"] = topicLabels[i]["active"] || _topics.indexOf(i) != -1;
   }
+  resetColors();
   transition();
 }
 
@@ -268,13 +279,12 @@ function createOrUpdateGraph(i) {
     .style("stroke-opacity", streaming ? "0.3" : "1.0")
     .transition().duration(500).attr("d", streaming ? area : line);
 
-  graphSelection.style("fill", function (d) { return streaming ? "url(#linearGradientTopic" + d[0].topic + ")": "none"; });
-
+  graphSelection.style("fill", function(d) { return streaming ? graph[i].color(d[0].topic) : "none"; });
   var graphEntering = graphSelection.enter();
     graphEntering.append("svg:path")
         .attr("class", function (d) { return "line graph" + i.toString() + " topic"+d[0].topic.toString(); })
         .attr("stroke", function(d) { return !streaming ? graph[i].color(d[0].topic) : "#fff"; })
-        .style("fill", function (d) { return streaming ? "url(#linearGradientTopic" + d[0].topic + ")": "none" })
+        .style("fill", function(d) { return streaming ? graph[i].color(d[0].topic) : "none"; })
         .style("stroke-width", streaming ? "0.5" : "1.5")
         .style("stroke-opacity", "1")
         .style("stroke-dasharray", graph[i].dasharray)
@@ -287,6 +297,7 @@ function createOrUpdateGraph(i) {
   var graphExiting = graphSelection.exit();
   graphExiting.transition().duration(500).style("stroke-opacity", "0").remove();
   graph[i].graphCreated = true;
+
 }
 
 function highlightTopic(e) {
@@ -335,8 +346,7 @@ function refreshAxes() {
 function toggleTopic(d) {
   // if (d3.event) d3.event.preventDefault();
   topicLabels[d.topic]["active"] = !topicLabels[d.topic]["active"];
-  resetColors();
-  transition();
+  resetColors(true);
 }
 
 function wordCloudPositions (d, i) {
@@ -347,6 +357,7 @@ function displayFullTopic(d) {
   if (d3.event) d3.event.preventDefault();
   if (d.topic in wordClouds) {
     wordCloudGroup.selectAll(".cloud" + d.topic).remove();
+    delete wordClouds[d.topic]
   } else {
     wordClouds[d.topic] = topicCloud(d.topic, wordCloudGroup);  
     wordCloudGroup.selectAll("g").attr("transform", wordCloudPositions)
@@ -375,9 +386,9 @@ function updateLegend() {
     });
   }
   var topicLabelsCurrent = activeTopicLabels.concat(inactiveTopicLabels);
-  for (i in topicLabelsCurrent) {
-    topics.push({'topic': i, 'label': topicLabels[i]['label'], 'active': topicLabels[i]["active"]});
-  }
+  topicLabelsCurrent.forEach(function (i) {
+    topics.push({'topic': i, 'label': topicLabels[i]['label'], 'active': topicLabels[i]["active"]});    
+  });
   // legendLabels = vis.select("#legend").selectAll(".legend.label").remove();
 
 
@@ -427,7 +438,7 @@ function legendLabelPositions (d) {
   } else {
     i = activeTopicLabels.length + inactiveTopicLabels.indexOf(topic);
   }
-  var group = 8;
+  var group = 5;
   return "translate(" + (Math.floor(i/group)*160) + "," + ((i % group)*15) + ")";
 }
 
@@ -670,7 +681,7 @@ function createGraphObject(i) {
     'contributingDocs': {},
     'baseline': 0
   };
-    graph[i]['color'] = d3.scale.category20().domain(d3.range(20)); //ordinal().range(colorbrewer.Spectral[9]).domain(d3.range(20));
+    graph[i]['color'] = d3.scale.category10().domain(d3.range(10)); //ordinal().range(colorbrewer.Spectral[9]).domain(d3.range(20));
 }
 function highlightItem(itemID) {
   getDocsForYear(docMetadata[itemID]["year"]);
@@ -778,7 +789,7 @@ function createGradientScale() {
     .attr("y", "-16")
     .style("fill", "#000")
     .attr("text-anchor", "middle")
-    .text("std deviations from mean");
+    .text("documents");
 
   gradientBox.append("svg:rect")
       .attr("width", "200")
@@ -793,25 +804,36 @@ function createGradientScale() {
     .call(gradientAxis);
 
 }
-function updateGradients(i) {
-  defs.selectAll("linearGradient.graph" + i.toString()).remove();
-  var gradients = defs.selectAll("linearGradient.graph" + i.toString()).data(graph[i].data, function(d) { return d[0].topic; });
+
+function updateGradient() {
+  defs.select("#linearGradientDensity").remove();
+  var docNumbers = [];
+  var years = d3.keys(graph[0].contributingDocs);
+  years.sort();
+  years.forEach(function (year) {
+    var sum = 0;
+    for (var i in graph) {
+      sum += graph[i].contributingDocs[year].length;
+    }
+    docNumbers.push(sum);
+  });
+
+  gradientOpacity.domain(d3.extent(docNumbers));
+  var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")
-      .attr("id", function (d) { return "linearGradientTopic" + d[0].topic.toString();})
-      .attr("class", "graph" + i.toString())
+      .attr("id", "linearGradientDensity")
       .attr("x1", "0%")
       .attr("y1", "0%")
       .attr("x2", "100%")
       .attr("y2", "0%")
-      .call(addStops);
+      .call(addStopsForDocs); 
 }
-
-function addStops(selection) {
+function addStopsForDocs(selection) {
   var stops = selection.selectAll("stop").data(function (d) { return d; });
   stops.enter().append("svg:stop")
       .attr("offset", function (d, i) { return (i * 100.0 / this.parentNode.__data__.length) + "%"; })
-      .attr("stop-color", function (d) { return graph[0].color(d.topic);})
-      .attr("stop-opacity", function (d) { return gradientOpacity(Math.abs(d.y)); });
+      .attr("stop-color", "#fff")
+      .attr("stop-opacity", function (d) { return gradientOpacity(d); });
 }
 
 function topicCloud(i, parent) {

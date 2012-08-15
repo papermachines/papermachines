@@ -44,9 +44,17 @@
 		<menuitem id="geodict" label="&papermachines.collectionmenu.geodict;"
 			disabled="true"
 			oncommand="Zotero.PaperMachines.runProcess('geodict')"/>
-		<menuitem id="mallet" label="&papermachines.collectionmenu.mallet;"
+		<menuitem id="dbpedia" label="&papermachines.collectionmenu.dbpedia;"
 			disabled="true"
-			oncommand="Zotero.PaperMachines.runProcess('mallet')"/>
+			oncommand="Zotero.PaperMachines.runProcess('dbpedia')"/>
+		<menu id="mallet" label="&papermachines.collectionmenu.topicmodeling;" disabled="true">
+			<menupopup id="mallet-menu">
+				<menuitem id="mallet" label="&papermachines.collectionmenu.mallet;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet')"/>
+				<menuitem id="mallet" label="&papermachines.collectionmenu.mallet_categorical;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet_categorical')"/>
+			</menupopup>
+		</menu>
 		<menuseparator hidden="false"/>
 		<menuitem id="reset-output" label="&papermachines.collectionmenu.reset_output;"
 			oncommand="Zotero.PaperMachines.resetOutput()"/>
