@@ -9,7 +9,7 @@ class MalletLDA(textprocessor.TextProcessor):
 	Perform LDA using MALLET
 	"""
 
-	def _categorical(self):
+	def _basic_params(self):
 		self.categorical = False
 		self.template_name = "mallet"
 
@@ -41,13 +41,19 @@ class MalletLDA(textprocessor.TextProcessor):
 			for j in range(i+1,len(topics)):
 				self.correlations[str(i) + ',' + str(j)] = self._cov(topics[i], topics[j]) / (self.stdevs[i] * self.stdevs[j])
 
-	def _import_dfr(self, dfr_dir):
+
+	def _import_dfr_metadata(self, dfr_dir):
 		citation_file = os.path.join(dfr_dir, "citations.CSV")
 		citations = {}
 		for rowdict in self.parse_csv(citation_file):
 			doi = rowdict.pop("id")
 			citations[doi] = rowdict
-			
+			self.metadata[doi] = {'title': citations[doi].get("title", ""), 'year': citations[doi].get('pubdate','')[0:4], 'label': "jstor", 'itemID': doi}
+		return citations
+
+	def _import_dfr(self, dfr_dir):
+		citations = self._import_dfr_metadata(dfr_dir)
+
 		wordcounts_dir = os.path.join(dfr_dir, "wordcounts")
 		for doi in citations.keys():
 			try:
@@ -60,7 +66,6 @@ class MalletLDA(textprocessor.TextProcessor):
 					this_text += (word + u' ') * count
 				if len(this_text) < 20:
 					continue
-				self.metadata[doi] = {'title': citations[doi].get("title", ""), 'year': citations[doi].get('pubdate','')[0:4], 'label': "jstor", 'itemID': doi}
 				yield doi, this_text
 			except:
 				logging.error(doi)
@@ -75,12 +80,12 @@ class MalletLDA(textprocessor.TextProcessor):
 					f.write(u'\t'.join([filename.replace(u" ",u"_"), self.metadata[filename]["label"], text]) + u'\n')
 			if len(self.extra_args) > 0 and self.name == "mallet":
 				for doi, text in self._import_dfr(self.extra_args[0]):
-					f.write(u'\t'.join([doi, self.metadata[filename]["label"], text]) + u'\n')
+					f.write(u'\t'.join([doi, self.metadata[doi]["label"], text]) + u'\n')
 
-	def _setup_mallet_instances(self):
+	def _setup_mallet_instances(self, sequence=True):
 		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection)
 
-		self._categorical()
+		self._basic_params()
 
 		if not os.path.exists(self.mallet_out_dir):
 			os.makedirs(self.mallet_out_dir)
@@ -106,16 +111,18 @@ class MalletLDA(textprocessor.TextProcessor):
 
 		if not self.dry_run and not os.path.exists(self.texts_file):
 			self._import_files()
+		elif len(self.extra_args) > 0:
+			self._import_dfr_metadata(self.extra_args[0])
 
-		# import_args = self.mallet + ["cc.mallet.classify.tui.Csv2Vectors", 
-		import_args = self.mallet + ["cc.mallet.util.BulkLoader", 
-			"--keep-sequence",
+		import_args = self.mallet + ["cc.mallet.classify.tui.Csv2Vectors", 
 			"--remove-stopwords",
-			"--stoplist", self.stoplist, 
+			"--stoplist-file", self.stoplist, 
 			"--input", self.texts_file,
-			"--prune-count", "3",
-			"--prune-doc-frequency", "0.5",
+			"--token-regex", '[\p{L}\p{M}]+',
 			"--output", self.instance_file]
+		if sequence:
+			import_args.append("--keep-sequence")
+
 
 		logging.info("beginning text import")
 		if not self.dry_run and not os.path.exists(self.instance_file):
@@ -127,7 +134,7 @@ class MalletLDA(textprocessor.TextProcessor):
 		"""
 		self.name = "mallet"
 		self.topics = 50
-		self.dry_run = False
+		self.dry_run = True
 
 		self._setup_mallet_instances()
 

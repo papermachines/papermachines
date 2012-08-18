@@ -9,6 +9,10 @@
 <!ENTITY papermachines.collectionmenu.topicmodeling			"Topic Modeling">
 <!ENTITY papermachines.collectionmenu.mallet				"By Time">
 <!ENTITY papermachines.collectionmenu.mallet_categorical	"By Subcollection">
+<!ENTITY papermachines.collectionmenu.mallet_classify		"Classification">
+<!ENTITY papermachines.collectionmenu.mallet_train-classifier	"Train Classifier">
+<!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test Classification">
+
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines">
 <!ENTITY papermachines.itemmenu.text_in_topic_view			"Show Text in Topic View">
 <!ENTITY papermachines.itemmenu.text_in_map_view			"Locate Text in Map View">

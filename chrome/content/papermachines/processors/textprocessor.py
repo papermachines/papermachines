@@ -59,7 +59,7 @@ class TextProcessor:
 		params.update({"COLLECTION_NAME": self.collection_name})
 		try:
 			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
-			additional_arg_str = "_" + "_".join([urllib.quote(x) for x in self.extra_args]) if len(self.extra_args) > 0 else ""
+			additional_arg_str = "_" + "_".join([urllib.quote_plus(x) for x in self.extra_args]) if len(self.extra_args) > 0 else ""
 			out_filename = getattr(self, "out_filename", os.path.join(self.out_dir, self.name + self.collection + additional_arg_str + ".html"))
 			with file(out_filename, 'w') as outfile:
 				with file(template_filename) as template:

@@ -55,6 +55,15 @@
 					oncommand="Zotero.PaperMachines.runProcess('mallet_categorical')"/>
 			</menupopup>
 		</menu>
+		<menu id="mallet_classify" label="&papermachines.collectionmenu.mallet_classify;" disabled="true">
+			<menupopup id="mallet_classify-menu">
+				<menuitem id="mallet_train-classifier" label="&papermachines.collectionmenu.mallet_train-classifier;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet_train-classifier')"/>
+				<menuitem id="mallet" label="&papermachines.collectionmenu.mallet_classify-file;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet_classify-file')"/>
+			</menupopup>
+		</menu>
+
 		<menuseparator hidden="false"/>
 		<menuitem id="reset-output" label="&papermachines.collectionmenu.reset_output;"
 			oncommand="Zotero.PaperMachines.resetOutput()"/>

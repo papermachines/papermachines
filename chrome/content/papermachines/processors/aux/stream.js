@@ -32,8 +32,10 @@ var legend, showLegend = true;
 var startDate, endDate;
 var activeTopicLabels = [], inactiveTopicLabels = [];
 var graph = {};
+
 var streaming = true,
     my,
+    toggleState = categorical ? 2 : 0,
     width = 960,
     height = 500,
     wordClouds = {};
@@ -44,6 +46,7 @@ var origTopicTimeData,
     dataSummed,
     xAxis,
     yAxis,
+    categories,
     legendLabels,
     topicLabels = null,
     topicLabelsSorted,
@@ -57,10 +60,16 @@ var offsetLeft = 0,
 
 var x = d3.time.scale()
     .range([0, width]);
+
+var xOrdinal = d3.scale.ordinal()
+    .rangePoints([100, width - 100]);
+
 var y = d3.scale.linear()
     .range([height - marginVertical, marginVertical]);
 
-var line, area;
+var y0, y1;
+
+var line, area, bars;
 
 generateSearch(searchN++);
 
@@ -90,6 +99,7 @@ startDate = graph[0].data[0][0].x;
 endDate = graph[0].data[0][graph[0].data[0].length - 1].x;
 
 x.domain([startDate, endDate]);
+xOrdinal.domain(d3.keys(categories));
 
 line = d3.svg.line()
   .interpolate("basis")
@@ -124,19 +134,38 @@ yAxis = d3.svg.axis()
   .ticks(5)
   .tickSize(width, width);
 
+xOrdinalAxis = d3.svg.axis()
+  .scale(xOrdinal);
+
 mostCoherentTopics(5);
 
-resetColors(true);
+transition();
 setStartParameters();
 
 function transition(toggle) {
-  if (toggle) streaming = !streaming;
+  if (toggle) toggleState = (toggleState + 1) % 3; 
+
+  switch(toggleState) {
+    case 0:
+      streaming = true;
+      categorical = false;
+      break;
+    case 1:
+      streaming = false;
+      categorical = false;
+      break;
+    case 2:
+      streaming = false;
+      categorical = true;
+  }
 
   // if (streaming) {
   //   createGradientScale();
   // } else {
   //   d3.select("#gradientScale").remove();
   // }
+
+  updateActiveLabels();
 
   for (i in graph) {
     sumUpData(i, origTopicTimeData);
@@ -157,17 +186,20 @@ function transition(toggle) {
 
   if (!streaming) y.domain([-maxStdDev,maxStdDev])
 
+  resetColors();
   for (i in graph) {
     createOrUpdateGraph(i);
   }
   updateGradient();
 
   graphGroup.select("#density").remove();
-  graphGroup.append("rect")
-    .attr("id", "density")
-    .style("fill", "url(#linearGradientDensity)")
-    .attr("width", width)
-    .attr("height", height);
+  if (!categorical) {
+    graphGroup.append("rect")
+      .attr("id", "density")
+      .style("fill", "url(#linearGradientDensity)")
+      .attr("width", width)
+      .attr("height", height);  
+  }
 
   refreshAxes();
   updateLegend();
@@ -186,17 +218,50 @@ function shuffle(array) {
     return array;
 }
 
-function resetColors(transitionNow) {
+function resetColors() {
+  var currentColors = activeTopicLabels.map(function (d) { return graph[0].color(d); });
+  currentColors.sort();
+  var anyRepeats = false;
+  for (var i = 0, n = currentColors.length; i < n; i++) {
+    if (currentColors[i] == currentColors[(i + 1) % n]) {
+      anyRepeats = true;
+    }
+  }
+  if (!anyRepeats) {
+    return;
+  }
+
   for (i in graph) {
     // var newLabelColors = shuffle(activeTopicLabels.slice());
     var newLabelColors = activeTopicLabels.slice();
     graph[i]['color'] = d3.scale.category10().domain(newLabelColors);
   }
-  if (transitionNow) transition();
+  for (var i in wordClouds) {
+    wordCloudGroup.select(".cloud" + i.toString()).transition().duration(250).style("fill", graph[0].color(i));
+  }
 }
 
 function sumUpData(graphIndex, origData) {
   graph[graphIndex].data = [];
+  // if (categorical) {  
+    graph[graphIndex].categoricalData = [];
+    categories = {};
+    origData.forEach(function(d, i) {
+      if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
+        d.forEach(function(e) {
+          e.y.forEach(function (datum) {
+            if (!categories.hasOwnProperty(datum.label)) {
+              categories[datum.label] = {};
+            }
+            if (!categories[datum.label].hasOwnProperty(i)) {
+              categories[datum.label][i] = {'x': datum.label, 'topic': i, 'y': 0};
+            }
+          });
+        });
+      }
+    });
+  // }
+
   var firstRun = dataSummed.length == 0;
   var minDocs = 0, maxDocs = 1;
 
@@ -215,10 +280,17 @@ function sumUpData(graphIndex, origData) {
           graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
 
           e.y.forEach(function (f) {
-            docMetadata[f.itemID] = {'title': f.title, 'year': e.x.getFullYear()};
+            docMetadata[f.itemID] = {'title': f.title, 'year': e.x.getFullYear(), 'label': f.label};
             if (graph[graphIndex].searchFilter(f)) {
               datum.y += f.ratio;
               graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
+              // if (categorical) {
+                categories[f.label][i].y += f.ratio;
+                if (!graph[graphIndex].contributingDocsOrdinal.hasOwnProperty(f.label)) {
+                  graph[graphIndex].contributingDocsOrdinal[f.label] = {};
+                }
+                graph[graphIndex].contributingDocsOrdinal[f.label][f.itemID] = true;
+              // }
             }
           });
 
@@ -248,6 +320,32 @@ function sumUpData(graphIndex, origData) {
         }
       });
     });
+
+    // if (categorical) {
+      var activeTopics = [];
+      if (topicLabels != null) {
+        for (var i in topicLabels) {
+          if (topicLabels[i]["active"]) activeTopics.push(i);
+        }
+      } else {
+        activeTopics = d3.range(origData.length);
+      }
+      for (var i in activeTopics) {
+        graph[graphIndex].categoricalData.push([]);
+      }
+
+      var categoriesSorted = d3.keys(categories);
+      categoriesSorted.sort();
+      categoriesSorted.forEach(function (category) {
+        var s = d3.keys(graph[graphIndex].contributingDocsOrdinal[category]).length || 1;
+        for (var i in activeTopics) {
+          var datum = categories[category][activeTopics[i]];
+          datum.y /= s;
+          graph[graphIndex].categoricalData[i].push(datum);
+        }
+      });      
+    // }
+
     if (firstRun) dataSummed = graph[graphIndex].data;
 }
 
@@ -265,11 +363,16 @@ function showMore() {
   for (i in topicLabels) {
     topicLabels[i]["active"] = topicLabels[i]["active"] || _topics.indexOf(i) != -1;
   }
-  resetColors();
   transition();
 }
 
 function createOrUpdateGraph(i) {
+
+  if (categorical) {
+    createCategoricalGraph(i);
+    return;
+  }
+  graphGroup.selectAll("g.layer").remove();
   var graphSelection = graphGroup.selectAll("path.line.graph" + i.toString())
     .data(streaming ? graph[i].streamData : graph[i].data, function(d) { return d[0].topic;});
 
@@ -297,7 +400,53 @@ function createOrUpdateGraph(i) {
   var graphExiting = graphSelection.exit();
   graphExiting.transition().duration(500).style("stroke-opacity", "0").remove();
   graph[i].graphCreated = true;
+}
 
+function createCategoricalGraph (i) {
+  d3.layout.stack()(graph[i].categoricalData);
+  my = d3.max(graph[i].categoricalData, function(d) {
+      return d3.max(d, function(d) {
+        return d.y0 + d.y;
+      });
+  });
+
+  y0 = function(d) { return height - d.y0 * height / my; };
+  y1 = function(d) { return height - (d.y + d.y0) * height / my; };
+
+  var barWidth = (d3.max(xOrdinal.range()) - d3.min(xOrdinal.range())) / xOrdinal.domain().length / 3;
+
+  graphGroup.selectAll("*").remove();
+  var categoricalLayers = graphGroup.selectAll("g.layer").data(graph[i].categoricalData, function (d) { return d[0].topic; });
+  categoricalLayers.style("fill", function(d) { return graph[0].color(d[0].topic);});
+
+  categoricalLayers.exit().remove();
+
+  categoricalLayers.enter().append("g")
+      .attr("class", "layer")
+      .style("fill", function(d) { return graph[0].color(d[0].topic);});
+
+  bars = categoricalLayers.selectAll("g.bar.graph" + i.toString())
+      .data(function (d) { return d;}, function (d) { return d.x + d.topic.toString(); });
+
+  bars.selectAll("rect").transition()
+      .delay(function(d, i) { return i * 10; })
+      .attr("y", y1)
+      .attr("height", function(d) { return y0(d) - y1(d); });
+
+  bars.exit().remove();
+
+  bars.enter().append("g")
+      .attr("class", "bar graph" + i.toString())
+      .attr("transform", function(d) { return "translate(" + (xOrdinal(d.x) - (barWidth / 2)) + ",0)"; })
+    .append("rect")
+      .attr("width", barWidth)
+      .attr("x", 0)
+      .attr("y", height)
+      .attr("height", 0)
+    .transition()
+      .delay(function(d, i) { return i * 10; })
+      .attr("y", y1)
+      .attr("height", function(d) { return y0(d) - y1(d); });
 }
 
 function highlightTopic(e) {
@@ -321,17 +470,21 @@ function unhighlightTopic() {
 
 function refreshAxes() {
   if (axesGroup.select("g.x.axis").empty()) {
-    axesGroup.append("svg:g")
+    var gXAxis = axesGroup.append("svg:g")
     .attr("class", "x axis")
     .attr("transform", "translate(0," + height + ")")
-    .call(xAxis);
+    .call(categorical ? xOrdinalAxis : xAxis);
   } else {
-    axesGroup.select("g.x.axis").transition().duration(500).call(xAxis);
+    axesGroup.select("g.x.axis").transition().duration(500).call(categorical ? xOrdinalAxis : xAxis);
   }
   if (streaming) {
     axesGroup.select("g.y.axis").transition().duration(500).style("fill-opacity", 0);
     axesGroup.selectAll(".y.axis line").style("stroke-opacity", 0);
-  } else {
+  } 
+  if (categorical) {
+    axesGroup.select("g.y.axis").remove();
+  }
+  if (!streaming && !categorical) {
     if (axesGroup.select("g.y.axis").empty()) {
       axesGroup.append("svg:g")
       .attr("class", "y axis")
@@ -344,9 +497,16 @@ function refreshAxes() {
   }
 }
 function toggleTopic(d) {
-  // if (d3.event) d3.event.preventDefault();
+  if (d3.event) {
+    d3.event.preventDefault();
+    d3.event.stopPropagation();
+  }
   topicLabels[d.topic]["active"] = !topicLabels[d.topic]["active"];
-  resetColors(true);
+  if (!topicLabels[d.topic]["active"] && d.topic in wordClouds) {
+    delete wordClouds[d.topic];
+    wordCloudGroup.select(".cloud" + d.topic).remove();
+  }
+  transition();
 }
 
 function wordCloudPositions (d, i) {
@@ -354,7 +514,10 @@ function wordCloudPositions (d, i) {
 }
 
 function displayFullTopic(d) {
-  if (d3.event) d3.event.preventDefault();
+  if (d3.event) {
+    d3.event.preventDefault();
+    d3.event.stopPropagation();
+  }
   if (d.topic in wordClouds) {
     wordCloudGroup.selectAll(".cloud" + d.topic).remove();
     delete wordClouds[d.topic]
@@ -364,6 +527,22 @@ function displayFullTopic(d) {
   }
 }
 
+function updateActiveLabels() {
+    activeTopicLabels = [], inactiveTopicLabels = [];
+
+  if (topicLabelsSorted) {
+    topicLabelsSorted.forEach(function(k) {
+      if (topicLabels[k]["active"]) current = activeTopicLabels;
+      else current = inactiveTopicLabels;
+      current.push(k);
+    });
+  } else {
+    for (var i in topicLabels) {
+      if (topicLabels[i]["active"]) activeTopicLabels.push(i);
+      else inactiveTopicLabels.push(i);
+    }
+  }
+}
 function updateLegend() {
   // legendGroup.select("#legend").remove();
 
@@ -376,15 +555,6 @@ function updateLegend() {
   }
 
   var topics = [];
-  activeTopicLabels = [], inactiveTopicLabels = [];
-
-  if (topicLabelsSorted) {
-    topicLabelsSorted.forEach(function(k) {
-      if (topicLabels[k]["active"]) current = activeTopicLabels;
-      else current = inactiveTopicLabels;
-      current.push(k);
-    });
-  }
   var topicLabelsCurrent = activeTopicLabels.concat(inactiveTopicLabels);
   topicLabelsCurrent.forEach(function (i) {
     topics.push({'topic': i, 'label': topicLabels[i]['label'], 'active': topicLabels[i]["active"]});    
@@ -679,6 +849,7 @@ function createGraphObject(i) {
     'results': null,
     'dasharray': i == 0 ? "" : 12 / (i+1),
     'contributingDocs': {},
+    'contributingDocsOrdinal': {},
     'baseline': 0
   };
     graph[i]['color'] = d3.scale.category10().domain(d3.range(10)); //ordinal().range(colorbrewer.Spectral[9]).domain(d3.range(20));
@@ -859,11 +1030,11 @@ function topicCloud(i, parent) {
     parent.append("g")
         .attr("class", "cloud" + i.toString())
         .attr("transform", "translate(" + cloudW/2 + "," + cloudH / 2 + ")")
+        .style("fill", graph[0].color(i))
       .selectAll("text")
         .data(words)
       .enter().append("text")
         .style("font-size", function(d) { return d.size + "px"; })
-        .style("fill", graph[0].color(i))
         .attr("text-anchor", "middle")
         .attr("transform", function(d) {
           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
