@@ -4,7 +4,7 @@
 
 <!ENTITY papermachines.collectionmenu.wordcloud				"Word Cloud">
 <!ENTITY papermachines.collectionmenu.phrasenet				"Phrase Net">
-<!ENTITY papermachines.collectionmenu.geodict				"Geodict">
+<!ENTITY papermachines.collectionmenu.geodict				"Geoparser">
 <!ENTITY papermachines.collectionmenu.dbpedia				"DBPedia Annotation">
 
 <!ENTITY papermachines.collectionmenu.topicmodeling			"Topic Modeling">
@@ -21,6 +21,6 @@
 <!ENTITY papermachines.itemmenu.text_in_map_view			"Locate Text in Map View">
 
 <!ENTITY papermachines.dialog.title							"Paper Machines">
-<!ENTITY papermachines.dialog.intro							"Set process parameters">
+<!ENTITY papermachines.dialog.intro							"Select classifier to use">
 <!ENTITY papermachines.dialog.cancel						"Cancel">
 <!ENTITY papermachines.dialog.accept						"OK">
