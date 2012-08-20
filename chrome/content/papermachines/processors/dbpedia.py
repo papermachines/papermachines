@@ -8,6 +8,10 @@ class DBpedia(textprocessor.TextProcessor):
 	annotates texts using DBpedia Spotlight
 	"""
 
+	def _basic_params(self):
+		self.name = "dbpedia"
+		self.dry_run = False
+
 	def _get_annotated(self, text, confidence = 0.2, support = 20):
 		values = {'text': text[0:10000].encode('utf-8'),
 			'confidence': confidence,
@@ -19,9 +23,6 @@ class DBpedia(textprocessor.TextProcessor):
 		encoding = req.headers.get('content-type', 'charset=latin1').split('charset=')[-1]
 
 		return unicode(annotation, encoding)
-
-	def _basic_params(self):
-		self.name = "dbpedia"
 
 	def process(self):
 		"""
@@ -36,7 +37,6 @@ class DBpedia(textprocessor.TextProcessor):
 
 		self.url = "http://spotlight.dbpedia.org/rest/annotate"
 		self.headers = {'Accept': 'application/json', 'content-type': 'application/x-www-form-urlencoded'}
-		self.dry_run = True
 
 		annotated = {}
 		if not self.dry_run:

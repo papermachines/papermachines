@@ -43,10 +43,8 @@ Zotero.PaperMachines = {
 			return Zotero.PaperMachines.selectFromOptions(classifiers);
 		}
 	},
-	progressWindows: [],
 	communicationObjects: {},
 	noTagsString: "",
-	runningProcesses: {},
 
 	SCHEME: "zotero://papermachines",
 
@@ -60,7 +58,7 @@ Zotero.PaperMachines = {
 				.getService(Components.interfaces.nsISupports)
 				.wrappedJSObject;
 	
-			// try {
+			try {
 				var [path, queryString] = uri.path.substr(1).split('?');
 				var pathParts = path.split('/');
 
@@ -122,15 +120,13 @@ Zotero.PaperMachines = {
 					return extChannel;
 				}
 
-			// } catch (e){
-			// 	Zotero.PaperMachines.LOG(e);
-			// 	// Zotero.debug(e);
-			//    throw (e);
-			// }
+			} catch (e){
+				Zotero.PaperMachines.LOG(e);
+			   throw (e);
+			}
 		}
 	},
 	init: function () {
-
 		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
 			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
 
@@ -383,7 +379,6 @@ Zotero.PaperMachines = {
 	},
 	displayWordCloud: function () {
 		var thisID = Zotero.PaperMachines.getItemGroupID(ZoteroPane.getItemGroup());
-		// var runningNow = Zotero.PaperMachines.runningProcesses.hasOwnProperty("wordcloud" + thisID);
 
 		var wordCloudURI = "zotero://papermachines/wordcloud/" + thisID;
 		Zotero.PaperMachines.replaceTagsBoxWithWordCloud(wordCloudURI);
@@ -774,11 +769,6 @@ Zotero.PaperMachines = {
 			}
 			progbar_str += '</body></html>';
 		return progbar_str;
-	},
-	_openProgressWindow: function (file) {
-		var uri = "file://"+file.path;
-		window.open(uri, file.leafName, "menubar=no,location=no,resizable=yes,scrollbars=no,status=no,toolbar=no,width=250,height=50");
-		Zotero.PaperMachines.progressWindows.push(file.leafName);
 	},
 	getThisGroupID: function () {
 		return Zotero.PaperMachines.getItemGroupID(ZoteroPane.getItemGroup());
