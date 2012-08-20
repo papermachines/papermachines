@@ -2,18 +2,17 @@
 import sys, os, logging, traceback, time, subprocess
 import mallet
 
-class MalletClassifier(mallet.MalletLDA):
+class MalletClassifier(mallet.Mallet):
 	"""
 	Train a classifier
 	"""
 	def _basic_params(self):
-		self.template_name = "mallet-classifier"
-
-	def process(self):
 		self.dry_run = False
 		self.name = "mallet_train-classifier"
+		self.dfr = False
 
-		self._setup_mallet_instances(False)
+	def process(self):
+		self._setup_mallet_instances(sequence=False)
 
 		self.mallet_output = os.path.join(self.mallet_out_dir, "trained.classifier")
 		process_args = self.mallet + ["cc.mallet.classify.tui.Vectors2Classify",
@@ -37,8 +36,7 @@ class MalletClassifier(mallet.MalletLDA):
 
 if __name__ == "__main__":
 	try:
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", "mallet_train-classifier.log"), level=logging.INFO)
-		processor = MalletClassifier(sys.argv, track_progress=True)
+		processor = MalletClassifier(track_progress=False)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

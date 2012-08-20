@@ -20,12 +20,13 @@ class DBpedia(textprocessor.TextProcessor):
 
 		return unicode(annotation, encoding)
 
+	def _basic_params(self):
+		self.name = "dbpedia"
+
 	def process(self):
 		"""
 		create a folder of JSON files with named entity recognition by DBpedia
 		"""
-
-		self.name = "dbpedia"
 
 		annotations_out_dir = os.path.join(self.out_dir, self.name + self.collection)
 		if not os.path.exists(annotations_out_dir):
@@ -82,8 +83,7 @@ class DBpedia(textprocessor.TextProcessor):
 
 if __name__ == "__main__":
 	try:
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", "dbpedia.log"), level=logging.INFO)
-		processor = DBpedia(sys.argv, track_progress=True)
+		processor = DBpedia(track_progress=True)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

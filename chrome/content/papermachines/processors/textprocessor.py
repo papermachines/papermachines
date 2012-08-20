@@ -6,16 +6,23 @@ class TextProcessor:
 	Base class for text processing in Paper Machines
 	"""
 
-	def __init__(self, sysargs, track_progress=True):
-		logging.info("command: " + ' '.join([x.replace(' ','''\ ''') for x in sysargs]))
-		self.cwd = sysargs[1]
-		csv_file = sysargs[2]
-		self.out_dir = sysargs[3]
-		self.collection_name = sysargs[4]
-
-		self.extra_args = sysargs[5:]
+	def __init__(self, track_progress=True):
+		# take in command line options
+		self.cwd = sys.argv[1]
+		csv_file = sys.argv[2]
+		self.out_dir = sys.argv[3]
+		self.collection_name = sys.argv[4]
+		self.extra_args = sys.argv[5:]
 
 		self.collection = os.path.basename(csv_file).replace(".csv","")
+
+		# call a function to set processor name, etc.
+		self._basic_params()
+
+		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", self.name + ".log"), level=logging.INFO)
+
+		logging.info("command: " + ' '.join([x.replace(' ','''\ ''') for x in sys.argv]))
+
 		self.metadata = {}
 
 		for rowdict in self.parse_csv(csv_file):
@@ -27,6 +34,8 @@ class TextProcessor:
 			self.track_progress = True
 			self.progress_initialized = False
 
+	def _basic_params(self):
+		self.name = "textprocessor"
 
 	def parse_csv(self, filename, dialect=csv.excel, **kwargs):
 		with file(filename, 'rb') as f:
@@ -59,7 +68,7 @@ class TextProcessor:
 		params.update({"COLLECTION_NAME": self.collection_name})
 		try:
 			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
-			additional_arg_str = "_" + "_".join([urllib.quote_plus(x) for x in self.extra_args]) if len(self.extra_args) > 0 else ""
+			additional_arg_str = "_" + "_".join([urllib.quote_plus(x).replace('+',"%20") for x in self.extra_args]) if len(self.extra_args) > 0 else ""
 			out_filename = getattr(self, "out_filename", os.path.join(self.out_dir, self.name + self.collection + additional_arg_str + ".html"))
 			with file(out_filename, 'w') as outfile:
 				with file(template_filename) as template:
@@ -81,8 +90,7 @@ class TextProcessor:
 
 if __name__ == "__main__":
 	try:
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", "textprocessor.log"), level=logging.INFO)
-		processor = TextProcessor(sys.argv, track_progress = True)
+		processor = TextProcessor(track_progress = True)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

@@ -22,8 +22,55 @@ import data
 # The main entry point. This function takes an unstructured text string and returns a list of all the
 # fragments it could identify as locations, together with lat/lon positions
 
-countries_cache = data.setup_countries_cache()
-regions_cache   = data.setup_regions_cache()
+if data.is_initialized("countries"):
+    countries_cache = data.setup_countries_cache()
+if data.is_initialized("regions"):
+    regions_cache   = data.setup_regions_cache()
+
+
+def find_location_in_string(text):
+    # try to return one location from a short string
+
+    result = None
+
+    tokens = [x.lower().strip(".,") for x in text.split()][::-1]
+
+    cursor = data.get_database_connection()
+    select = "SELECT * FROM cities WHERE last_word = ?"
+
+    possible_country = None
+    possible_region = None
+    city = None
+
+    possible_cities = []
+    for token in tokens:
+        if token in countries_cache:
+            possible_country = countries_cache[token][0]['country_code'].lower()
+        elif token in regions_cache:
+            possible_region = regions_cache[token][0]['region_code'].lower()
+        else:
+            possible_cities.append(token)
+    for token in possible_cities:
+        cities = data.get_cities(token, token, possible_country, possible_region)
+        if len(cities) > 0:
+            city = sorted(cities.values(), key=lambda x: x['population'])[0]
+            break
+
+    if city is not None:
+        current_result = {
+            'found_tokens': [],
+        }
+        lat = city['lat']
+        lon = city['lon']
+                
+        current_result['found_tokens'].append({
+            'type': 'CITY',
+            'lat': lat,
+            'lon': lon,
+            'matched_string': text,
+        })
+        result = current_result
+    return result
 
 def find_locations_in_text(text):
 
@@ -129,7 +176,7 @@ def is_country( text, text_starting_index, previous_result):
             if last_word not in countries_cache:
                 break
             candidate_dicts = countries_cache[last_word]
-#            select = 'SELECT * FROM countries WHERE last_word=%s;'
+#            select = 'SELECT * FROM countries WHERE last_word=?;'
 #            values = (pulled_word, )
 ##            print "Calling '"+(select % values)+"'"
 #            cursor.execute(select, values)

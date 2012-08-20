@@ -30,10 +30,7 @@ def get_cities(pulled_word,current_word,country_code,region_code):
         values = (current_word, country_code, region_code)
 
     values = [v.lower() for v in values]
-    # q = select
-    # for val in values:
-    #     q = q.replace("?", '"' + val + '"', 1)
-    # print "Calling '"+q+"'"
+
     cursor.execute(select, values)
     candidate_rows = cursor.fetchall()
     # print candidate_rows
@@ -87,3 +84,9 @@ def setup_regions_cache():
             regions_cache[last_word] = []
         regions_cache[last_word].append(candidate_dict)
     return regions_cache
+
+def is_initialized(name):
+    cursor = get_database_connection()
+    cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE name = ?;",[name])
+    return cursor.fetchone()[0] > 0
+

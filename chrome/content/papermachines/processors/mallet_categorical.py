@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys, os, logging, traceback
-import mallet
+import mallet_lda
 
-class MalletSubcollections(mallet.MalletLDA):
+class MalletSubcollections(mallet_lda.MalletLDA):
 	"""
 	Set topic modeling to categorical view by default
 	"""
@@ -10,11 +10,13 @@ class MalletSubcollections(mallet.MalletLDA):
 		self.name = "mallet_categorical"
 		self.categorical = True
 		self.template_name = "mallet"
+		self.dry_run = False
+		self.topics = 50
+		self.dfr = len(self.extra_args) > 0
 
 if __name__ == "__main__":
 	try:
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", "mallet_categorical.log"), level=logging.INFO)
-		processor = MalletSubcollections(sys.argv, track_progress=True)
+		processor = MalletSubcollections(track_progress=False)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

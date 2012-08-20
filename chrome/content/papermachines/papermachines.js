@@ -24,7 +24,24 @@ Zotero.PaperMachines = {
 		"mallet": "Topic Modeling",
 		"mallet_categorical": "Topic Modeling",
 		"mallet_train-classifier": "Classifier Training",
+		"mallet_classify-file": "Classifier Testing",
 		"dbpedia": "DBpedia Annotation"
+	},
+	processesThatPrompt: {
+		"mallet_classify-file": function () {
+			// get list of classifiers
+			var classifiers = [];
+			var classifiedCollections = Zotero.PaperMachines.DB.columnQuery("SELECT collection FROM processed_collections WHERE status = 'done' AND processor='mallet_train-classifier';");
+			classifiedCollections.forEach(function (collection) {
+				var classifier = Zotero.PaperMachines.out_dir.clone();
+				classifier.append("mallet_train-classifier" + collection);
+				classifier.append("trained.classifier");
+				if (classifier.exists()) {
+					classifiers.push({"name": Zotero.PaperMachines.getNameOfGroup(collection), "label": "-", "value": classifier.path});
+				}
+			})
+			return Zotero.PaperMachines.selectFromOptions(classifiers);
+		}
 	},
 	progressWindows: [],
 	communicationObjects: {},
@@ -43,7 +60,7 @@ Zotero.PaperMachines = {
 				.getService(Components.interfaces.nsISupports)
 				.wrappedJSObject;
 	
-			try {
+			// try {
 				var [path, queryString] = uri.path.substr(1).split('?');
 				var pathParts = path.split('/');
 
@@ -105,17 +122,17 @@ Zotero.PaperMachines = {
 					return extChannel;
 				}
 
-			} catch (e){
-				Zotero.PaperMachines.LOG(e);
-				// Zotero.debug(e);
-			   throw (e);
-			}
+			// } catch (e){
+			// 	Zotero.PaperMachines.LOG(e);
+			// 	// Zotero.debug(e);
+			//    throw (e);
+			// }
 		}
 	},
 	init: function () {
 
-		// this.ZoteroPane = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-		// 	.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser").ZoteroPane;
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
 
 		var protocol = Components.classes["@mozilla.org/network/protocol;1?name=zotero"]
 								 .getService(Components.interfaces.nsIProtocolHandler)
@@ -153,7 +170,7 @@ Zotero.PaperMachines = {
 
 		this.DB.query("UPDATE processed_collections SET status = 'failed' WHERE status = 'running';");
 
-		setTimeout(Zotero.PaperMachines.replaceOnCollectionSelected, 5000);
+		win.setTimeout(Zotero.PaperMachines.replaceOnCollectionSelected, 5000);
 
 		// ZoteroPane.addReloadListener(function () {
 		// 	setTimeout(Zotero.PaperMachines.replaceOnCollectionSelected, 5000);		
@@ -221,9 +238,17 @@ Zotero.PaperMachines = {
 	runProcess: function () {
 		var func_args = Array.prototype.slice.call(arguments);
 		var processPathParts = [func_args[0]];
+
 		processPathParts.push(Zotero.PaperMachines.getThisGroupID());
 
-		var additional_args = func_args.slice(1).map(function (d) { return encodeURIComponent(d);});
+		var additional_args = func_args.slice(1);
+
+		if (processPathParts[0] in Zotero.PaperMachines.processesThatPrompt) {
+			var prompt_result = Zotero.PaperMachines.processesThatPrompt[processPathParts[0]]();
+			if (prompt_result) additional_args.push(prompt_result);
+		}
+
+		additional_args = additional_args.map(function (d) { return encodeURIComponent(d);});
 
 		processPathParts = processPathParts.concat(additional_args);
 		window.open("zotero://papermachines/"+processPathParts.join('/'), processPathParts[0]);
@@ -349,7 +374,6 @@ Zotero.PaperMachines = {
 					Zotero.PaperMachines.onCollectionSelected();
 				} catch (e) {
 					Zotero.PaperMachines.LOG(e.name + ": " + e.message);
-//					Zotero.debug(e.name + ": " + e.message);
 				}
 			};
 			win.setTimeout(Zotero.PaperMachines.onCollectionSelected, 500);
@@ -498,7 +522,7 @@ Zotero.PaperMachines = {
 		alert(location);
 	},
 	getPlaceOfItem: function (item) {
-		return this.DB.valueQuery("SELECT place FROM doc_places WHERE itemID = ?;", [item.id]);
+		return this.DB.valueQuery("SELECT place FROM doc_places WHERE itemID = ?;", [item.id]) || item.getField("place");
 	},
 	getYearOfItem: function (item) {
 		return item.getField("date", true, true).substring(0,4);
@@ -551,6 +575,12 @@ Zotero.PaperMachines = {
 		if (id.indexOf("C") != -1) {
 			return Zotero.Collections.get(id.split("C")[1]);
 		}
+	},
+	getNameOfGroup: function (id) {
+		try {
+			return Zotero.PaperMachines.getGroupByID(id).getName();		
+		}
+		catch (e) { return false; }
 	},
 	extractFromItemGroup: function (itemGroup, queue) {
 		var dir = Zotero.PaperMachines._getOrCreateDir(Zotero.PaperMachines.getItemGroupID(itemGroup));
@@ -611,9 +641,7 @@ Zotero.PaperMachines = {
 				Zotero.PaperMachines.DB.query("INSERT INTO doc_files (itemID, filename) VALUES (?,?)", [item.id, outFile.path]);
 			}
 			Zotero.PaperMachines.DB.query("INSERT INTO collection_docs (collection,itemID) VALUES (?,?)", [dir.leafName, item.id]);
-			if (item.getField("place")) {
-//				Zotero.PaperMachines.locateItem(item);				
-			}
+
 			Zotero.PaperMachines.DB.commitTransaction();
 
 		}
@@ -786,25 +814,25 @@ Zotero.PaperMachines = {
 		s.addCondition("quicksearch-everything", "contains", str);
 		return s.search();
 	},
-	insertHello: function () {
-		var data = {
-			title: "Zotero",
-			company: "Center for History and New Media",
-			creators: [
-				['Dan', 'Stillman', 'programmer'],
-				['Simon', 'Kornblith', 'programmer']
-			],
-			version: '1.0.1',
-			company: 'Center for History and New Media',
-			place: 'Fairfax, VA',
-			url: 'http://www.zotero.org'
-		};
-		Zotero.Items.add('computerProgram', data); // returns a Zotero.Item instance
+	selectFromOptions: function(options) {
+		var params = {"dataIn": options, "dataOut": null};
+		
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+
+		win.openDialog("chrome://papermachines/content/dialog.xul", "", "chrome, dialog, modal", params);
+
+		if (params.dataOut != null) {
+			return params.dataOut;
+		} else {
+			return false;
+		}
 	},
 	LOG: function(msg) {
 	  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
 									 .getService(Components.interfaces.nsIConsoleService);
 	  consoleService.logStringMessage(msg);
+	  Zotero.debug(msg);
 	},
 	evtListener: function (evt) {
 		var node = evt.target, doc = node.ownerDocument;

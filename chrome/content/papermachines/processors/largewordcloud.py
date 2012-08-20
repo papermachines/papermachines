@@ -6,7 +6,7 @@ class LargeWordCloud(wordcloud.WordCloud):
 	"""
 	Generate large word cloud
 	"""
-	def _adjustSize(self):
+	def _basic_params(self):
 		self.width = "960"
 		self.height = "500"
 		self.fontsize = "[10,72]"
@@ -15,9 +15,7 @@ class LargeWordCloud(wordcloud.WordCloud):
 
 if __name__ == "__main__":
 	try:
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", "largewordcloud.log"), level=logging.INFO)
-		processor = LargeWordCloud(sys.argv, track_progress=True)
-		processor._adjustSize()
+		processor = LargeWordCloud(track_progress=True)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

@@ -179,6 +179,7 @@ var world_countries =
 {"type":"Feature","properties":{"name":"Zimbabwe"},"geometry":{"type":"Polygon","coordinates":[[[31.191409,-22.25151],[30.659865,-22.151567],[30.322883,-22.271612],[29.839037,-22.102216],[29.432188,-22.091313],[28.794656,-21.639454],[28.02137,-21.485975],[27.727228,-20.851802],[27.724747,-20.499059],[27.296505,-20.39152],[26.164791,-19.293086],[25.850391,-18.714413],[25.649163,-18.536026],[25.264226,-17.73654],[26.381935,-17.846042],[26.706773,-17.961229],[27.044427,-17.938026],[27.598243,-17.290831],[28.467906,-16.4684],[28.825869,-16.389749],[28.947463,-16.043051],[29.516834,-15.644678],[30.274256,-15.507787],[30.338955,-15.880839],[31.173064,-15.860944],[31.636498,-16.07199],[31.852041,-16.319417],[32.328239,-16.392074],[32.847639,-16.713398],[32.849861,-17.979057],[32.654886,-18.67209],[32.611994,-19.419383],[32.772708,-19.715592],[32.659743,-20.30429],[32.508693,-20.395292],[32.244988,-21.116489],[31.191409,-22.25151]]]},"id":"ZWE"}
 ]};
 
+
 function generateSearch() {
   var searchTime = document.getElementById("searchTime");
   searchTime.min = startDate;
@@ -188,7 +189,7 @@ function generateSearch() {
 
   d3.select("#timeDisplay").text(endDate);
 }
-var feature, data, linkPaths, positions = {}, visible = {}, allLinks = [], selectedLinks = [], linksByText = {}, foundLinks = [];
+var feature, data, linkPaths, positions = {}, visible = {}, allLinks = [], selectedLinks = [], foundLinks = [];
 var results = [], currentResult;
 
 
@@ -245,11 +246,53 @@ data = svg.selectAll("circle")
 
 cells = svg.append("svg:g")
     .attr("id", "cells");
+  linkData = [];
+  for (i in linksByYear) {
+    var yearLinks = linksByYear[i];
+    linkData = linkData.concat(yearLinks);
+  }
 
+linkPaths = cells.selectAll("path.arc").data(linkData).enter()
+    .append("svg:path")
+    .attr("class", function (d) { return "arc year"+d.year; })
+    .style("display", timeFilter)
+    .style("stroke-opacity", fadeOldConnections)
+    .attr("d", function(d) { return myClip(path(arc(d))); });
+
+data.append("svg:title")
+		.text(function(d) { return d.properties.name; });
+ 
 function timeFilter(d) {
   if (d.year >= startDate && d.year < endDate) return "block";
   else return "none";
-};
+}
+
+function myClip (d) {
+  var points = d.split("L");
+
+  lastXPoint = parseInt(points[0].substr(1).split(',')[0]);
+
+  discontinuity = -1;
+  for (i in points) {
+    if (Math.abs(parseInt(points[i].split(',')[0]) - lastXPoint) > 300) {
+      discontinuity = i; 
+      break;
+    }
+  }
+
+  if (discontinuity != -1) {
+    var a = points.slice(0, discontinuity);
+    var b = points.slice(discontinuity);
+    // a[a.length - 1] = a[a.length - 1] + "Z";
+    b[0] = "M" + b[0];
+    a_str = a.join("L");
+    b_str = b.join("L");
+    return a_str + b_str;
+  } else {
+    return d;    
+  }
+}
+
 function move() {
   var t = d3.event.translate,
       s = d3.event.scale;
@@ -386,3 +429,25 @@ function flashOutline(selection) {
         }
       });
 }
+
+var palette = colorbrewer.RdYlGn[5];
+var palette_edges = colorbrewer.Spectral[5];
+
+var ylgn = d3.interpolateRgb(palette[2], palette[4]);
+
+var defs = svg.append("svg:defs");
+
+var gradient = defs.append("svg:linearGradient")
+  .attr("id", "fade")
+  .attr("x1", "0%")
+  .attr("y1", "0%")
+  .attr("x2", "100%")
+  .attr("y2", "100%");
+
+gradient.append("svg:stop")
+    .attr("offset", "0%")
+    .style("stop-color", palette_edges[4]);
+gradient.append("svg:stop")
+  .attr("offset", "100%")
+  .style("stop-color", palette[0]);
+

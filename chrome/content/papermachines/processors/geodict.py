@@ -25,7 +25,11 @@ class GeoDict(textprocessor.TextProcessor):
 			self.update_progress()
 			try:
 				# id = self.metadata[filename]['itemID']
+				city = geodict_lib.find_location_in_string(self.metadata[filename]['place'])
 				geo_parsed[filename] = geodict_lib.find_locations_in_text(file(filename).read())
+				if city is not None:
+					self.metadata[filename]['city'] = city
+					geo_parsed[filename].append(city)
 			except:
 				pass
 
@@ -33,11 +37,13 @@ class GeoDict(textprocessor.TextProcessor):
 		output.write(json.dumps(geo_parsed))
 		output.close()
 
-		data_filename = os.path.join(self.out_dir, self.name + self.collection + '.js') # this file contains data in a d3.js-ready format
+		data_filename = os.path.join(self.out_dir, self.name + self.collection + '.js')
 
 		places = {}
+		places_for_doc = {}
 		for filename, place_array in geo_parsed.iteritems():
 			year = self.metadata[filename]["year"]
+			places_for_doc[filename] = {}
 			for place_tokens in place_array:
 				for place_dict in place_tokens["found_tokens"]:
 					name = place_dict["matched_string"]
@@ -50,6 +56,10 @@ class GeoDict(textprocessor.TextProcessor):
 							places[name]["weight"][year] = 1
 						else:
 							places[name]["weight"][year] += 1
+					if name not in places_for_doc[filename]:
+						places_for_doc[filename][name] = 1
+					else:
+						places_for_doc[filename][name] += 1
 
 		places_array = []
 		places_index = {}
@@ -67,7 +77,39 @@ class GeoDict(textprocessor.TextProcessor):
 			i += 1
 
 		placeIDsToNames = {v : k for k, v in places_index.iteritems()}
-		placeIDsToCoords = {k : v for k, v in places.iteritems()}
+		placeIDsToCoords = {places_index[k] : [v['lon'], v['lat']] for k, v in places.iteritems()}
+
+		linksByYear = {}
+		for filename in self.files:
+			if not 'city' in self.metadata[filename] or len(geo_parsed[filename]) < 2:
+				continue
+			try:
+				title = os.path.basename(filename)
+				itemID = self.metadata[filename]['itemID']
+				year = self.metadata[filename]['year']
+				if year not in linksByYear:
+					linksByYear[year] = {}
+				source = places_index[self.metadata[filename]['city']['found_tokens'][0]['matched_string']]
+				targets = [places_index[name] for name in places_for_doc[filename].keys()]
+				for target in targets:
+					edge = str(source) + ',' + str(target)
+					if edge not in linksByYear[year]:
+						linksByYear[year][edge] = 1
+					else:
+						linksByYear[year][edge] += 1
+			except:
+				logging.info(traceback.format_exc())
+
+		years = sorted(linksByYear.keys())
+		groupedLinksByYear = []
+
+		for year in years:
+			groupedLinksByYear.append([])
+			for edge in linksByYear[year]:
+				weight = linksByYear[year][edge]
+				source, target = [int(x) for x in edge.split(',')]
+				groupedLinksByYear[-1].append({'source': source, 'target': target, 'year': year, 'weight': weight})
+
 
 		data_vars = {"placeIDsToCoords": placeIDsToCoords,
 			"placeIDsToNames": placeIDsToNames,
@@ -86,9 +128,9 @@ class GeoDict(textprocessor.TextProcessor):
 		logging.info("writing JS include file")
 
 		with file(data_filename, 'w') as data_file:
-			data_file.write(data)		
+			data_file.write(data)
 
-		params = {"DATA_FILE": os.path.basename(data_filename)}
+		params = {"DATA_FILE": os.path.basename(data_filename), "LINKS_BY_YEAR": json.dumps(groupedLinksByYear)}
 		self.write_html(params)
 
 		logging.info("finished")
@@ -96,8 +138,7 @@ class GeoDict(textprocessor.TextProcessor):
 
 if __name__ == "__main__":
 	try:
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", "geodict.log"), level=logging.INFO)
-		processor = GeoDict(sys.argv, track_progress=True)
+		processor = GeoDict(track_progress=True)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

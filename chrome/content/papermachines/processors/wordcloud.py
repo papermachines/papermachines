@@ -7,6 +7,9 @@ class WordCloud(textprocessor.TextProcessor):
 	"""
 	Generate word cloud
 	"""
+	def _basic_params(self):
+		self.name = "wordcloud"
+
 	def _findWordFreqs(self):
 		self.freqs = {}
 		for filename in self.files:
@@ -27,7 +30,7 @@ class WordCloud(textprocessor.TextProcessor):
 
 	def process(self):
 		logging.info("starting to process")
-		self.name = getattr(self, "name", "wordcloud")
+
 		self.template_filename = os.path.join(self.cwd, "templates", "wordcloud.html")
 		stopfile = os.path.join(self.cwd, "stopwords.txt")
 		logging.info("reading stopwords from " + stopfile)
@@ -63,8 +66,7 @@ class WordCloud(textprocessor.TextProcessor):
 
 if __name__ == "__main__":
 	try:
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", "wordcloud.log"), level=logging.INFO)
-		processor = WordCloud(sys.argv, track_progress = True)
+		processor = WordCloud(track_progress = True)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

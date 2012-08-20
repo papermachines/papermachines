@@ -4,10 +4,10 @@
     <title>Geoparser: COLLECTION_NAME</title>
     <script type="text/javascript" src="d3.v2.js"></script>
     <script type="text/javascript" src="html5slider.js"></script>
+    <script type="text/javascript" src="colorbrewer.js"></script>
     <script type="text/javascript" src="DATA_FILE"></script>
     <style type="text/css">
 body {
-  background: url(texture-noise.png);
   overflow: hidden;
   margin: 0;
   font-size: 14px;
@@ -84,12 +84,10 @@ path {
 path.arc {
   pointer-events: none;
   fill: none;
-  stroke: #000;
   stroke-width: 0.5;
-  display: block;
-  opacity: 0.1;
+  display: block; 
+  stroke: url(#fade);
 }
-
 .site {
 fill: #238B45;
 stroke: #0B5A26;
@@ -105,6 +103,7 @@ stroke: #0B5A26;
     <div id="body">
       <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><div id="timeDisplay"></div></div>
     </div>
+    <script type="text/javascript"> var linksByYear = LINKS_BY_YEAR;</script>
     <script type="text/javascript" src="geodict.js"></script>
     <script type="text/javascript">
       window.onload = function () { generateSearch(); };
