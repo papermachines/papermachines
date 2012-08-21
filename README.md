@@ -20,13 +20,19 @@ To begin, right-click (control-click) on the collection you wish to analyze and 
 Show word frequency as a function of size. An [oft-maligned](http://www.niemanlab.org/2011/10/word-clouds-considered-harmful/), but still arguably useful way to get a quick impression of the most common words in your collection. After it is generated, it will appear in the Tags pane of Zotero.
 
 ### Phrase Net
-Finds phrases that follow a certain pattern, such as "x and y," and displays the most common pairings. This method is derived from a [Many Eyes visualization](http://www-958.ibm.com/software/data/cognos/manyeyes/page/Phrase_Net.html)).
+Finds phrases that follow a certain pattern, such as "x and y," and displays the most common pairings as the largest words. This method is derived from a [Many Eyes visualization](http://www-958.ibm.com/software/data/cognos/manyeyes/page/Phrase_Net.html)).
 
 ### Geoparser
-Generates a map linking texts to the places they mention, filtered by time. The underlying functionality is based on Pete Warden's [geodict](https://github.com/petewarden/geodict). NOTE: you must download the "geodict" version for this, as it adds an extra 70 megs to the download.
+Generates a map linking texts to the places they mention, filtered by time. This uses Yahoo!'s Placemaker service, and is limited to the first 50k of each file (approximately 10,000 words per text).
+
+### DBpedia Annotation
+Annotates files using the DBpedia Spotlight service, providing a look at what named entities (people, places, organizations, etc.) are mentioned in the text. More often mentioned entities are displayed larger.
 
 ### Topic Modeling
-Shows the proportional prevalence of different "topics" (collections of words likely to co-occur) in the corpus over time, highlighting spots where topics are more common. This uses the [MALLET](http://mallet.cs.umass.edu) package to perform [latent Dirichlet allocation](http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation), and by default displays the 20 most "coherent" topics, based on a metric devised by [Mimno et al.](http://www.cs.princeton.edu/~mimno/papers/mimno-semantic-emnlp.pdf)
+Shows the proportional prevalence of different "topics" (collections of words likely to co-occur) in the corpus, by time or by subcollection. This uses the [MALLET](http://mallet.cs.umass.edu) package to perform [latent Dirichlet allocation](http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation), and by default displays the 5 most "coherent" topics, based on a metric devised by [Mimno et al.](http://www.cs.princeton.edu/~mimno/papers/mimno-semantic-emnlp.pdf)
+
+### Classification
+This allows you to train the computer to infer the common features of the documents under each subcollection; subsequently, a set of texts in a different folder can be sorted automatically based on this training. At the moment, the probability distribution for each text is given in plain text; a visualization of this data is forthcoming.
 
 ## Acknowledgements
 Thanks to Google Summer of Code for funding this work, and to [Matthew Battles](http://metalab.harvard.edu/people/) and [Jo Guldi](http://www.joguldi.com/) for overseeing it. My gratitude also to the creators of all the open-source projects upon which this work relies:
