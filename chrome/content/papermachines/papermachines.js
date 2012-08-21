@@ -21,8 +21,8 @@ Zotero.PaperMachines = {
 		"largewordcloud": "Word Cloud",
 		"phrasenet": "Phrase Net",
 		"geoparse": "Geoparser",
-		"mallet": "Topic Modeling",
-		"mallet_categorical": "Topic Modeling",
+		"mallet_lda": "Topic Modeling",
+		"mallet_lda_categorical": "Topic Modeling",
 		"mallet_train-classifier": "Classifier Training",
 		"mallet_classify-file": "Classifier Testing",
 		"dbpedia": "DBpedia Annotation"
@@ -247,7 +247,7 @@ Zotero.PaperMachines = {
 		additional_args = additional_args.map(function (d) { return encodeURIComponent(d);});
 
 		processPathParts = processPathParts.concat(additional_args);
-		window.open("zotero://papermachines/"+processPathParts.join('/'), processPathParts[0]);
+		Zotero.PaperMachines.openWindowOrTab("zotero://papermachines/"+processPathParts.join('/'), processPathParts[0]);
 	},
 	_checkIfRunning: function (processPath) {
 		var sql = "SELECT id FROM processed_collections WHERE process_path = ? AND status = 'running';";
@@ -503,7 +503,7 @@ Zotero.PaperMachines = {
 		var objs = Object.keys(Zotero.PaperMachines.communicationObjects);
 		if (objs.length == 0) {
 			var listenerID = "/mallet/" + Zotero.PaperMachines.getThisGroupID();
-			window.open("zotero://papermachines"+listenerID, listenerID);
+			Zotero.PaperMachines.openWindowOrTab("zotero://papermachines"+listenerID, listenerID);
 		}
 		// Zotero.PaperMachines.sendMessageTo(listenerID, "receive-select", {"itemID": items[0].id});
 		// alert(Zotero.PaperMachines.getFilenameForItem(items[0]));
@@ -823,6 +823,15 @@ Zotero.PaperMachines = {
 									 .getService(Components.interfaces.nsIConsoleService);
 	  consoleService.logStringMessage(msg);
 	  Zotero.debug(msg);
+	},
+	openWindowOrTab: function(url) {
+		if (Zotero.isStandalone) {
+			window.open(url);
+		} else {
+			var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+				.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+			win.gBrowser.selectedTab = win.gBrowser.addTab(url);			
+		}
 	},
 	evtListener: function (evt) {
 		var node = evt.target, doc = node.ownerDocument;

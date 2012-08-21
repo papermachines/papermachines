@@ -7,9 +7,9 @@ class MalletSubcollections(mallet_lda.MalletLDA):
 	Set topic modeling to categorical view by default
 	"""
 	def _basic_params(self):
-		self.name = "mallet_categorical"
+		self.name = "mallet_lda_categorical"
 		self.categorical = True
-		self.template_name = "mallet"
+		self.template_name = "mallet_lda"
 		self.dry_run = False
 		self.topics = 50
 		self.dfr = len(self.extra_args) > 0

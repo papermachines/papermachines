@@ -11,7 +11,7 @@ class MalletLDA(mallet.Mallet):
 
 	def _basic_params(self):
 		self.categorical = False
-		self.template_name = "mallet"
+		self.template_name = "mallet_lda"
 		self.name = "mallet"
 		self.topics = 50
 		self.dry_run = False

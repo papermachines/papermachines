@@ -41,25 +41,25 @@
 					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x y')"/>
 			</menupopup>
 		</menu>
-		<menuitem id="geodict" label="&papermachines.collectionmenu.geodict;"
+		<menuitem id="geoparse" label="&papermachines.collectionmenu.geoparse;"
 			disabled="true"
-			oncommand="Zotero.PaperMachines.runProcess('geodict')"/>
+			oncommand="Zotero.PaperMachines.runProcess('geoparse')"/>
 		<menuitem id="dbpedia" label="&papermachines.collectionmenu.dbpedia;"
 			disabled="true"
 			oncommand="Zotero.PaperMachines.runProcess('dbpedia')"/>
 		<menu id="mallet" label="&papermachines.collectionmenu.topicmodeling;" disabled="true">
 			<menupopup id="mallet-menu">
-				<menuitem id="mallet" label="&papermachines.collectionmenu.mallet;"
-					oncommand="Zotero.PaperMachines.runProcess('mallet')"/>
-				<menuitem id="mallet" label="&papermachines.collectionmenu.mallet_categorical;"
-					oncommand="Zotero.PaperMachines.runProcess('mallet_categorical')"/>
+				<menuitem id="mallet_lda" label="&papermachines.collectionmenu.mallet_lda;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet_lda')"/>
+				<menuitem id="mallet_categorical" label="&papermachines.collectionmenu.mallet_lda_categorical;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet_lda_categorical')"/>
 			</menupopup>
 		</menu>
 		<menu id="mallet_classify" label="&papermachines.collectionmenu.mallet_classify;" disabled="true">
 			<menupopup id="mallet_classify-menu">
 				<menuitem id="mallet_train-classifier" label="&papermachines.collectionmenu.mallet_train-classifier;"
 					oncommand="Zotero.PaperMachines.runProcess('mallet_train-classifier')"/>
-				<menuitem id="mallet" label="&papermachines.collectionmenu.mallet_classify-file;"
+				<menuitem id="mallet_classify-file" label="&papermachines.collectionmenu.mallet_classify-file;"
 					oncommand="Zotero.PaperMachines.runProcess('mallet_classify-file')"/>
 			</menupopup>
 		</menu>
