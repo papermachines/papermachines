@@ -6,12 +6,12 @@ Paper Machines is an open-source extension for the [Zotero](http://www.zotero.or
 
 ## Prerequisites
 
-In order to run Paper Machines, you will need the following:
+In order to run Paper Machines, you will need the following (note that Python and Java are installed automatically on Mac OS X):
 
-* Zotero
-* a corpus of documents (preferably with high-quality metadata)
+* [Zotero](http://www.zotero.org/)
+* a corpus of documents, preferably with high-quality metadata
 * Python ([download for Windows](http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi))
-* Java ([download](http://java.com/en/download/index.jsp))
+* Java ([download for Windows/Mac/Linux/etc.](http://java.com/en/download/index.jsp))
 
 ## Usage
 To begin, right-click (control-click) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization.
