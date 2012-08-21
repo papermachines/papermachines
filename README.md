@@ -35,12 +35,16 @@ Shows the proportional prevalence of different "topics" (collections of words li
 This allows you to train the computer to infer the common features of the documents under each subcollection; subsequently, a set of texts in a different folder can be sorted automatically based on this training. At the moment, the probability distribution for each text is given in plain text; a visualization of this data is forthcoming.
 
 ## Acknowledgements
-Thanks to Google Summer of Code for funding this work, and to [Matthew Battles](http://metalab.harvard.edu/people/) and [Jo Guldi](http://www.joguldi.com/) for overseeing it. My gratitude also to the creators of all the open-source projects upon which this work relies:
+Thanks to Google Summer of Code for funding this work, and to [Matthew Battles](http://metalab.harvard.edu/people/) and [Jo Guldi](http://www.joguldi.com/) for overseeing it. My gratitude also to the creators of all the open-source projects and services upon which this work relies:
 
+* [ColorBrewer](http://colorbrewer2.org/)
 * [d3.js](http://d3js.org/)
 * [d3.layout.cloud.js](https://github.com/jasondavies/d3-cloud)
-* [geodict](https://github.com/petewarden/geodict)
+* [DBpedia Spotlight](https://github.com/dbpedia-spotlight/dbpedia-spotlight)
+* [Firefox](http://www.firefox.com/)
 * [html5slider](https://github.com/fryn/html5slider)
 * [MALLET](http://mallet.cs.umass.edu)
+* [python-placemaker](https://github.com/bycoffe/python-placemaker/)
+* [Yahoo! Placemaker](http://developer.yahoo.com/geo/placemaker/)
 * [Zotero](http://www.zotero.org/)
 
