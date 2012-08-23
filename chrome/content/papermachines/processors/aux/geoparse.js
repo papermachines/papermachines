@@ -230,7 +230,7 @@ var layers;
 
 function valueToRadius(d) {
   var mentions = getMentionsToDate(d);
-  return (mentions != 0) ? Math.min(Math.pow(mentions, 0.5), 10) : 0;
+  return (mentions != 0) ? Math.min(Math.max(1,Math.pow(mentions, 0.3)), 10) : 0;
 }
 
 collection = world_countries;
@@ -370,7 +370,7 @@ function timeAction() {
 }
 
 function fadeOldConnections(d) {
-  return Math.pow(endDate - d[0].year, -0.2);
+  return Math.pow(endDate - d[0].year, -0.3) / 2;
 }
 function searchAction() {
   var queryStr = document.getElementById("search").value;
@@ -434,13 +434,13 @@ function countryColor(d) {
   var color = "#EEEEEE"; // fall-back if no data
   if (d.properties.name in countries) {
     var ratio = getCountryWeight(d.properties.name);
-    if (ratio <= 0.33) {
-      color = "#BAE4B3";
-    } else if (ratio <= 0.66) {
-      color = "#74C476";
-    } else if (ratio <= 1.0) {
-      color = "#238B45";
-    }
+    // if (ratio <= 0.33) {
+    //   color = "#BAE4B3";
+    // } else if (ratio <= 0.66) {
+    //   color = "#74C476";
+    // } else if (ratio <= 1.0) {
+    //   color = "#238B45";
+    // }
   }
 
 	return color;

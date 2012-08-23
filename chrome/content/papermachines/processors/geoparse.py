@@ -13,7 +13,7 @@ class Geoparse(textprocessor.TextProcessor):
 
 	def _basic_params(self):
 		self.name = "geoparse"
-		self.dry_run = True
+		self.dry_run = False
 
 	def process(self):
 		"""
@@ -26,14 +26,17 @@ class Geoparse(textprocessor.TextProcessor):
 
 		geo_parsed = {}
 		places_by_woeid = {}
-		origins_by_filename = {}
-		out_filename = os.path.join(self.out_dir, self.name + self.collection + '.json')
 
-		if not self.dry_run:
-			output = file(out_filename, 'w')
-			for filename in self.files:
-				logging.info("processing " + filename)
-				self.update_progress()
+		for filename in self.files:
+			logging.info("processing " + filename)
+			self.update_progress()
+
+			file_geoparsed = filename.replace(".txt", ".json")
+
+			if os.path.exists(file_geoparsed):
+				geoparse_obj = json.load(file(file_geoparsed))
+			elif not self.dry_run:
+				geoparse_obj = {'places_by_woeid': {}, 'references': {}}
 				try:
 					# id = self.metadata[filename]['itemID']
 					str_to_parse = self.metadata[filename]['place']
@@ -46,32 +49,30 @@ class Geoparse(textprocessor.TextProcessor):
 					p.find_places(str_to_parse.encode('utf8', 'ignore'))
 					for woeid, referenced_place in p.referencedPlaces.iteritems():
 						place = referenced_place["place"]
-						places_by_woeid[woeid] = {'name': place.name, 'type': place.placetype, 'coordinates': [place.centroid.longitude, place.centroid.latitude]}
+						geoparse_obj['places_by_woeid'][woeid] = {'name': place.name, 'type': place.placetype, 'coordinates': [place.centroid.longitude, place.centroid.latitude]}
 
 						for reference in referenced_place["references"]:
 							if reference.start < last_index:
 								city = woeid
 							else:
 								places.append(woeid)
+								if not woeid in geoparse_obj['references']:
+									geoparse_obj['reference'][woeid] = []
+								geoparse_obj['references'][woeid].append((reference.start - last_index, reference.end - last_index))
 
-					geo_parsed[filename] = places
-					if city is not None:
-						self.metadata[filename]['city'] = city
-						origins_by_filename[filename] = city
+					geoparse_obj['places'] = places
+					geoparse_obj['city'] = city
+					json.dump(geoparse_obj, file(file_geoparsed, 'w'))
 					time.sleep(0.2)
 				except (KeyboardInterrupt, SystemExit):
 					raise
 				except:
 					logging.error(traceback.format_exc())
 
-			json.dump([places_by_woeid, geo_parsed, origins_by_filename], output)
-			output.close()
-		else:
-			if os.path.exists(out_filename):
-				(places_by_woeid, geo_parsed, origins_by_filename) = json.load(file(out_filename))
-				places_by_woeid = {int(k):v for k, v in places_by_woeid.iteritems()}
-				for filename, city in origins_by_filename.iteritems():
-					self.metadata[filename]['city'] = city
+			geo_parsed[filename] = geoparse_obj.get('places', [])
+			self.metadata[filename]['city'] = geoparse_obj.get('city')
+			for woeid, data in geoparse_obj.get('places_by_woeid', {}).iteritems():
+				places_by_woeid[woeid] = data
 
 		data_filename = os.path.join(self.out_dir, self.name + self.collection + '.js')
 
@@ -104,7 +105,7 @@ class Geoparse(textprocessor.TextProcessor):
 
 		linksByYear = {}
 		for filename in self.files:
-			if not 'city' in self.metadata[filename] or len(geo_parsed[filename]) < 2:
+			if self.metadata[filename].get('city') is None or len(geo_parsed[filename]) < 2:
 				continue
 			try:
 				title = os.path.basename(filename)
