@@ -6,6 +6,7 @@
     <script type="text/javascript" src="html5slider.js"></script>
     <script type="text/javascript" src="colorbrewer.js"></script>
     <script type="text/javascript" src="DATA_FILE"></script>
+    <link type="text/css" rel="stylesheet" href="button.css"/>
     <style type="text/css">
 body {
   overflow: hidden;
@@ -94,14 +95,14 @@ stroke: #0B5A26;
 }
 
 #searches {
-  width:100px;
+  width:250px;
   height: 2em;
 }
     </style>
   </head>
   <body>
     <div id="body">
-      <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><div id="timeDisplay"></div></div>
+      <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><span id="timeDisplay"></div></div>
     </div>
     <script type="text/javascript"> var linksByYear = LINKS_BY_YEAR;</script>
     <script type="text/javascript" src="geoparse.js"></script>

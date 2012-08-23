@@ -13,7 +13,7 @@ class Geoparse(textprocessor.TextProcessor):
 
 	def _basic_params(self):
 		self.name = "geoparse"
-		self.dry_run = False
+		self.dry_run = True
 
 	def process(self):
 		"""
@@ -66,8 +66,12 @@ class Geoparse(textprocessor.TextProcessor):
 
 			json.dump([places_by_woeid, geo_parsed, origins_by_filename], output)
 			output.close()
-		elif os.path.exists(out_filename):
-			(places_by_woeid, geo_parsed, origins_by_filename) = json.load(file(out_filename))
+		else:
+			if os.path.exists(out_filename):
+				(places_by_woeid, geo_parsed, origins_by_filename) = json.load(file(out_filename))
+				places_by_woeid = {int(k):v for k, v in places_by_woeid.iteritems()}
+				for filename, city in origins_by_filename.iteritems():
+					self.metadata[filename]['city'] = city
 
 		data_filename = os.path.join(self.out_dir, self.name + self.collection + '.js')
 
@@ -132,7 +136,7 @@ class Geoparse(textprocessor.TextProcessor):
 
 		data_vars = {"placeIDsToCoords": placeIDsToCoords,
 			"placeIDsToNames": placeIDsToNames,
-			"placesMentioned": {v["name"] : v["weight"] for k, v in places.iteritems() if v["type"] != "Country"},
+			"placesMentioned": {k : v["weight"] for k, v in places.iteritems() if v["type"] != "Country"},
 			"countries": {v["name"] : v["weight"] for k, v in places.iteritems() if v["type"] == "Country"},
 			"max_country_weight": max_country_weight,
 			"startDate": min([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit()]),
