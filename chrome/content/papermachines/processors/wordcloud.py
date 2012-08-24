@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, json, cStringIO, tempfile, logging, traceback
+import sys, os, json, cStringIO, tempfile, logging, traceback, codecs
 import textprocessor
 from lib.porter2 import stem
 
@@ -9,11 +9,12 @@ class WordCloud(textprocessor.TextProcessor):
 	"""
 	def _basic_params(self):
 		self.name = "wordcloud"
+		self.require_stopwords = True
 
 	def _findWordFreqs(self):
 		self.freqs = {}
 		for filename in self.files:
-			with file(filename) as f:
+			with codecs.open(filename, 'r', encoding = 'utf8') as f:
 				logging.info("processing " + filename)
 				for line in f:
 					for stem in self._tokenizeAndStem(line):
@@ -32,9 +33,6 @@ class WordCloud(textprocessor.TextProcessor):
 		logging.info("starting to process")
 
 		self.template_filename = os.path.join(self.cwd, "templates", "wordcloud.html")
-		stopfile = os.path.join(self.cwd, "stopwords.txt")
-		logging.info("reading stopwords from " + stopfile)
-		self.stopwords = [line.strip() for line in file(stopfile)]
 
 		self.width = getattr(self, "width", "300")
 		self.height = getattr(self, "height", "150")

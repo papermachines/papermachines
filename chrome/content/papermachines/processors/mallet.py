@@ -11,6 +11,7 @@ class Mallet(textprocessor.TextProcessor):
 
 	def _basic_params(self):
 		self.name = "mallet"
+		self.require_stopwords = True
 
 	def _import_dfr_metadata(self, dfr_dir):
 		citation_file = os.path.join(dfr_dir, "citations.CSV")
@@ -78,12 +79,8 @@ class Mallet(textprocessor.TextProcessor):
 			self._import_dfr_metadata(self.extra_args[0])
 
 	def _setup_mallet_instances(self, sequence=True):
-		self._basic_params()
 		self._setup_mallet_command()
 		self._import_texts()
-
-		self.stoplist = os.path.join(self.cwd, "stopwords.txt")
-		self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
 
 		self.instance_file = os.path.join(self.mallet_out_dir, self.collection + ".mallet")
 

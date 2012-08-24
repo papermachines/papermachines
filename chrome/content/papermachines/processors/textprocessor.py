@@ -19,6 +19,10 @@ class TextProcessor:
 		# call a function to set processor name, etc.
 		self._basic_params()
 
+		if self.require_stopwords:
+			self.stoplist = os.path.join(self.cwd, "stopwords.txt")
+			self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
+
 		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", self.name + ".log"), level=logging.INFO)
 
 		logging.info("command: " + ' '.join([x.replace(' ','''\ ''') for x in sys.argv]))
