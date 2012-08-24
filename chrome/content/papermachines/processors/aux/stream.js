@@ -80,8 +80,8 @@ var vis = d3.select("#chart")
 
 var defs = vis.append("svg:defs");
 
-vis = vis.append("svg:g");
-    // .on("click", getDocs);
+vis = vis.append("svg:g")
+    .on("click", getDocs);
 
 var graphGroup = vis.append("svg:g").attr("id", "graphGroup");
 var axesGroup = vis.append("svg:g").attr("id", "axesGroup");
@@ -116,7 +116,7 @@ var layout = d3.layout.stack().offset("zero");
 
 topicLabels = {};
 for (i in labels) {
-  if (labels[i].allocation_ratio > 0.02) {
+  if (labels[i].allocation_ratio > 0.01) {
     topicLabels[i] = labels[i];
     topicLabels[i]["active"] = true;
   }

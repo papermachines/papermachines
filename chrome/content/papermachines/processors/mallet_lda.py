@@ -14,7 +14,7 @@ class MalletLDA(mallet.Mallet):
 		self.template_name = "mallet_lda"
 		self.name = "mallet_lda"
 		self.topics = 50
-		self.dry_run = False
+		self.dry_run = True
 		self.dfr = len(self.extra_args) > 0
 		if self.dfr:
 			self.dfr_dir = self.extra_args[0]
@@ -108,6 +108,7 @@ class MalletLDA(mallet.Mallet):
 			fname_to_year[filename] = year
 
 		years = sorted(years)
+		self.years = years
 		fname_to_index = {fname: years.index(year) for fname, year in fname_to_year.iteritems()}
 
 		weights_by_topic = []

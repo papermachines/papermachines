@@ -88,9 +88,9 @@ class Mallet(textprocessor.TextProcessor):
 								i += 1
 							else:
 								index = vocab[word]
-								df[index] += 1
 								if index not in tf_for_doc:
 									tf_for_doc[index] = 0
+									df[index] += 1
 								tf_for_doc[index] += 1
 						tf_all_docs[filename] = copy.deepcopy(tf_for_doc)
 						for word_index in tf_for_doc.keys():
@@ -158,13 +158,11 @@ class Mallet(textprocessor.TextProcessor):
 		else:
 			if len(self.extra_args) > 0 and self.dfr:
 				self._import_dfr_metadata(self.extra_args[0])
-			self.docs = {}
+			self.docs = []
 			with codecs.open(self.texts_file, 'r', 'utf-8') as f:
-				i = 0
 				for line in f:
-					self.docs[i] = line.split(u'\t')[0]
-					i += 1
-			self.doc_count = len(self.docs.keys())
+					self.docs.append(line.split(u'\t')[0])
+			self.doc_count = len(self.docs)
 
 	def _setup_mallet_instances(self, sequence=True, tfidf = False):
 		self._setup_mallet_command()
@@ -174,7 +172,7 @@ class Mallet(textprocessor.TextProcessor):
 
 		logging.info("beginning text import")
 
-		if tfidf:
+		if tfidf and not self.dry_run:
 			self._tfidf_filter()
 
 		import_args = self.mallet + ["cc.mallet.classify.tui.Csv2Vectors", 
