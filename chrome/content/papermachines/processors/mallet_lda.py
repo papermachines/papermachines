@@ -16,6 +16,8 @@ class MalletLDA(mallet.Mallet):
 		self.topics = 50
 		self.dry_run = False
 		self.dfr = len(self.extra_args) > 0
+		if self.dfr:
+			self.dfr_dir = self.extra_args[0]
 
 	def _stdev(self, X):
 		n = float(len(X))
@@ -50,7 +52,7 @@ class MalletLDA(mallet.Mallet):
 		run LDA, creating an output file divided by time
 		"""
 
-		self._setup_mallet_instances(sequence=True)
+		self._setup_mallet_instances(sequence=True, tfidf=True)
 
 		self.mallet_files = {'state': os.path.join(self.mallet_out_dir, "topic-state.gz"),
 			'doc-topics': os.path.join(self.mallet_out_dir, "doc-topics.txt"),
@@ -103,9 +105,7 @@ class MalletLDA(mallet.Mallet):
 			else:
 				year = 2012
 			years.add(year)
-			cleaned_filename = filename.replace(" ", "_")
-			fname_to_year[cleaned_filename] = year
-			self.metadata[cleaned_filename] = x
+			fname_to_year[filename] = year
 
 		years = sorted(years)
 		fname_to_index = {fname: years.index(year) for fname, year in fname_to_year.iteritems()}
@@ -115,15 +115,16 @@ class MalletLDA(mallet.Mallet):
 		for i in range(self.topics):
 			weights_by_topic.append([{'x': str(j), 'y': [], 'topic': i} for j in years])		
 
-		for line in file(self.mallet_files['doc-topics']).readlines():
+		for line in file(self.mallet_files['doc-topics']):
 			try:
-				values = line.split()
-				del values[0] # get rid of ID
+				values = line.split('\t')
 				
-				filename = values.pop(0)
-				if filename == "name":
+				id = values.pop(0)
+				if id.startswith("#doc"):
 					continue
-				
+				filename = self.docs[int(id)]
+				del values[0]
+
 				freqs = {int(y[0]): float(y[1]) for y in xpartition(values)}
 				for i in freqs.keys():
 					weights_by_topic[i][fname_to_index[filename]]['y'].append({"title": os.path.basename(filename).replace(".txt",'').replace('_', ' '), "itemID": self.metadata[filename]["itemID"], "label": self.metadata[filename]["label"], "ratio": freqs[i]})
