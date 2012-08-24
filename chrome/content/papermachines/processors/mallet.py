@@ -46,7 +46,7 @@ class Mallet(textprocessor.TextProcessor):
 			for filename in self.files:
 				with codecs.open(filename, 'r', encoding='utf-8') as input_file:
 					text = input_file.read()
-					text = re.sub(u"""[^\w,.'" ]+""", u'', text.replace(u"\n", u" "))
+					text = re.sub(u"""[^\p{L}\p{M} ]+""", u'', text.lower().replace(u"\n", u" "))
 					f.write(u'\t'.join([filename.replace(u" ",u"_"), self.metadata[filename]["label"], text]) + u'\n')
 			if self.dfr:
 				for doi, text in self._import_dfr(self.dfr_dir):
