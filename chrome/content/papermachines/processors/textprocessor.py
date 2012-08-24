@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, csv, logging, tempfile, traceback, urllib
+import sys, os, csv, logging, tempfile, traceback, urllib, codecs
 
 class TextProcessor:
 	"""
@@ -19,7 +19,7 @@ class TextProcessor:
 		# call a function to set processor name, etc.
 		self._basic_params()
 
-		if self.require_stopwords:
+		if getattr(self, "require_stopwords", False):
 			self.stoplist = os.path.join(self.cwd, "stopwords.txt")
 			self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
 

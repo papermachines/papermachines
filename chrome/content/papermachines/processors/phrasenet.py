@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, json, re, tempfile, cStringIO, logging, traceback
+import sys, os, json, re, tempfile, cStringIO, logging, traceback, codecs
 import textprocessor
 
 class PhraseNet(textprocessor.TextProcessor):
@@ -16,7 +16,7 @@ class PhraseNet(textprocessor.TextProcessor):
 		self.nodes = {}
 		self.edges = {}
 		for filename in self.files:
-			with file(filename) as f:
+			with codecs.open(filename, 'r', encoding='utf8') as f:
 				logging.info("processing " + filename)
 				for re_match in pattern.finditer(f.read()):
 					match = re_match.groups()

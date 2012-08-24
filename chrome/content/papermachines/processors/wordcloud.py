@@ -10,6 +10,10 @@ class WordCloud(textprocessor.TextProcessor):
 	def _basic_params(self):
 		self.name = "wordcloud"
 		self.require_stopwords = True
+		self.width = "300"
+		self.height = "150"
+		self.fontsize = "[10,32]"
+		self.n = 50
 
 	def _findWordFreqs(self):
 		self.freqs = {}
@@ -33,11 +37,6 @@ class WordCloud(textprocessor.TextProcessor):
 		logging.info("starting to process")
 
 		self.template_filename = os.path.join(self.cwd, "templates", "wordcloud.html")
-
-		self.width = getattr(self, "width", "300")
-		self.height = getattr(self, "height", "150")
-		self.fontsize = getattr(self, "fontsize", "[10,32]")
-		self.n = getattr(self, "n", 50)
 
 		logging.info("finding word frequencies")
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, logging, traceback
+import sys, os, logging, traceback, codecs
 import wordcloud
 
 class LargeWordCloud(wordcloud.WordCloud):
@@ -12,6 +12,7 @@ class LargeWordCloud(wordcloud.WordCloud):
 		self.fontsize = "[10,72]"
 		self.name = "largewordcloud"
 		self.n = 150
+		self.require_stopwords = True
 
 if __name__ == "__main__":
 	try:
