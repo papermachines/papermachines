@@ -62,6 +62,7 @@ class TextProcessor:
 				self.progress_file = file(self.progress_filename, 'w')
 				self.count = 0
 				self.total = len(self.files)
+				self.progress_initialized = True
 
 			self.count += 1
 			self.progress_file.write('<' + str(self.count*1000.0/float(self.total)) + '>\n')
