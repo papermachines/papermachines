@@ -1,5 +1,6 @@
 a
 à
+às
 agora
 ainda
 alguém
@@ -11,6 +12,8 @@ ampla
 amplas
 amplo
 amplos
+ano
+anos
 ante
 antes
 ao
@@ -67,7 +70,9 @@ dito
 diz
 dizem
 do
+dois
 dos
+durante
 e
 é
 e'
@@ -118,8 +123,11 @@ lá
 lhe
 lhes
 lo
+maior
+mais
 mas
 me
+menos
 mesma
 mesmas
 mesmo
@@ -151,8 +159,10 @@ nosso
 nossos
 num
 numa
+número
 nunca
 o
+onde
 os
 ou
 outra
@@ -195,6 +205,7 @@ próprio
 próprios
 quais
 qual
+qualquer
 quando
 quanto
 quantos
@@ -228,6 +239,7 @@ tenha
 ter
 teu
 teus
+the
 ti
 tido
 tinha
@@ -237,6 +249,7 @@ todas
 todavia
 todo
 todos
+três
 tu
 tua
 tuas
@@ -249,6 +262,7 @@ um
 uma
 umas
 uns
+vai
 vendo
 ver
 vez
