@@ -10,7 +10,6 @@ class PhraseNet(textprocessor.TextProcessor):
 
 	def _basic_params(self):
 		self.name = "phrasenet"
-		self.require_stopwords = True
 
 	def _findPhrases(self, pattern):
 		self.nodes = {}

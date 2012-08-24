@@ -14,6 +14,7 @@ class Geoparse(textprocessor.TextProcessor):
 	def _basic_params(self):
 		self.name = "geoparse"
 		self.dry_run = False
+		self.require_stopwords = False
 
 	def process(self):
 		"""

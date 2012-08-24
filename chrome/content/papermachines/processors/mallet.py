@@ -11,7 +11,6 @@ class Mallet(textprocessor.TextProcessor):
 
 	def _basic_params(self):
 		self.name = "mallet"
-		self.require_stopwords = True
 
 	def _import_dfr_metadata(self, dfr_dir):
 		citation_file = os.path.join(dfr_dir, "citations.CSV")

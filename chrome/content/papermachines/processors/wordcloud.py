@@ -9,7 +9,6 @@ class WordCloud(textprocessor.TextProcessor):
 	"""
 	def _basic_params(self):
 		self.name = "wordcloud"
-		self.require_stopwords = True
 		self.width = "300"
 		self.height = "150"
 		self.fontsize = "[10,32]"

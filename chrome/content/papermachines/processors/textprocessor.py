@@ -16,10 +16,12 @@ class TextProcessor:
 
 		self.collection = os.path.basename(csv_file).replace(".csv","")
 
+		self.require_stopwords = True # load stopwords by default
+
 		# call a function to set processor name, etc.
 		self._basic_params()
 
-		if getattr(self, "require_stopwords", False):
+		if self.require_stopwords:
 			self.stoplist = os.path.join(self.cwd, "stopwords.txt")
 			self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
 

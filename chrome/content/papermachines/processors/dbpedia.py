@@ -11,6 +11,7 @@ class DBpedia(textprocessor.TextProcessor):
 	def _basic_params(self):
 		self.name = "dbpedia"
 		self.dry_run = False
+		self.require_stopwords = False
 
 	def _get_annotated(self, text, confidence = 0.2, support = 20):
 		values = {'text': text[0:10000].encode('utf-8'),
