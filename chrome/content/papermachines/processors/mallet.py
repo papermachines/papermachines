@@ -77,9 +77,9 @@ class Mallet(textprocessor.TextProcessor):
 						tf_for_doc = {}
 						flen = 0
 						for word in part.split():
-							flen += 1
 							if len(word) < 3:
 								continue
+							flen += 1
 							if word not in vocab:
 								vocab[word] = i
 								tf_for_doc[i] = 1
@@ -109,6 +109,7 @@ class Mallet(textprocessor.TextProcessor):
 
 		os.rename(self.texts_file, self.texts_file + '-pre_tf-idf')
 		inverse_vocab = {v : k for k, v in vocab.iteritems()}
+		new_vocab = {}
 
 		with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
 			for filename, freqs in tf_all_docs.iteritems():
@@ -120,12 +121,16 @@ class Mallet(textprocessor.TextProcessor):
 					word = inverse_vocab[index]
 					if word in self.stopwords:
 						continue
+					if word not in new_vocab:
+						new_vocab[word] = 0
+					new_vocab[word] += count
 					text += (word + u' ') * count
 					flen += count
 				if flen > 25:
 					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
 				else:
 					self.docs.remove(filename)
+		logging.info("tf-idf complete; retained {:} of {:} words; minimum tf-idf score: {:}".format(len(new_vocab.keys()), len(vocab.keys()), min_score))
 
 	def _setup_mallet_command(self):
 		self.mallet_cp_dir = os.path.join(self.cwd, "lib", "mallet-2.0.7", "dist")
