@@ -112,6 +112,7 @@ class MalletLDA(mallet.Mallet):
 		fname_to_index = {fname: years.index(year) for fname, year in fname_to_year.iteritems()}
 
 		weights_by_topic = []
+		doc_metadata = {}
 
 		for i in range(self.topics):
 			weights_by_topic.append([{'x': str(j), 'y': [], 'topic': i} for j in years])		
@@ -126,9 +127,13 @@ class MalletLDA(mallet.Mallet):
 				filename = self.docs[int(id)]
 				del values[0]
 
+				itemid = self.metadata[filename]["itemID"]
+
+				doc_metadata[itemid] = {"label": self.metadata[filename]["label"], "title": self.metadata[filename]["title"]}
+
 				freqs = {int(y[0]): float(y[1]) for y in xpartition(values)}
 				for i in freqs.keys():
-					weights_by_topic[i][fname_to_index[filename]]['y'].append({"title": os.path.basename(filename).replace(".txt",'').replace('_', ' '), "itemID": self.metadata[filename]["itemID"], "label": self.metadata[filename]["label"], "ratio": freqs[i]})
+					weights_by_topic[i][fname_to_index[filename]]['y'].append({"itemID": itemid, "ratio": freqs[i]})
 			except KeyboardInterrupt:
 				sys.exit(1)
 			except:
@@ -153,6 +158,7 @@ class MalletLDA(mallet.Mallet):
 
 		params = {"CATEGORICAL": "true" if self.categorical else "false",
 				"TOPICS_DOCS": json.dumps(weights_by_topic),
+				"DOC_METADATA": json.dumps(doc_metadata),
 				"TOPIC_LABELS": json.dumps(labels),
 				"TOPIC_COHERENCE": json.dumps(coherence),
 				"TOPIC_PROPORTIONS": json.dumps(self.proportions),

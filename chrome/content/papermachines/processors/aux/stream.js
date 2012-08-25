@@ -50,8 +50,7 @@ var origTopicTimeData,
     legendLabels,
     topicLabels = null,
     topicLabelsSorted,
-    total = 1,
-    docMetadata = {};
+    total = 1;
 
 var dateParse = d3.time.format("%Y").parse;
 
@@ -116,7 +115,7 @@ var layout = d3.layout.stack().offset("zero");
 
 topicLabels = {};
 for (i in labels) {
-  if (labels[i].allocation_ratio > 0.01) {
+  if (labels[i].allocation_ratio > 0) {
     topicLabels[i] = labels[i];
     topicLabels[i]["active"] = true;
   }
@@ -178,7 +177,8 @@ function transition(toggle) {
             });
         });
 
-        y.domain([0, my]);
+        y.domain([0, 1]);
+        // y.domain([0, my]);
     }
   }
 
@@ -249,12 +249,13 @@ function sumUpData(graphIndex, origData) {
     origData.forEach(function(d, i) {
       if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
         d.forEach(function(e) {
-          e.y.forEach(function (datum) {
-            if (!categories.hasOwnProperty(datum.label)) {
-              categories[datum.label] = {};
+          e.y.forEach(function (f) {
+            var label = docMetadata[f.itemID]["label"];
+            if (!categories.hasOwnProperty(label)) {
+              categories[label] = {};
             }
-            if (!categories[datum.label].hasOwnProperty(i)) {
-              categories[datum.label][i] = {'x': datum.label, 'topic': i, 'y': 0};
+            if (!categories[label].hasOwnProperty(i)) {
+              categories[label][i] = {'x': label, 'topic': i, 'y': 0};
             }
           });
         });
@@ -280,16 +281,16 @@ function sumUpData(graphIndex, origData) {
           graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
 
           e.y.forEach(function (f) {
-            docMetadata[f.itemID] = {'title': f.title, 'year': e.x.getFullYear(), 'label': f.label};
             if (graph[graphIndex].searchFilter(f)) {
               datum.y += f.ratio;
               graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
+              var label = docMetadata[f.itemID]["label"];
               // if (categorical) {
-                categories[f.label][i].y += f.ratio;
-                if (!graph[graphIndex].contributingDocsOrdinal.hasOwnProperty(f.label)) {
-                  graph[graphIndex].contributingDocsOrdinal[f.label] = {};
+                categories[label][i].y += f.ratio;
+                if (!graph[graphIndex].contributingDocsOrdinal.hasOwnProperty(label)) {
+                  graph[graphIndex].contributingDocsOrdinal[label] = {};
                 }
-                graph[graphIndex].contributingDocsOrdinal[f.label][f.itemID] = true;
+                graph[graphIndex].contributingDocsOrdinal[label][f.itemID] = true;
               // }
             }
           });
@@ -989,7 +990,9 @@ function updateGradient() {
     docNumbers.push(sum);
   });
 
-  gradientOpacity.domain(d3.extent(docNumbers));
+  var gradientDomain = d3.extent(docNumbers);
+  gradientDomain[0] = 5;
+  gradientOpacity.domain(gradientDomain);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")
       .attr("id", "linearGradientDensity")

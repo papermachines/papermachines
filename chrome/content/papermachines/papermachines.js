@@ -394,7 +394,7 @@ Zotero.PaperMachines = {
 		}
 
 		var csv_str = "";
-		var header = ["filename","itemID", "label", "key","year","place"];
+		var header = ["filename","itemID", "title", "label", "key","year","place"];
 		csv_str += header.join(",") + "\n";
 
 		var query = "SELECT itemID, filename FROM doc_files WHERE itemID IN " +
