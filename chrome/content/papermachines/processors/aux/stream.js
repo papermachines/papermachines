@@ -38,9 +38,11 @@ var streaming = true,
     toggleState = categorical ? 2 : 0,
     width = 960,
     height = 500,
+    smoothing = "median",
+    windowSize = 4,
     wordClouds = {};
 
-var maxStdDev = 2.5;
+var maxStdDev = 3;
 
 var origTopicTimeData,
     dataSummed,
@@ -180,8 +182,8 @@ function transition(toggle) {
             });
         });
 
-        // y.domain([0, 1]);
-        y.domain([0, my]);
+        y.domain([0, 1]);
+        // y.domain([0, my]);
     }
   }
 
@@ -330,6 +332,30 @@ function sumUpData(graphIndex, origData) {
         }
       });
     });
+
+    if (!categorical && smoothing) { // smooth using simple moving median
+      graph[graphIndex].data.forEach(function (d,i) {
+        var smoothed = [];
+        for (var j = 0, n = d.length; j < n; j++) {
+          var sample = [];
+          for (var k = -windowSize; k <= windowSize; k++) {
+            if (j+k >= 0 && j+k < n) {
+              sample.push(d[j + k].y);              
+            } else {
+              sample.push(d[j].y);
+            }
+          }
+          if (smoothing == "median") {
+            smoothed.push(d3.median(sample));            
+          } else if (smoothing == "mean") {
+            smoothed.push(d3.mean(sample));            
+          }
+        }
+        d.forEach(function (e, idx) {
+          e.y = smoothed[idx];
+        });
+      });
+    }
 
     // if (categorical) {
       var activeTopics = [];
@@ -630,7 +656,7 @@ function legendLabelPositions (d) {
   } else {
     i = activeTopicLabels.length + inactiveTopicLabels.indexOf(topic);
   }
-  var group = 5;
+  var group = 10;
   return "translate(" + (Math.floor(i/group)*160) + "," + ((i % group)*15) + ")";
 }
 
@@ -794,8 +820,13 @@ function getDocsForYear(year) {
       for (var doc in graph[i].contributingDocs[year]) {
         var id = graph[i].contributingDocs[year][doc];
         var title = docMetadata[id]["title"];
-        if (title == "") title = id;
-        docs += "<span id='doc" + id + "'>"+ title + "</span><br/>";
+        if (title == "\t") title = id;
+        var mainTopic = docMetadata[id]["main_topic"];
+        var my_color = "#666";
+        if (topicLabels[mainTopic] && topicLabels[mainTopic]["active"]) {
+          my_color = graph[0].color(mainTopic);
+        }
+        docs += "<span style='color: " + my_color + ";' id='doc" + id + "'>"+ title + "</span><br/>";
       }
       
       d3.select("#popup" + i).html(docs);

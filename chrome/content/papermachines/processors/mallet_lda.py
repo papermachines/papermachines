@@ -132,8 +132,14 @@ class MalletLDA(mallet.Mallet):
 				doc_metadata[itemid] = {"label": self.metadata[filename]["label"], "title": self.metadata[filename]["title"]}
 
 				freqs = {int(y[0]): float(y[1]) for y in xpartition(values)}
+				main_topic = None
+				topic_max = 0.0
 				for i in freqs.keys():
 					weights_by_topic[i][fname_to_index[filename]]['y'].append({"itemID": itemid, "ratio": freqs[i]})
+					if freqs[i] > topic_max:
+						main_topic = i
+						topic_max = freqs[i]
+				doc_metadata[itemid]["main_topic"] = main_topic
 			except KeyboardInterrupt:
 				sys.exit(1)
 			except:
