@@ -26,7 +26,7 @@ var timeFilter = function() { return true;};
 var timeRanges;
 var searchN = 0;
 
-var gradientOpacity = d3.scale.pow().exponent(0.5).range([1,0]);
+var gradientOpacity = d3.scale.log().clamp(true).range([1,0]);
 
 var legend, showLegend = true;
 var startDate, endDate;
@@ -75,7 +75,7 @@ generateSearch(searchN++);
 var vis = d3.select("#chart")
   .append("svg:svg")
     .attr("width", width + offsetLeft + 25)
-    .attr("height", height + 20);
+    .attr("height", height + 50);
 
 var defs = vis.append("svg:defs");
 
@@ -101,12 +101,12 @@ x.domain([startDate, endDate]);
 xOrdinal.domain(d3.keys(categories));
 
 line = d3.svg.line()
-  .interpolate("basis")
+  .interpolate("monotone")
   .x(function(d) { return x(d.x); })
   .y(function(d) { return y(d.y); });
 
 area = d3.svg.area()
-  .interpolate("basis")
+  .interpolate("monotone")
   .x(function(d) { return x(d.x); })
   .y0(function(d) { return y(d.y0); })
   .y1(function(d) { return y(d.y0 + d.y); });
@@ -141,10 +141,8 @@ mostCoherentTopics(5);
 transition();
 setStartParameters();
 
-function transition(toggle) {
-  if (toggle) toggleState = (toggleState + 1) % 3; 
-
-  switch(toggleState) {
+function doToggle(state) {
+  switch(state) {
     case 0:
       streaming = true;
       categorical = false;
@@ -157,6 +155,11 @@ function transition(toggle) {
       streaming = false;
       categorical = true;
   }
+}
+function transition(toggle) {
+  if (toggle) toggleState = (toggleState + 1) % 3; 
+
+  doToggle(toggleState);
 
   // if (streaming) {
   //   createGradientScale();
@@ -177,8 +180,8 @@ function transition(toggle) {
             });
         });
 
-        y.domain([0, 1]);
-        // y.domain([0, my]);
+        // y.domain([0, 1]);
+        y.domain([0, my]);
     }
   }
 
@@ -197,8 +200,9 @@ function transition(toggle) {
     graphGroup.append("rect")
       .attr("id", "density")
       .style("fill", "url(#linearGradientDensity)")
+      .style("pointer-events", "none")
       .attr("width", width)
-      .attr("height", height);  
+      .attr("height", height);
   }
 
   refreshAxes();
@@ -300,6 +304,11 @@ function sumUpData(graphIndex, origData) {
       });
     }
   });
+  
+  // for (var j in graph[graphIndex].data) {
+  //   var i = graph[graphIndex].data[j][0].topic;
+  //   findTopicProportionAndStdev(i, graph[graphIndex].contributingDocs, graph[graphIndex].data[j]);
+  // }
 
     graph[graphIndex].data.forEach(function (d,i) {
       d.forEach(function (e) {
@@ -478,6 +487,18 @@ function refreshAxes() {
   } else {
     axesGroup.select("g.x.axis").transition().duration(500).call(categorical ? xOrdinalAxis : xAxis);
   }
+
+  if (categorical) {
+    d3.select(".x.axis").selectAll("text")
+    .attr("transform", function(d) {
+        return "rotate(90)translate(" + this.getBBox().height/2 + "," +
+            this.getBBox().width/2 + ")";
+    });
+  } else {
+    d3.select(".x.axis").selectAll("text")
+    .attr("transform", "");    
+  }
+
   if (streaming) {
     axesGroup.select("g.y.axis").transition().duration(500).style("fill-opacity", 0);
     axesGroup.selectAll(".y.axis line").style("stroke-opacity", 0);
@@ -649,8 +670,9 @@ function setStartParameters() {
         for (var j = 1; j <= query_obj[i]; j++) { compare();}
       } else if (i == "popup") {
         deferUntilSearchComplete.add(getDocsForYear, query_obj[i]);
-      } else if (i == "streaming") {
-        streaming = query_obj[i];
+      } else if (i == "state") {
+        toggleState = parseInt(query_obj[i]);
+        doToggle(toggleState);
       } else if (document.getElementById(i)) {
         document.getElementById(i).value = query_obj[i];
       }
@@ -661,7 +683,7 @@ function setStartParameters() {
 
 function save() {
   var url = "?";
-  url += "&streaming="+(streaming.toString());
+  url += "&state="+(toggleState.toString());
   url += "&compare="+(searchN - 1).toString();
 
   var fields = document.getElementsByTagName("input");
@@ -772,6 +794,7 @@ function getDocsForYear(year) {
       for (var doc in graph[i].contributingDocs[year]) {
         var id = graph[i].contributingDocs[year][doc];
         var title = docMetadata[id]["title"];
+        if (title == "") title = id;
         docs += "<span id='doc" + id + "'>"+ title + "</span><br/>";
       }
       
@@ -980,17 +1003,22 @@ function createGradientScale() {
 function updateGradient() {
   defs.select("#linearGradientDensity").remove();
   var docNumbers = [];
-  var years = d3.keys(graph[0].contributingDocs);
+      years = d3.keys(graph[0].contributingDocs),
+      startYear = startDate.getFullYear(),
+      endYear = endDate.getFullYear();
+
   years.sort();
   years.forEach(function (year) {
-    var sum = 0;
-    for (var i in graph) {
-      sum += graph[i].contributingDocs[year].length;
+    if (year >= startYear && year < endYear) {
+      var sum = 0;
+      for (var i in graph) {
+        sum += graph[i].contributingDocs[year].length;
+      }
+      docNumbers.push({"percentage": 100.0 * (year - startYear) / (endYear - startYear), "value": sum});
     }
-    docNumbers.push(sum);
   });
 
-  var gradientDomain = d3.extent(docNumbers);
+  var gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
   gradientDomain[0] = 5;
   gradientOpacity.domain(gradientDomain);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
@@ -1000,14 +1028,12 @@ function updateGradient() {
       .attr("y1", "0%")
       .attr("x2", "100%")
       .attr("y2", "0%")
-      .call(addStopsForDocs); 
-}
-function addStopsForDocs(selection) {
-  var stops = selection.selectAll("stop").data(function (d) { return d; });
-  stops.enter().append("svg:stop")
-      .attr("offset", function (d, i) { return (i * 100.0 / this.parentNode.__data__.length) + "%"; })
-      .attr("stop-color", "#fff")
-      .attr("stop-opacity", function (d) { return gradientOpacity(d); });
+      .selectAll("stop").data(function (d) { return d; })
+        .enter().append("svg:stop")
+          .attr("offset", function (d, i) { return (d.percentage) + "%"; })
+          // .attr("offset", function (d, i) { return (i * 100.0 / this.parentNode.__data__.length) + "%"; })
+          .attr("stop-color", "#fff")
+          .attr("stop-opacity", function (d) { return gradientOpacity(d.value); });
 }
 
 function topicCloud(i, parent) {
@@ -1046,6 +1072,16 @@ function topicCloud(i, parent) {
   }
 
   return parent.select("g.cloud" + i.toString());
+}
+
+function findTopicProportionAndStdev(i, contributingDocs, data) {
+  var vals = data.map(function (d) { var total = contributingDocs[d.x.getFullYear()].length || 1; return d.y / total;});
+  topicProportions[i] = d3.mean(vals);
+  var variances = [];
+  for (var j = 0, n = vals.length; j < n; j++) {
+    variances.push(Math.pow(vals[j] - topicProportions[i], 2));
+  }
+  topicStdevs[i] = Math.sqrt((1.0 / (vals.length - 1.0)) * d3.sum(variances));
 }
 
 function saveSVG() {

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys, os, logging, tempfile, time, subprocess, math, re, urllib, json, codecs, csv, traceback
 import xml.etree.ElementTree as et
-from itertools import izip
+from lib.porter2 import stem
 import copy
 import textprocessor
 
@@ -31,9 +31,15 @@ class Mallet(textprocessor.TextProcessor):
 				this_text = ''		
 				for rowdict in self.parse_csv(os.path.join(wordcounts_dir, "wordcounts_" + doi.replace('/','_') + ".CSV")):
 					word = rowdict["WORDCOUNTS"]
-					count = int(rowdict["WEIGHT"])
 					if word in self.stopwords:
 						continue
+					if self.stemming:
+						prestem = word
+						if word not in self.stemmed:
+							self.stemmed[prestem] = stem(prestem)
+						word = self.stemmed[prestem]
+					count = int(rowdict["WEIGHT"])
+
 					this_text += (word + u' ') * count
 				if len(this_text) < 20:
 					continue
@@ -43,12 +49,21 @@ class Mallet(textprocessor.TextProcessor):
 				logging.error(traceback.format_exc())
 
 	def _import_files(self):
+		if self.stemming:
+			self.stemmed = {}
 		self.docs = []
 		with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
 			for filename in self.files:
 				with codecs.open(filename, 'r', encoding='utf-8') as input_file:
 					text = input_file.read()
 					text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
+					if self.stemming:
+						newtext = u''
+						for word in text.split():
+							if word not in self.stemmed:
+								self.stemmed[word] = stem(word)
+							newtext += self.stemmed[word] + u' '
+						text = newtext
 					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
 					self.docs.append(filename)
 			if self.dfr:
@@ -164,7 +179,9 @@ class Mallet(textprocessor.TextProcessor):
 					self.docs.append(line.split(u'\t')[0])
 			self.doc_count = len(self.docs)
 
-	def _setup_mallet_instances(self, sequence=True, tfidf = False):
+	def _setup_mallet_instances(self, sequence=True, tfidf = False, stemming = True):
+		self.stemming = stemming
+
 		self._setup_mallet_command()
 		self._import_texts()
 

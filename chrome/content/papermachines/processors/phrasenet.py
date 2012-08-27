@@ -15,6 +15,7 @@ class PhraseNet(textprocessor.TextProcessor):
 		self.nodes = {}
 		self.edges = {}
 		for filename in self.files:
+			self.update_progress()
 			with codecs.open(filename, 'r', encoding='utf8') as f:
 				logging.info("processing " + filename)
 				for re_match in pattern.finditer(f.read()):
