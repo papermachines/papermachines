@@ -31,10 +31,10 @@ class MalletLDA(mallet.Mallet):
 		ybar = sum(Y) / n
 		return (1.0/(n-1.0)) * sum([((x-xbar) * (y-ybar)) for x, y in zip(X, Y)])
 
-	def _find_proportions(self, topics, total_docs):
+	def _find_proportions(self, topics):
 		self.proportions = {}
 		for i in range(len(topics)):
-			self.proportions[i] = float(sum(topics[i])) / total_docs
+			self.proportions[i] = float(sum(topics[i])) / len(topics[i])
 
 	def _find_stdevs(self, topics):
 		self.stdevs = {}
@@ -141,16 +141,16 @@ class MalletLDA(mallet.Mallet):
 
 		topics_by_year = []
 		for topic in weights_by_topic:
-			topic_sums = []			
+			topic_sums = []	
 			for year in topic:
 				sum = 0.0
 				for doc in year['y']:
 					sum += doc['ratio']
-				topic_sums.append(sum)
+				topic_sums.append(sum / float(len(year['y'])))
 			topics_by_year.append(topic_sums)
 
 		self.topics_by_year = topics_by_year
-		self._find_proportions(topics_by_year, len(fnames))
+		self._find_proportions(topics_by_year)
 		self._find_stdevs(topics_by_year)
 		self._find_correlations(topics_by_year)
 
