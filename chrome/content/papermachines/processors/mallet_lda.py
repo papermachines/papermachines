@@ -172,6 +172,9 @@ class MalletLDA(mallet.Mallet):
 				"TOPIC_CORRELATIONS": json.dumps(self.correlations)
 		}
 
+		index = getattr(self, "index", "{}")
+		params["INDEX"] = json.dumps(index)
+
 		self.write_html(params)
 
 if __name__ == "__main__":

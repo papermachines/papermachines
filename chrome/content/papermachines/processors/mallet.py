@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, logging, tempfile, time, subprocess, math, re, urllib, json, codecs, csv, traceback
+import sys, os, shutil, logging, tempfile, time, subprocess, math, re, urllib, json, codecs, csv, traceback
 import xml.etree.ElementTree as et
 from lib.porter2 import stem
 import copy
@@ -79,6 +79,7 @@ class Mallet(textprocessor.TextProcessor):
 		tf = {}
 		tf_all_docs = {}
 		tfidf = {}
+		self.index = {}
 
 		i = 0
 		with codecs.open(self.texts_file, 'r', encoding='utf-8') as f:
@@ -130,6 +131,7 @@ class Mallet(textprocessor.TextProcessor):
 			for filename, freqs in tf_all_docs.iteritems():
 				text = u''
 				flen = 0
+				thisfile_vocab = []
 				for index, count in freqs.iteritems():
 					if tfidf[index] < min_score or df[index] < min_df:
 						continue
@@ -139,10 +141,15 @@ class Mallet(textprocessor.TextProcessor):
 					if word not in new_vocab:
 						new_vocab[word] = 0
 					new_vocab[word] += count
+					thisfile_vocab.append(word)
 					text += (word + u' ') * count
 					flen += count
 				if flen > 25:
 					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
+					for word in thisfile_vocab:
+						if word not in self.index:
+							self.index[word] = []
+						self.index[word].append(self.metadata[filename]["itemID"])
 				else:
 					self.docs.remove(filename)
 		logging.info("tf-idf complete; retained {:} of {:} words; minimum tf-idf score: {:}".format(len(new_vocab.keys()), len(vocab.keys()), min_score))
@@ -156,7 +163,9 @@ class Mallet(textprocessor.TextProcessor):
 
 		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection)
 
-		if not os.path.exists(self.mallet_out_dir):
+		if not self.dry_run:
+			if os.path.exists(self.mallet_out_dir):
+				shutil.rmtree(self.mallet_out_dir)
 			os.makedirs(self.mallet_out_dir)
 
 		self.progress_filename = os.path.join(self.out_dir, self.name + self.collection + "progress.txt")

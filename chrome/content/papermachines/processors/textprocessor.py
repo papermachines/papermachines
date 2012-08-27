@@ -70,9 +70,10 @@ class TextProcessor:
 			self.progress_file.write('<' + str(self.count*1000.0/float(self.total)) + '>\n')
 			self.progress_file.flush()
 
-	def write_html(self, params):
+	def write_html(self, user_params):
 		logging.info("writing HTML")
-		params.update({"COLLECTION_NAME": self.collection_name})
+		params = {"COLLECTION_NAME": self.collection_name}
+		params.update(user_params)
 		try:
 			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
 			additional_arg_str = "_" + "_".join([urllib.quote_plus(x).replace('+',"%20") for x in self.extra_args]) if len(self.extra_args) > 0 else ""
