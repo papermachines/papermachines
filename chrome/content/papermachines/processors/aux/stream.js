@@ -25,6 +25,7 @@ var deferUntilSearchComplete = new _Sequence();
 var timeFilter = function() { return true;};
 var timeRanges;
 var searchN = 0;
+var graphColors = d3.scale.category10().domain(d3.range(10));
 
 var gradientOpacity = d3.scale.log().clamp(true).range([1,0]);
 
@@ -33,13 +34,15 @@ var startDate, endDate;
 var activeTopicLabels = [], inactiveTopicLabels = [];
 var graph = {};
 
+var indexTerms = d3.keys(index);
+
 var streaming = true,
     my,
     toggleState = categorical ? 2 : 0,
     width = 960,
     height = 500,
     smoothing = "mean",
-    windowSize = 3,
+    windowSize = 4,
     wordClouds = {};
 
 var maxStdDev = 3;
@@ -173,16 +176,17 @@ function transition(toggle) {
 
   updateActiveLabels();
 
-  for (i in graph) {
+  for (var i in graph) {
     sumUpData(i, origTopicTimeData);
     if (streaming) {
       graph[i].streamData = layout(graph[i].data);
 
-        my = d3.max(graph[i].data, function(d) {
+        var newMy = d3.max(graph[i].streamData, function(d) {
             return d3.max(d, function(d) {
               return d.y0 + d.y;
             });
         });
+        if (newMy != 0) my = newMy;
 
         // y.domain([0, 1]);
         y.domain([0, my]);
@@ -227,7 +231,7 @@ function shuffle(array) {
 }
 
 function resetColors() {
-  var currentColors = activeTopicLabels.map(function (d) { return graph[0].color(d); });
+  var currentColors = activeTopicLabels.map(function (d) { return graphColors(d); });
   currentColors.sort();
   var anyRepeats = false;
   for (var i = 0, n = currentColors.length; i < n; i++) {
@@ -239,18 +243,16 @@ function resetColors() {
     return;
   }
 
-  for (i in graph) {
-    var newLabelColors = shuffle(activeTopicLabels.slice());
-    // var newLabelColors = activeTopicLabels.slice();
-    if (newLabelColors.length <= 10) {
-      graph[i]['color'] = d3.scale.category10();
-    } else {
-      graph[i]['color'] = d3.scale.category20();
-    }
-    graph[i]['color'].domain(newLabelColors);
+  var newLabelColors = shuffle(activeTopicLabels.slice());
+  // var newLabelColors = activeTopicLabels.slice();
+  if (newLabelColors.length <= 10) {
+    graphColors = d3.scale.category10();
+  } else {
+    graphColors = d3.scale.category20();
   }
+  graphColors.domain(newLabelColors);
   for (var i in wordClouds) {
-    wordCloudGroup.select(".cloud" + i.toString()).transition().duration(250).style("fill", graph[0].color(i));
+    wordCloudGroup.select(".cloud" + i.toString()).transition().duration(250).style("fill", graphColors(i));
   }
 }
 
@@ -277,7 +279,6 @@ function sumUpData(graphIndex, origData) {
   // }
 
   var firstRun = dataSummed.length == 0;
-  var minDocs = 0, maxDocs = 1;
 
   origData.forEach(function (d, i) {
     if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
@@ -294,9 +295,10 @@ function sumUpData(graphIndex, origData) {
           graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
 
           e.y.forEach(function (f) {
+            graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
             if (graph[graphIndex].searchFilter(f)) {
               datum.y += f.ratio;
-              graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
+              // graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
               var label = docMetadata[f.itemID]["label"];
               // if (categorical) {
                 categories[label][i].y += f.ratio;
@@ -410,7 +412,6 @@ function showMore() {
 }
 
 function createOrUpdateGraph(i) {
-
   if (categorical) {
     createCategoricalGraph(i);
     return;
@@ -420,17 +421,18 @@ function createOrUpdateGraph(i) {
     .data(streaming ? graph[i].streamData : graph[i].data, function(d) { return d[0].topic;});
 
   graphSelection
-    .attr("stroke", function(d) { return !streaming ? graph[i].color(d[0].topic) : "#000"; })
-    .style("stroke-width", streaming ? "0.25" : "1.5")
-    .style("stroke-opacity", streaming ? "0.3" : "1.0")
+    .attr("stroke", function(d) { return !streaming ? graphColors(d[0].topic) : "#000"; })
+    .style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; })
+    .style("stroke-width", streaming ? "0.5" : "1.5")
+    .style("stroke-opacity", streaming ? "0.5" : "1.0")
     .transition().duration(500).attr("d", streaming ? area : line);
 
-  graphSelection.style("fill", function(d) { return streaming ? graph[i].color(d[0].topic) : "none"; });
+  graphSelection.style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; });
   var graphEntering = graphSelection.enter();
     graphEntering.append("svg:path")
         .attr("class", function (d) { return "line graph" + i.toString() + " topic"+d[0].topic.toString(); })
-        .attr("stroke", function(d) { return !streaming ? graph[i].color(d[0].topic) : "#fff"; })
-        .style("fill", function(d) { return streaming ? graph[i].color(d[0].topic) : "none"; })
+        .attr("stroke", function(d) { return !streaming ? graphColors(d[0].topic) : "#fff"; })
+        .style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; })
         .style("stroke-width", streaming ? "0.5" : "2")
         .style("stroke-opacity", "1")
         .style("stroke-dasharray", graph[i].dasharray)
@@ -460,13 +462,13 @@ function createCategoricalGraph (i) {
 
   graphGroup.selectAll("*").remove();
   var categoricalLayers = graphGroup.selectAll("g.layer").data(graph[i].categoricalData, function (d) { return d[0].topic; });
-  categoricalLayers.style("fill", function(d) { return graph[0].color(d[0].topic);});
+  categoricalLayers.style("fill", function(d) { return graphColors(d[0].topic);});
 
   categoricalLayers.exit().remove();
 
   categoricalLayers.enter().append("g")
       .attr("class", "layer")
-      .style("fill", function(d) { return graph[0].color(d[0].topic);});
+      .style("fill", function(d) { return graphColors(d[0].topic);});
 
   bars = categoricalLayers.selectAll("g.bar.graph" + i.toString())
       .data(function (d) { return d;}, function (d) { return d.x + d.topic.toString(); });
@@ -651,7 +653,7 @@ function updateLegend() {
 }
 
 function legendLabelColor(d) {
-  return topicLabels[d.topic]["active"] ? graph[0].color(d.topic) : "#666666";
+  return topicLabels[d.topic]["active"] ? graphColors(d.topic) : "#666666";
 }
 
 function legendLabelPositions (d) {
@@ -832,7 +834,7 @@ function getDocsForYear(year) {
         var mainTopic = docMetadata[id]["main_topic"];
         var my_color = "#666";
         if (topicLabels[mainTopic] && topicLabels[mainTopic]["active"]) {
-          my_color = graph[0].color(mainTopic);
+          my_color = graphColors(mainTopic);
         }
         docs += "<span style='color: " + my_color + ";' id='doc" + id + "'>"+ title + "</span><br/>";
       }
@@ -915,8 +917,8 @@ function createGraphObject(i) {
     'contributingDocsOrdinal': {},
     'baseline': 0
   };
-    graph[i]['color'] = d3.scale.category10().domain(d3.range(10)); //ordinal().range(colorbrewer.Spectral[9]).domain(d3.range(20));
 }
+
 function highlightItem(itemID) {
   getDocsForYear(docMetadata[itemID]["year"]);
   d3.select("#doc" + itemID.toString()).call(flash);
@@ -962,28 +964,50 @@ function searchAction() {
           };
         } else {
             var me = graph[i];
+            var originalTerms = me.queryStr.split(" ");
+            var terms = {};
+            me.results = {};
+            for (var j in originalTerms) {
+              var term = originalTerms[j];
+              if (term in index) {
+                terms[term] = true;
+              } else {
+                for (var k in indexTerms) {
+                  if (indexTerms[k].match(term)) {
+                    terms[indexTerms[k]] = true;
+                  }
+                }
+              }
+            }
+            for (var term in terms) {
+              for (var j in index[term]) {
+                me.results[index[term][j]] = true;
+              }
+            }
 
-            var element = document.createElement("PaperMachinesDataElement");
-            element.setAttribute("query", graph[i].queryStr);
-            document.documentElement.appendChild(element);
+            me.searchFilter = (function (graph) { return function (d) { return graph.results.hasOwnProperty(d.itemID) }; })(graph[i]);
 
-            me.searchCallback = function (search) {
-              me.results = search;
-              me.searchFilter = function (d) {
-                  return me.results.indexOf(parseInt(d.itemID)) != -1;
-              };
-            };
+            // var element = document.createElement("PaperMachinesDataElement");
+            // element.setAttribute("query", graph[i].queryStr);
+            // document.documentElement.appendChild(element);
 
-            document.addEventListener("papermachines-response", function(event) {
-                var node = event.target, response = node.getUserData("response");
-                document.documentElement.removeChild(node);
-                document.removeEventListener("papermachines-response", arguments.callee, false);
-                me.searchCallback(JSON.parse(response));
-              }, false);
+            // me.searchCallback = function (search) {
+            //   me.results = search;
+            //   me.searchFilter = function (d) {
+            //       return me.results.indexOf(parseInt(d.itemID)) != -1;
+            //   };
+            // };
 
-            var evt = document.createEvent("HTMLEvents");
-            evt.initEvent("papermachines-request", true, false);
-            element.dispatchEvent(evt);
+            // document.addEventListener("papermachines-response", function(event) {
+            //     var node = event.target, response = node.getUserData("response");
+            //     document.documentElement.removeChild(node);
+            //     document.removeEventListener("papermachines-response", arguments.callee, false);
+            //     me.searchCallback(JSON.parse(response));
+            //   }, false);
+
+            // var evt = document.createEvent("HTMLEvents");
+            // evt.initEvent("papermachines-request", true, false);
+            // element.dispatchEvent(evt);
 
           }
       } 
@@ -1042,10 +1066,17 @@ function createGradientScale() {
 function updateGradient() {
   defs.select("#linearGradientDensity").remove();
   var docNumbers = [];
-      years = d3.keys(graph[0].contributingDocs),
+      yearsObj = {},
       startYear = startDate.getFullYear(),
       endYear = endDate.getFullYear();
 
+  for (var i in graph) {
+    for (var year in graph[i].contributingDocs) {
+      yearsObj[year] = true;
+
+    }
+  }
+  var years = d3.keys(yearsObj);
   years.sort();
   years.forEach(function (year) {
     if (year >= startYear && year < endYear) {
@@ -1098,7 +1129,7 @@ function topicCloud(i, parent) {
     parent.append("g")
         .attr("class", "cloud" + i.toString())
         .attr("transform", "translate(" + cloudW/2 + "," + cloudH / 2 + ")")
-        .style("fill", graph[0].color(i))
+        .style("fill", graphColors(i))
       .selectAll("text")
         .data(words)
       .enter().append("text")
