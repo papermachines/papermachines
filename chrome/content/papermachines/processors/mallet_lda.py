@@ -163,17 +163,17 @@ class MalletLDA(mallet.Mallet):
 		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
 
 		params = {"CATEGORICAL": "true" if self.categorical else "false",
-				"TOPICS_DOCS": json.dumps(weights_by_topic),
-				"DOC_METADATA": json.dumps(doc_metadata),
-				"TOPIC_LABELS": json.dumps(labels),
-				"TOPIC_COHERENCE": json.dumps(coherence),
-				"TOPIC_PROPORTIONS": json.dumps(self.proportions),
-				"TOPIC_STDEVS": json.dumps(self.stdevs),
-				"TOPIC_CORRELATIONS": json.dumps(self.correlations)
+				"TOPICS_DOCS": json.dumps(weights_by_topic, separators=(',',':')),
+				"DOC_METADATA": json.dumps(doc_metadata, separators=(',',':')),
+				"TOPIC_LABELS": json.dumps(labels, separators=(',',':')),
+				"TOPIC_COHERENCE": json.dumps(coherence, separators=(',',':')),
+				"TOPIC_PROPORTIONS": json.dumps(self.proportions, separators=(',',':')),
+				"TOPIC_STDEVS": json.dumps(self.stdevs, separators=(',',':')),
+				"TOPIC_CORRELATIONS": json.dumps(self.correlations, separators=(',',':'))
 		}
 
 		index = getattr(self, "index", "{}")
-		params["INDEX"] = json.dumps(index)
+		params["###INDEX###"] = json.dumps(index, separators=(',',':'))
 
 		self.write_html(params)
 

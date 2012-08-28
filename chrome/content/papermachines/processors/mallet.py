@@ -183,9 +183,19 @@ class Mallet(textprocessor.TextProcessor):
 			if len(self.extra_args) > 0 and self.dfr:
 				self._import_dfr_metadata(self.extra_args[0])
 			self.docs = []
+			self.index = {}
 			with codecs.open(self.texts_file, 'r', 'utf-8') as f:
 				for line in f:
-					self.docs.append(line.split(u'\t')[0])
+					fields = line.split(u'\t')
+					filename = fields[0]
+					self.docs.append(filename)
+					this_vocab = set()
+					for word in fields[2].split():
+						this_vocab.add(word)
+					for word in this_vocab:
+						if word not in self.index:
+							self.index[word] = []
+						self.index[word].append(self.metadata[filename]["itemID"])
 			self.doc_count = len(self.docs)
 
 	def _setup_mallet_instances(self, sequence=True, tfidf = False, stemming = True):
