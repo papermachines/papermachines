@@ -95,6 +95,7 @@ var wordCloudGroup = vis.append("svg:g").attr("id", "wordCloudGroup")
 
 origTopicTimeData = data;
 dataSummed = [];
+graph[0].active = true;
 sumUpData(0, origTopicTimeData);
 
 y.domain([-maxStdDev, maxStdDev]);
@@ -176,30 +177,32 @@ function transition(toggle) {
 
   updateActiveLabels();
 
+  var my_graphs = [];
   for (var i in graph) {
     sumUpData(i, origTopicTimeData);
     if (streaming) {
       graph[i].streamData = layout(graph[i].data);
-
-        var newMy = d3.max(graph[i].streamData, function(d) {
+      if (graph[i].active) {
+        my_graphs.push(d3.max(graph[i].streamData, function(d) {
             return d3.max(d, function(d) {
               return d.y0 + d.y;
             });
-        });
-        if (newMy != 0) my = newMy;
-
-        // y.domain([0, 1]);
-        y.domain([0, my]);
+        }));
+      }
     }
   }
 
   x.domain([startDate, endDate]);
 
-  if (!streaming) y.domain([-maxStdDev,maxStdDev])
+  my = d3.max(my_graphs);
+
+  if (!streaming) y.domain([-maxStdDev,maxStdDev]);
+  else y.domain([0, my]);
 
   resetColors();
   for (i in graph) {
-    createOrUpdateGraph(i);
+    if (graph[i].active) createOrUpdateGraph(i);
+    else graphGroup.selectAll("path.line.graph" + i.toString()).remove();
   }
   updateGradient();
 
@@ -298,7 +301,6 @@ function sumUpData(graphIndex, origData) {
             graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
             if (graph[graphIndex].searchFilter(f)) {
               datum.y += f.ratio;
-              // graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
               var label = docMetadata[f.itemID]["label"];
               // if (categorical) {
                 categories[label][i].y += f.ratio;
@@ -323,7 +325,8 @@ function sumUpData(graphIndex, origData) {
 
     graph[graphIndex].data.forEach(function (d,i) {
       d.forEach(function (e) {
-        var s = graph[graphIndex].contributingDocs[e.x.getFullYear()].length || 1;
+        var docsForYear = graph[graphIndex].contributingDocs[e.x.getFullYear()];
+        var s = (docsForYear ? docsForYear.length : 1) || 1;
 
         // s is both the total number of docs in a given year and the sum of all topics
         // for that year
@@ -950,67 +953,74 @@ function searchAction() {
     };
   }
 
+  var actives = 0;
   for (var i in graph) {
     graph[i].queryStr = document.getElementById("search" + i).value;
+    if (graph[i].queryStr != "") {
+      actives++;
+    }
+  }
+  for (var i in graph) {
+    if (graph[i].queryStr == "" && actives > 0) {
+      graph[i].active = false;
+    } else {
+      graph[i].active = true;
+      actives++;
+    }
   }
 
   for (var i = 0; i < searchN; i++ ) {
-    if (graph[i].queryStr == "" && i != 0) {
-      graph[i].searchFilter = function() { return false;};
+    if (graph[i].queryStr == "") {
+      graph[i].searchFilter = function() { 
+        return true; 
+      };
     } else {
-        if (graph[i].queryStr == "") {
-          graph[i].searchFilter = function() { 
-            return true; 
-          };
-        } else {
-            var me = graph[i];
-            var originalTerms = me.queryStr.split(" ");
-            var terms = {};
-            me.results = {};
-            for (var j in originalTerms) {
-              var term = originalTerms[j];
-              if (term in index) {
-                terms[term] = true;
-              } else {
-                for (var k in indexTerms) {
-                  if (indexTerms[k].match(term)) {
-                    terms[indexTerms[k]] = true;
-                  }
-                }
+        var originalTerms = graph[i].queryStr.split(" ");
+        var terms = {};
+        graph[i].results = {};
+        for (var j in originalTerms) {
+          var term = originalTerms[j];
+          if (term in index) {
+            terms[term] = true;
+          } else {
+            for (var k in indexTerms) {
+              if (indexTerms[k].match(term)) {
+                terms[indexTerms[k]] = true;
               }
             }
-            for (var term in terms) {
-              for (var j in index[term]) {
-                me.results[index[term][j]] = true;
-              }
-            }
-
-            me.searchFilter = (function (graph) { return function (d) { return graph.results.hasOwnProperty(d.itemID) }; })(graph[i]);
-
-            // var element = document.createElement("PaperMachinesDataElement");
-            // element.setAttribute("query", graph[i].queryStr);
-            // document.documentElement.appendChild(element);
-
-            // me.searchCallback = function (search) {
-            //   me.results = search;
-            //   me.searchFilter = function (d) {
-            //       return me.results.indexOf(parseInt(d.itemID)) != -1;
-            //   };
-            // };
-
-            // document.addEventListener("papermachines-response", function(event) {
-            //     var node = event.target, response = node.getUserData("response");
-            //     document.documentElement.removeChild(node);
-            //     document.removeEventListener("papermachines-response", arguments.callee, false);
-            //     me.searchCallback(JSON.parse(response));
-            //   }, false);
-
-            // var evt = document.createEvent("HTMLEvents");
-            // evt.initEvent("papermachines-request", true, false);
-            // element.dispatchEvent(evt);
-
           }
-      } 
+        }
+        for (var term in terms) {
+          for (var j in index[term]) {
+            graph[i].results[index[term][j]] = true;
+          }
+        }
+
+        graph[i].searchFilter = (function (graph) { return function (d) { return graph.results.hasOwnProperty(d.itemID) }; })(graph[i]);
+
+        // var element = document.createElement("PaperMachinesDataElement");
+        // element.setAttribute("query", graph[i].queryStr);
+        // document.documentElement.appendChild(element);
+
+        // me.searchCallback = function (search) {
+        //   me.results = search;
+        //   me.searchFilter = function (d) {
+        //       return me.results.indexOf(parseInt(d.itemID)) != -1;
+        //   };
+        // };
+
+        // document.addEventListener("papermachines-response", function(event) {
+        //     var node = event.target, response = node.getUserData("response");
+        //     document.documentElement.removeChild(node);
+        //     document.removeEventListener("papermachines-response", arguments.callee, false);
+        //     me.searchCallback(JSON.parse(response));
+        //   }, false);
+
+        // var evt = document.createEvent("HTMLEvents");
+        // evt.initEvent("papermachines-request", true, false);
+        // element.dispatchEvent(evt);
+
+    }
   }
   setTimeout(function () {transition();}, 500);
   deferUntilSearchComplete.next();
@@ -1073,7 +1083,6 @@ function updateGradient() {
   for (var i in graph) {
     for (var year in graph[i].contributingDocs) {
       yearsObj[year] = true;
-
     }
   }
   var years = d3.keys(yearsObj);
