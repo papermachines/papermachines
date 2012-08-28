@@ -38,8 +38,8 @@ var streaming = true,
     toggleState = categorical ? 2 : 0,
     width = 960,
     height = 500,
-    smoothing = "median",
-    windowSize = 4,
+    smoothing = "mean",
+    windowSize = 3,
     wordClouds = {};
 
 var maxStdDev = 3;
@@ -113,7 +113,7 @@ area = d3.svg.area()
   .y0(function(d) { return y(d.y0); })
   .y1(function(d) { return y(d.y0 + d.y); });
 
-var layout = d3.layout.stack().offset("zero");
+var layout = d3.layout.stack().offset("silhouette");
 
 topicLabels = {};
 for (i in labels) {
@@ -160,7 +160,9 @@ function doToggle(state) {
 }
 function transition(toggle) {
   if (toggle) toggleState = (toggleState + 1) % 3; 
-
+  if (toggleState == 2 && d3.keys(categories).length > 50) {
+    toggleState = 0;
+  }
   doToggle(toggleState);
 
   // if (streaming) {
@@ -182,8 +184,8 @@ function transition(toggle) {
             });
         });
 
-        y.domain([0, 1]);
-        // y.domain([0, my]);
+        // y.domain([0, 1]);
+        y.domain([0, my]);
     }
   }
 
@@ -238,9 +240,14 @@ function resetColors() {
   }
 
   for (i in graph) {
-    // var newLabelColors = shuffle(activeTopicLabels.slice());
-    var newLabelColors = activeTopicLabels.slice();
-    graph[i]['color'] = d3.scale.category10().domain(newLabelColors);
+    var newLabelColors = shuffle(activeTopicLabels.slice());
+    // var newLabelColors = activeTopicLabels.slice();
+    if (newLabelColors.length <= 10) {
+      graph[i]['color'] = d3.scale.category10();
+    } else {
+      graph[i]['color'] = d3.scale.category20();
+    }
+    graph[i]['color'].domain(newLabelColors);
   }
   for (var i in wordClouds) {
     wordCloudGroup.select(".cloud" + i.toString()).transition().duration(250).style("fill", graph[0].color(i));
@@ -424,7 +431,7 @@ function createOrUpdateGraph(i) {
         .attr("class", function (d) { return "line graph" + i.toString() + " topic"+d[0].topic.toString(); })
         .attr("stroke", function(d) { return !streaming ? graph[i].color(d[0].topic) : "#fff"; })
         .style("fill", function(d) { return streaming ? graph[i].color(d[0].topic) : "none"; })
-        .style("stroke-width", streaming ? "0.5" : "1.5")
+        .style("stroke-width", streaming ? "0.5" : "2")
         .style("stroke-opacity", "1")
         .style("stroke-dasharray", graph[i].dasharray)
         .on("mouseover", function (d) { highlightTopic(d[0]);})
@@ -517,8 +524,9 @@ function refreshAxes() {
   if (categorical) {
     d3.select(".x.axis").selectAll("text")
     .attr("transform", function(d) {
-        return "rotate(90)translate(" + this.getBBox().height/2 + "," +
-            this.getBBox().width/2 + ")";
+        return "rotate(90)";
+        // translate(" + this.getBBox().height/2 + "," +
+        //     this.getBBox().width/2 + ")";
     });
   } else {
     d3.select(".x.axis").selectAll("text")
@@ -1050,7 +1058,7 @@ function updateGradient() {
   });
 
   var gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
-  gradientDomain[0] = 5;
+  // gradientDomain[0] = 5;
   gradientOpacity.domain(gradientDomain);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")
