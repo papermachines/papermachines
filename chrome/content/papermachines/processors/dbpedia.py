@@ -46,6 +46,9 @@ class DBpedia(textprocessor.TextProcessor):
 				self.update_progress()
 				try:
 					with codecs.open(filename, 'r', encoding='utf-8') as f:
+						out_filename = os.path.join(annotations_out_dir, os.path.basename(filename).replace(".txt",".json"))
+						if os.path.exists(out_filename):
+							continue
 						annotation = self._get_annotated(f.read())
 						if len(annotation) > 0:
 							out_filename = os.path.join(annotations_out_dir, os.path.basename(filename).replace(".txt",".json"))
