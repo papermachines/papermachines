@@ -1,5 +1,5 @@
-var w = 960,
-    h = 500;
+var w = 1280,
+    h = 800;
 
 var color = d3.scale.ordinal().domain(["entity", "document"]).range(["#333", "#38b"]);
 

@@ -27,12 +27,8 @@ class DBpedia(textprocessor.TextProcessor):
 
 	def process(self):
 		"""
-		create a folder of JSON files with named entity recognition by DBpedia
+		create JSON files with named entity recognition by DBpedia
 		"""
-
-		annotations_out_dir = os.path.join(self.out_dir, self.name + self.collection)
-		if not os.path.exists(annotations_out_dir):
-			os.makedirs(annotations_out_dir)
 
 		logging.info("beginning annotation")
 
@@ -45,23 +41,23 @@ class DBpedia(textprocessor.TextProcessor):
 				logging.info("processing " + filename)
 				self.update_progress()
 				try:
-					with codecs.open(filename, 'r', encoding='utf-8') as f:
-						out_filename = os.path.join(annotations_out_dir, os.path.basename(filename).replace(".txt",".json"))
-						if os.path.exists(out_filename):
-							continue
-						annotation = self._get_annotated(f.read())
-						if len(annotation) > 0:
-							out_filename = os.path.join(annotations_out_dir, os.path.basename(filename).replace(".txt",".json"))
-							annotated[out_filename] = filename
-							with codecs.open(out_filename, 'w', encoding='utf-8') as out:
-								out.write(annotation)
+					out_filename = filename.replace(".txt", "_dbpedia.json")
+					if os.path.exists(out_filename):
+						annotated[out_filename] = filename
+					else:
+						with codecs.open(filename, 'r', encoding='utf-8') as f:
+							annotation = self._get_annotated(f.read())
+							if len(annotation) > 0:
+								annotated[out_filename] = filename
+								with codecs.open(out_filename, 'w', encoding='utf-8') as out:
+									out.write(annotation)
 				except (KeyboardInterrupt, SystemExit):
 					raise
 				except:
 					logging.error(traceback.format_exc())
 		else:
 			for filename in self.files:
-				out_filename = os.path.join(annotations_out_dir, os.path.basename(filename).replace(".txt",".json"))
+				out_filename = filename.replace(".txt", "_dbpedia.json")
 				if os.path.exists(out_filename):
 					annotated[out_filename] = filename
 
@@ -78,8 +74,21 @@ class DBpedia(textprocessor.TextProcessor):
 					uris_to_docs[uri][itemID] = 0
 				uris_to_docs[uri][itemID] += 1
 
+		filtered_uris = {}
+		weights = []
+		for uri, items in uris_to_docs.iteritems():
+			weights.append(sum(items.values()))
+		weights.sort()
+		min_weight = weights[max(-50, -len(weights))]
 
-		params = {"DATA": json.dumps(uris_to_docs)}
+		for uri, items in uris_to_docs.iteritems():
+			if sum(items.values()) > min_weight:
+				filtered_uris[uri] = items
+
+
+
+		# params = {"DATA": json.dumps(uris_to_docs)}
+		params = {"DATA": json.dumps(filtered_uris)}
 		self.write_html(params)
 
 		logging.info("finished")

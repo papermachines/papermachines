@@ -32,7 +32,7 @@ class Geoparse(textprocessor.TextProcessor):
 			logging.info("processing " + filename)
 			self.update_progress()
 
-			file_geoparsed = filename.replace(".txt", ".json")
+			file_geoparsed = filename.replace(".txt", "_geoparse.json")
 
 			if os.path.exists(file_geoparsed):
 				geoparse_obj = json.load(file(file_geoparsed))
