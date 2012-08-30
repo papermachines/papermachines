@@ -7,8 +7,9 @@ Zotero_PaperMachines_Dialog.init = function () {
 	this.io = window.arguments[0];
 
 	var list = document.getElementById("zotero-papermachines-list");
+    document.getElementById("zotero-papermachines-intro").label = this.io.dataIn["prompt"];
 
-	this.io.dataIn.forEach(function (item) {
+	this.io.dataIn["options"].forEach(function (item) {
         var row = document.createElement('listitem');
         var cell = document.createElement('listcell');
         cell.setAttribute('label', item.name);

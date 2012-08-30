@@ -2,11 +2,10 @@ Zotero.PaperMachines = {
 	DB: null,
 	schema: {
 		'doc_files': "CREATE TABLE doc_files (itemID INTEGER PRIMARY KEY, filename VARCHAR(255));",
-		'doc_places': "CREATE TABLE doc_places (itemID INTEGER, place INTEGER, FOREIGN KEY(itemID) REFERENCES doc_files(itemID), FOREIGN KEY(place) REFERENCES places(id), UNIQUE(itemID, place) ON CONFLICT IGNORE);",
 		'collections': "CREATE TABLE collections (id INTEGER PRIMARY KEY, parent VARCHAR(255), child VARCHAR(255), FOREIGN KEY(parent) REFERENCES collection_docs(collection), FOREIGN KEY(child) REFERENCES collection_docs(collection), UNIQUE(parent, child) ON CONFLICT IGNORE);",
 		'collection_docs': "CREATE TABLE collection_docs (id INTEGER PRIMARY KEY, collection VARCHAR(255), itemID INTEGER, FOREIGN KEY(itemID) REFERENCES doc_files(itemID));",
-		'places': "CREATE TABLE places (id INTEGER PRIMARY KEY, name VARCHAR(255), lat NUMERIC, lng NUMERIC);",
-		'processed_collections': "CREATE TABLE processed_collections (id INTEGER PRIMARY KEY, process_path VARCHAR(255), collection VARCHAR(255), processor VARCHAR(255), status VARCHAR(255), progressfile VARCHAR(255), outfile VARCHAR(255), lastModified DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(collection) REFERENCES collection_docs(collection), UNIQUE(process_path) ON CONFLICT REPLACE);"
+		'processed_collections': "CREATE TABLE processed_collections (id INTEGER PRIMARY KEY, process_path VARCHAR(255), collection VARCHAR(255), processor VARCHAR(255), status VARCHAR(255), progressfile VARCHAR(255), outfile VARCHAR(255), lastModified DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(collection) REFERENCES collection_docs(collection), UNIQUE(process_path) ON CONFLICT REPLACE);",
+		'datasets': "CREATE TABLE datasets (id INTEGER PRIMARY KEY, type VARCHAR(255), path VARCHAR(255))"
 	},
 	processQuery: "SELECT * FROM processed_collections WHERE process_path = ?;",
 	pm_dir: null,
@@ -16,17 +15,9 @@ Zotero.PaperMachines = {
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
-	processors: ["wordcloud", "largewordcloud", "phrasenet", "mallet", "mallet_classify", "geoparse", "dbpedia"],
-	processNames: {"wordcloud": "Word Cloud",
-		"largewordcloud": "Word Cloud",
-		"phrasenet": "Phrase Net",
-		"geoparse": "Geoparser",
-		"mallet_lda": "Topic Modeling",
-		"mallet_lda_categorical": "Topic Modeling",
-		"mallet_train-classifier": "Classifier Training",
-		"mallet_classify-file": "Classifier Testing",
-		"dbpedia": "DBpedia Annotation"
-	},
+	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparse", "dbpedia"],
+	processNames: null, // see locale files
+	prompts: null,
 	processesThatPrompt: {
 		"mallet_classify-file": function () {
 			// get list of classifiers
@@ -40,7 +31,7 @@ Zotero.PaperMachines = {
 					classifiers.push({"name": Zotero.PaperMachines.getNameOfGroup(collection), "label": "-", "value": classifier.path});
 				}
 			})
-			return Zotero.PaperMachines.selectFromOptions(classifiers);
+			return Zotero.PaperMachines.selectFromOptions("mallet_classify-file", classifiers);
 		}
 	},
 	communicationObjects: {},
@@ -140,6 +131,8 @@ Zotero.PaperMachines = {
 		this.out_dir = this._getOrCreateDir("out");
 		this.processors_dir = this._getOrCreateDir("processors");
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
+
+		this.getStringsFromBundle();
 
 		try {
 			var tagSelector = ZoteroPane.document.getElementById("zotero-tag-selector");
@@ -241,7 +234,8 @@ Zotero.PaperMachines = {
 
 		if (processPathParts[0] in Zotero.PaperMachines.processesThatPrompt) {
 			var prompt_result = Zotero.PaperMachines.processesThatPrompt[processPathParts[0]]();
-			if (prompt_result) additional_args.push(prompt_result);
+			if (prompt_result) additional_args.push.apply(additional_args, prompt_result);
+			else return;
 		}
 
 		additional_args = additional_args.map(function (d) { return encodeURIComponent(d);});
@@ -415,7 +409,7 @@ Zotero.PaperMachines = {
 				} else if (header[k] == "year") {
 					val = this.getYearOfItem(item);
 				} else if (header[k] == "place") {
-					val = this.getPlaceOfItem(item);
+					val = item.getField("place");
 				} else if (header[k] == "key") {
 					val = item.key;
 				} else if (header[k] == "label") {
@@ -511,13 +505,24 @@ Zotero.PaperMachines = {
 	locateTextInMapView: function () {
 		var items = ZoteroPane.getSelectedItems();
 		var location = this.getPlaceOfItem(items[0]);
-		if (!location) {
-			this.locateItem(items[0]);
-		}
 		alert(location);
 	},
 	getPlaceOfItem: function (item) {
-		return this.DB.valueQuery("SELECT place FROM doc_places WHERE itemID = ?;", [item.id]) || item.getField("place");
+		var path = this.DB.valueQuery("SELECT filename FROM doc_files WHERE itemID = ?;",[item.id]);
+		var place = false;
+
+		if (path) {
+			var geoparseFile = Components.classes["@mozilla.org/file/local;1"]
+				.createInstance(Components.interfaces.nsILocalFile);
+			geoparseFile.initWithPath(path.replace(".txt", "_geoparse.json"));
+			if (geoparseFile.exists()) {
+				var geoparse = JSON.parse(Zotero.File.getContents(geoparseFile));
+				if (geoparse["city"]) {
+					place = geoparse["city"];
+				}
+			}
+		}
+		return place;
 	},
 	getYearOfItem: function (item) {
 		return item.getField("date", true, true).substring(0,4);
@@ -644,46 +649,6 @@ Zotero.PaperMachines = {
 		queue.runningTotal += 1;
 		queue.next();
 	},
-	locateItem: function(item) {
-		var placename = item.getField("place");
-		placename = placename.replace(/[^\w, ]/g, '')
-
-		var place_id = this.DB.valueQuery("SELECT id FROM places WHERE name = ?", [placename]);
-		if (place_id) {
-			if (this.DB.valueQuery("SELECT COUNT(*) FROM doc_places WHERE itemID = ?;", [item.id]) > 0) {
-				return;
-			} else {
-				this.DB.query("INSERT INTO doc_places (itemID, place) VALUES (?, ?);", [item.id, place_id]);
-				return;
-			}
-		} else {
-			// see https://github.com/schuyler/zotero-maps/blob/master/chrome/content/zotero-maps/setup.js
-
-
-			// var url = "http://zotero.ws.geonames.org/search?q=";
-			// url += encodeURIComponent(placename);
-			// url += "&maxRows=1&type=json";
-			// Zotero.HTTP.doGet(url, function (xmlhttp) {
-			// 	if (xmlhttp.status == 200) {
-			// 		var json = JSON.parse(xmlhttp.responseText);
-			// 		var geoname;
-			// 		if(json && json.totalResultsCount > 0) {
-			// 			geoname = json.geonames[0];
-			// 			/* Store the geonames result in the cache for later reuse.
-			// 			 * The geonames service may return a different place name than
-			// 			 * the one given; if so, cache that, too. */
-
-			// 			place_id = Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO places (name, lng, lat) values (?, ?, ?);", [placename, geoname.lng, geoname.lat]);
-			// 			if (geoname.name != placename) {
-			// 				Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO places (name, lng, lat) values (?, ?, ?);", [geoname.name, geoname.lng, geoname.lat]);
-			// 			}
-			// 		} else {
-			// 			place_id = Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO places (name, lng, lat) values (?, ?, ?);", [placename, 0.0, 0.0]);
-			// 		}
-			// 	}
-			// });
-		}
-	},
 	_updateBundledFilesCallback: function (installLocation) {
 		this.install_dir = installLocation;
 		var xpiZipReader, isUnpacked = installLocation.isDirectory();
@@ -759,7 +724,11 @@ Zotero.PaperMachines = {
 		var collectionName = thisGroup.getName();
 		var progbar_str = '<html><head><meta http-equiv="refresh" content="2;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
-			progbar_str += '<div>' + Zotero.PaperMachines.processNames[processResult["processor"]] + ': ' + collectionName + '</div>';
+			try {
+				progbar_str += '<div>' + Zotero.PaperMachines.processNames[processResult["processor"]] + ': ' + collectionName + '</div>';
+			} catch (e) {
+				progbar_str += '<div>' + collectionName + '</div>';
+			}
 			if (iterations) {
 				progbar_str += '<progress id="progressBar" max="1000" value="';
 				progbar_str += iterations.toString();
@@ -804,8 +773,8 @@ Zotero.PaperMachines = {
 		s.addCondition("quicksearch-everything", "contains", str);
 		return s.search();
 	},
-	selectFromOptions: function(options) {
-		var params = {"dataIn": options, "dataOut": null};
+	selectFromOptions: function(prompt, options) {
+		var params = {"dataIn": {"prompt": Zotero.PaperMachines.prompts[prompt], "options": options}, "dataOut": null};
 		
 		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
 			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
@@ -823,6 +792,23 @@ Zotero.PaperMachines = {
 									 .getService(Components.interfaces.nsIConsoleService);
 	  consoleService.logStringMessage(msg);
 	  Zotero.debug(msg);
+	},
+	getStringsFromBundle: function () {
+		var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+		Zotero.PaperMachines.bundle = stringBundleService.createBundle("chrome://papermachines/locale/papermachines.properties");
+		var enumerator = Zotero.PaperMachines.bundle.getSimpleEnumeration();
+		Zotero.PaperMachines.bundleStrings = {};
+		while (enumerator.hasMoreElements()) {
+			var property = enumerator.getNext().QueryInterface(Components.interfaces.nsIPropertyElement);
+			Zotero.PaperMachines.bundleStrings[property.key] = property.value;
+			var nameParts = property.key.split(".");
+			if (nameParts.length == 2 && Zotero.PaperMachines.hasOwnProperty(nameParts[0])) {
+				if (!Zotero.PaperMachines[nameParts[0]]) {
+					Zotero.PaperMachines[nameParts[0]] = {};
+				}
+				Zotero.PaperMachines[nameParts[0]][nameParts[1]] = property.value;
+			}
+		}
 	},
 	openWindowOrTab: function(url) {
 		if (Zotero.isStandalone) {

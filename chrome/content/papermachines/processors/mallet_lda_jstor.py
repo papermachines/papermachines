@@ -2,13 +2,13 @@
 import sys, os, logging, traceback
 import mallet_lda
 
-class MalletSubcollections(mallet_lda.MalletLDA):
+class MalletJSTOR(mallet_lda.MalletLDA):
 	"""
-	Set topic modeling to categorical view by default
+	Alias to distinguish mallet queries with JSTOR attached
 	"""
 	def _basic_params(self):
-		self.name = "mallet_lda_categorical"
-		self.categorical = True
+		self.name = "mallet_lda"
+		self.categorical = False
 		self.template_name = "mallet_lda"
 		self.dry_run = False
 		self.topics = 50
@@ -18,7 +18,7 @@ class MalletSubcollections(mallet_lda.MalletLDA):
 
 if __name__ == "__main__":
 	try:
-		processor = MalletSubcollections(track_progress=False)
+		processor = MalletJSTOR(track_progress=False)
 		processor.process()
 	except:
 		logging.error(traceback.format_exc())

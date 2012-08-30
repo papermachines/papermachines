@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Multiple Word Clouds: COLLECTION_NAME</title>
+<script src="d3.v2.js"></script>
+<script src="d3.layout.cloud.js"></script>
+</head>
+<body>
+<script>
+var fontSize = d3.scale.log().range(FONTSIZE);
+
+var color = d3.scale.category10().domain(d3.range(10));
+
+var width = WIDTH, height = HEIGHT;
+
+var clouds = CLOUDS;
+
+function draw(label, words) {
+  var vis = d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height + 16)
+    .append("g")
+      .attr("transform", "translate(" + width/2 + "," + height/2 + ")");
+
+  vis.selectAll("text.cloud")
+      .data(words)
+    .enter().append("text")
+      .style("font-size", function(d) { return d.size + "px"; })
+      .attr("text-anchor", "middle")
+      .attr("class", "cloud")
+      .style("fill", function (d) { return color(~~(Math.random() * 10));})
+      .attr("transform", function(d) {
+        return "translate(" + [d.x, d.y] +")rotate(" + d.rotate + ")";
+      })
+      .text(function(d) { return d.text; });
+
+  vis.append("text")
+    .attr("transform", "translate(0," + ((height/2)) + ")")
+    .attr("class", "label")
+    .text(label);
+
+}  
+for (var i in clouds) {
+  var data = clouds[i];
+  var vals = data.map(function (d) { return +d.value});
+  fontSize.domain([d3.min(vals), d3.max(vals)]);
+
+  var myDraw = function (thisLabel) {
+    return function(words) { draw(thisLabel, words);};
+  };
+  var layout = d3.layout.cloud().size([width, height])
+    .words(data)
+    .timeInterval(10)
+    .rotate(function() { return ~~(Math.random() * 2) * 90; })
+    .fontSize(function(d) { return fontSize(+d.value); })
+    .on("end", (myDraw)(i))
+    .start();
+}
+
+
+</script>
+</body>
+</html>

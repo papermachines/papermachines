@@ -14,13 +14,14 @@
 		<menuseparator hidden="false"/>
 		<menuitem label="&papermachines.collectionmenu.extract_text;"
 			oncommand="Zotero.PaperMachines.extractText()"/>
-		<menuitem id="wordcloud" label="&papermachines.collectionmenu.wordcloud;"
-			hidden="true"
-			disabled="true"
-			oncommand="Zotero.PaperMachines.runProcess('wordcloud')"/>
-		<menuitem id="largewordcloud" label="&papermachines.collectionmenu.wordcloud;"
-			disabled="true"
-			oncommand="Zotero.PaperMachines.runProcess('largewordcloud')"/>
+		<menu id="wordcloud" label="&papermachines.collectionmenu.wordcloud;" disabled="true">
+			<menupopup id="wordcloud-menu">
+			<menuitem id="wordcloud_large" label="&papermachines.collectionmenu.wordcloud_large;"
+				oncommand="Zotero.PaperMachines.runProcess('wordcloud_large')"/>
+			<menuitem id="wordcloud_multiple" label="&papermachines.collectionmenu.wordcloud_multiple;"
+				oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple')"/>
+			</menupopup>
+		</menu>
 		<menu id="phrasenet" label="&papermachines.collectionmenu.phrasenet;" disabled="true">
 			<menupopup id="phrasenet-menu">
 				<menuitem label="x and y"

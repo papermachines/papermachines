@@ -15,7 +15,7 @@
 	<script src="chrome://papermachines/content/dialog.js"/>
 	
 	<vbox id="zotero-papermachines-container" flex="1">
-		<caption label="&papermachines.dialog.intro;" id="zotero-papermachines-intro"/>
+		<caption id="zotero-papermachines-intro"/>
 		<spacer flex="1"/>
 		<listbox id="zotero-papermachines-list" context="zoteroPaperMachinesContext"></listbox>
 		<spacer flex="1"/>
