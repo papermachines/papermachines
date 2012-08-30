@@ -13,6 +13,7 @@ class WordCloud(textprocessor.TextProcessor):
 		self.height = "150"
 		self.fontsize = "[10,32]"
 		self.n = 50
+		self.tfidf_scoring = False
 
 	def _findTfIdfScores(self):
 		self.tf_by_doc = {}
@@ -42,18 +43,30 @@ class WordCloud(textprocessor.TextProcessor):
 		self.idf = {term: math.log10(n/df) for term, df in self.df.iteritems()}
 		self.tfidf = {term: self.max_tf[term] * self.idf[term] for term in self.max_tf.keys()}
 
-	def _findWordFreqs(self):
-		self.freqs = {}
-		for filename in self.files:
+	def _topN(self, freqs, n = None):
+		if n is None:
+			n = self.n
+		final_freqs = []
+		top_freqs = sorted(freqs.values())
+		min_freq = top_freqs[-min(n,len(top_freqs))] # find nth frequency from end, or start of list
+		for word, freq in freqs.iteritems():
+			if freq >= min_freq:
+				final_freqs.append({'text': word, 'value': freq})
+		return final_freqs
+
+	def _findWordFreqs(self, filenames):
+		freqs = {}
+		for filename in filenames:
 			with codecs.open(filename, 'r', encoding = 'utf8') as f:
 				logging.info("processing " + filename)
 				for line in f:
 					for stem in self._tokenizeAndStem(line):
-						if stem not in self.freqs:
-							self.freqs[stem] = 1
+						if stem not in freqs:
+							freqs[stem] = 1
 						else:
-							self.freqs[stem] += 1
+							freqs[stem] += 1
 			self.update_progress()
+		return self._topN(freqs)
 
 	def _tokenizeAndStem(self, line):
 		# uncomment for Porter stemming (slower, but groups words with their plurals, etc.)
@@ -67,20 +80,13 @@ class WordCloud(textprocessor.TextProcessor):
 
 		logging.info("finding word frequencies")
 
-		self._findWordFreqs()
-		# self._findTfIdfScores()
-		# self.freqs = self.tfidf
+		if self.tfidf_scoring:
+			self._findTfIdfScores()
+			freqs = self.tfidf
+		else:
+			freqs = self._findWordFreqs(self.files)
 
-		final_freqs = []
-
-		top_freqs = sorted(self.freqs.values())
-		min_freq = top_freqs[-min(self.n,len(top_freqs))] # find nth frequency from end, or start of list
-		logging.info("generating JSON")
-		for word, freq in self.freqs.iteritems():
-			if freq >= min_freq:
-				final_freqs.append({'text': word, 'value': freq})
-
-		params = {"DATA": json.dumps(final_freqs),
+		params = {"DATA": json.dumps(freqs),
 				"WIDTH": self.width,
 				"HEIGHT": self.height,
 				"FONTSIZE": self.fontsize

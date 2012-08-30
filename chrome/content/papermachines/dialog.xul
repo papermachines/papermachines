@@ -15,9 +15,11 @@
 	<script src="chrome://papermachines/content/dialog.js"/>
 	
 	<vbox id="zotero-papermachines-container" flex="1">
-		<caption id="zotero-papermachines-intro"/>
+		<caption id="zotero-papermachines-intro" hidden="true"/>
+		<description id="zotero-papermachines-confirm-intro" hidden="true"></description>
 		<spacer flex="1"/>
-		<listbox id="zotero-papermachines-list" context="zoteroPaperMachinesContext"></listbox>
+		<listbox id="zotero-papermachines-list" context="zoteroPaperMachinesContext" hidden="true"></listbox>
+		<textbox id="zotero-papermachines-textbox" hidden="true"/>
 		<spacer flex="1"/>
 		<hbox>
 			<button dlgtype="cancel" label="&papermachines.dialog.cancel;"/>

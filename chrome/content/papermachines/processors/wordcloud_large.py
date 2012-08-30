@@ -10,8 +10,9 @@ class LargeWordCloud(wordcloud.WordCloud):
 		self.width = "960"
 		self.height = "500"
 		self.fontsize = "[10,72]"
-		self.name = "largewordcloud"
+		self.name = "wordcloud_large"
 		self.n = 150
+		self.tfidf_scoring = False
 
 if __name__ == "__main__":
 	try:
