@@ -12,7 +12,7 @@ class LargeWordCloud(wordcloud.WordCloud):
 		self.fontsize = "[10,72]"
 		self.name = "wordcloud_large"
 		self.n = 150
-		self.tfidf_scoring = False
+		self.tfidf_scoring = len(self.extra_args) > 0
 
 if __name__ == "__main__":
 	try:

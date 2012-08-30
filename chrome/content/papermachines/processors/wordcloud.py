@@ -41,7 +41,7 @@ class WordCloud(textprocessor.TextProcessor):
 				self.update_progress()
 		n = float(len(self.files))
 		self.idf = {term: math.log10(n/df) for term, df in self.df.iteritems()}
-		self.tfidf = {term: self.max_tf[term] * self.idf[term] for term in self.max_tf.keys()}
+		self.tfidf = {term: self.max_tf[term] * self.idf[term] for term in self.max_tf.keys() if self.df[term] > 5}
 
 	def _topN(self, freqs, n = None):
 		if n is None:
@@ -82,7 +82,7 @@ class WordCloud(textprocessor.TextProcessor):
 
 		if self.tfidf_scoring:
 			self._findTfIdfScores()
-			freqs = self.tfidf
+			freqs = self._topN(self.tfidf)
 		else:
 			freqs = self._findWordFreqs(self.files)
 
