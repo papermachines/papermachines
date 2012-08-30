@@ -17,6 +17,7 @@ for (var i in data) {
 		if (!overallWeight.hasOwnProperty(item)){
 			overallWeight[item] = {"name": item, "value": 1, "group": "document"};
 		} else {
+			// overallWeight[item]["value"] += 1;
 		}
 		if (!(name in nameLinks)) {
 			nameLinks[name] = [item];
@@ -30,8 +31,6 @@ var nodeValues = d3.values(overallWeight).map(function (d) { return +d.value; })
 nodeValues.sort(d3.ascending);
 
 var aboveX = d3.quantile(nodeValues, 0.75);
-
-
 
 nodes = d3.values(overallWeight).filter(function (d) { return d.value >= aboveX || d.group == "document";});
 

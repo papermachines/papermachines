@@ -120,7 +120,7 @@ class Mallet(textprocessor.TextProcessor):
 			tfidf_values = tfidf.values()
 
 			if top_terms is None:
-				top_terms = min(len(vocab.keys()) * 0.7, 5000)
+				top_terms = min(int(len(vocab.keys()) * 0.7), 5000)
 			min_score = sorted(tfidf_values, reverse=True)[min(top_terms, len(tfidf_values) - 1)]
 
 		os.rename(self.texts_file, self.texts_file + '-pre_tf-idf')

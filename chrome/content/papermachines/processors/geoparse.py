@@ -58,7 +58,7 @@ class Geoparse(textprocessor.TextProcessor):
 							else:
 								places.append(woeid)
 								if not woeid in geoparse_obj['references']:
-									geoparse_obj['reference'][woeid] = []
+									geoparse_obj['references'][woeid] = []
 								geoparse_obj['references'][woeid].append((reference.start - last_index, reference.end - last_index))
 
 					geoparse_obj['places'] = places
@@ -73,26 +73,26 @@ class Geoparse(textprocessor.TextProcessor):
 			geo_parsed[filename] = geoparse_obj.get('places', [])
 			self.metadata[filename]['city'] = geoparse_obj.get('city')
 			for woeid, data in geoparse_obj.get('places_by_woeid', {}).iteritems():
-				places_by_woeid[woeid] = data
-
-		data_filename = os.path.join(self.out_dir, self.name + self.collection + '.js')
+				places_by_woeid[int(woeid)] = data
 
 		places = {}
 		for filename, woeids in geo_parsed.iteritems():
 			year = self.metadata[filename]["year"]
 			for woeid in woeids:
-				if woeid not in places:
-					places[woeid] = {}
-					places[woeid]["name"] = places_by_woeid[woeid]["name"]
-					places[woeid]["type"] = places_by_woeid[woeid]["type"]
-					places[woeid]["coordinates"] = places_by_woeid[woeid]["coordinates"]
-					places[woeid]["weight"] = {year: 1}
-				else:
-					if year not in places[woeid]["weight"]:
-						places[woeid]["weight"][year] = 1
+				if woeid in places_by_woeid:
+					if woeid not in places:
+						places[woeid] = {}
+						places[woeid]["name"] = places_by_woeid[woeid]["name"]
+						places[woeid]["type"] = places_by_woeid[woeid]["type"]
+						places[woeid]["coordinates"] = places_by_woeid[woeid]["coordinates"]
+						places[woeid]["weight"] = {year: 1}
 					else:
-						places[woeid]["weight"][year] += 1
+						if year not in places[woeid]["weight"]:
+							places[woeid]["weight"][year] = 1
+						else:
+							places[woeid]["weight"][year] += 1
 
+		self.places_by_woeid = places_by_woeid
 		max_country_weight = 0
 
 		for place in sorted(places.keys()):
@@ -105,6 +105,8 @@ class Geoparse(textprocessor.TextProcessor):
 		placeIDsToCoords = {k: v["coordinates"] for k, v in places_by_woeid.iteritems()}
 
 		linksByYear = {}
+		sources = {}
+
 		for filename in self.files:
 			if self.metadata[filename].get('city') is None or len(geo_parsed[filename]) < 2:
 				continue
@@ -115,13 +117,18 @@ class Geoparse(textprocessor.TextProcessor):
 				if year not in linksByYear:
 					linksByYear[year] = {}
 				source = self.metadata[filename]['city']
+				if source != None:
+					if source not in sources:
+						sources[source] = {}
+					if year not in sources[source]:
+						sources[source][year] = 0
+					sources[source][year] += 1
 				targets = geo_parsed[filename]
 				for target in targets:
 					edge = str(source) + ',' + str(target)
 					if edge not in linksByYear[year]:
-						linksByYear[year][edge] = 1
-					else:
-						linksByYear[year][edge] += 1
+						linksByYear[year][edge] = 0
+					linksByYear[year][edge] += 1
 			except:
 				logging.info(traceback.format_exc())
 
@@ -136,26 +143,16 @@ class Geoparse(textprocessor.TextProcessor):
 				groupedLinksByYear[-1].append({'source': source, 'target': target, 'year': year, 'weight': weight})
 
 
-		data_vars = {"placeIDsToCoords": placeIDsToCoords,
-			"placeIDsToNames": placeIDsToNames,
-			"placesMentioned": {k : v["weight"] for k, v in places.iteritems() if v["type"] != "Country"},
-			"countries": {v["name"] : v["weight"] for k, v in places.iteritems() if v["type"] == "Country"},
-			"max_country_weight": max_country_weight,
-			"startDate": min([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit()]),
-			"endDate": max([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit()])
+		params = {"PLACEIDSTOCOORDS": json.dumps(placeIDsToCoords),
+			"PLACEIDSTONAMES": json.dumps(placeIDsToNames),
+			"PLACESMENTIONED": json.dumps({k : v["weight"] for k, v in places.iteritems() if v["type"] != "Country"}),
+			"TEXTSFROMPLACE": json.dumps(sources),
+			"COUNTRIES": json.dumps({v["name"] : v["weight"] for k, v in places.iteritems() if v["type"] == "Country"}),
+			"MAX_COUNTRY_WEIGHT": str(max_country_weight),
+			"STARTDATE": str(min([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit() and x["year"] != "0000"])),
+			"ENDDATE": str(max([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit()])),
+			"LINKS_BY_YEAR": json.dumps(groupedLinksByYear)
 		}
-
-		data = ""
-
-		for k, v in data_vars.iteritems():
-			data += "var "+ k + "=" + json.dumps(v) + ";\n";
-
-		logging.info("writing JS include file")
-
-		with file(data_filename, 'w') as data_file:
-			data_file.write(data)
-
-		params = {"DATA_FILE": os.path.basename(data_filename), "LINKS_BY_YEAR": json.dumps(groupedLinksByYear)}
 		self.write_html(params)
 
 		logging.info("finished")

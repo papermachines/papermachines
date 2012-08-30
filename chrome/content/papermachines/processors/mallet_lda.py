@@ -157,8 +157,12 @@ class MalletLDA(mallet.Mallet):
 
 		self.topics_by_year = topics_by_year
 		self._find_proportions(topics_by_year)
-		self._find_stdevs(topics_by_year)
-		self._find_correlations(topics_by_year)
+		try:		
+			self._find_stdevs(topics_by_year)
+			self._find_correlations(topics_by_year)
+		except:
+			self.stdevs = {}
+			self.correlations = {}
 
 		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
 

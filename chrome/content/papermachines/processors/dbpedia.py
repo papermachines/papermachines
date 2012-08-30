@@ -79,7 +79,7 @@ class DBpedia(textprocessor.TextProcessor):
 		for uri, items in uris_to_docs.iteritems():
 			weights.append(sum(items.values()))
 		weights.sort()
-		min_weight = weights[max(-50, -len(weights))]
+		min_weight = weights[max(-100, -len(weights))]
 
 		for uri, items in uris_to_docs.iteritems():
 			if sum(items.values()) > min_weight:
@@ -88,7 +88,7 @@ class DBpedia(textprocessor.TextProcessor):
 
 
 		# params = {"DATA": json.dumps(uris_to_docs)}
-		params = {"DATA": json.dumps(filtered_uris)}
+		params = {"URIS_TO_DOCS": json.dumps(filtered_uris)}
 		self.write_html(params)
 
 		logging.info("finished")

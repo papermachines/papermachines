@@ -5,7 +5,6 @@
     <script type="text/javascript" src="d3.v2.js"></script>
     <script type="text/javascript" src="html5slider.js"></script>
     <script type="text/javascript" src="colorbrewer.js"></script>
-    <script type="text/javascript" src="DATA_FILE"></script>
     <link type="text/css" rel="stylesheet" href="button.css"/>
     <style type="text/css">
 body {
@@ -90,8 +89,7 @@ path.arc {
   stroke: url(#fade);
 }
 .site {
-fill: #238B45;
-stroke: #0B5A26;
+fill-opacity: 0.7;
 }
 
 #searches {
@@ -104,7 +102,17 @@ stroke: #0B5A26;
     <div id="body">
       <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><span id="timeDisplay"></div></div>
     </div>
-    <script type="text/javascript"> var linksByYear = LINKS_BY_YEAR;</script>
+    <script type="text/javascript">
+    var linksByYear = LINKS_BY_YEAR;
+    var placeIDsToCoords = PLACEIDSTOCOORDS;
+    var placeIDsToNames = PLACEIDSTONAMES;
+    var placesMentioned = PLACESMENTIONED;
+    var textsFromPlace = TEXTSFROMPLACE;
+    var countries = COUNTRIES;
+    var max_country_weight = MAX_COUNTRY_WEIGHT;
+    var startDate = STARTDATE;
+    var endDate = ENDDATE;
+    </script>
     <script type="text/javascript" src="geoparse.js"></script>
     <script type="text/javascript">
       window.onload = function () { generateSearch(); };

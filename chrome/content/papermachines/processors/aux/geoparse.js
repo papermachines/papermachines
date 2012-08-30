@@ -1,7 +1,9 @@
 var palette = colorbrewer.RdYlGn[5];
-var palette_edges = colorbrewer.RdYlBu[10];
+var palette_edges_full = colorbrewer.RdYlBu[10];
+palette_edges = [palette_edges_full[9], palette_edges_full[1]]; // source, target: blue, red
 
 var ylgn = d3.interpolateRgb(palette[2], palette[4]);
+var rdbu = d3.interpolateRgb(palette_edges[1], palette_edges[0]);
 
 var world_countries = 
 {"type":"FeatureCollection","features":[
@@ -235,7 +237,7 @@ var layers;
 
 function valueToRadius(d) {
   var mentions = getMentionsToDate(d);
-  return (mentions != 0) ? Math.min(Math.max(1,Math.pow(mentions, 0.3)), 10) : 0;
+  return (mentions != 0) ? Math.min(Math.max(1,Math.pow(mentions, 0.2)), 10) : 0;
 }
 
 collection = world_countries;
@@ -255,8 +257,8 @@ data = svg.selectAll("circle")
 	.enter().append("svg:circle")
 	.attr("cx", mapX)
 	.attr("cy", mapY)
+	.style("fill", cityColor)
 	.attr("class", "site")
-	.style("fill-opacity", "0.7")
   .attr("id", function(d,i) { return "place" + d.key; })
   .style("display", "block")
 	.attr("r", valueToRadius); 
@@ -447,17 +449,24 @@ function getCountryWeight(country) {
 }
 
 function cityColor(d) {
-  // http://colorbrewer2.org/index.php?type=sequential&scheme=OrRd&n=4
-  var ratio = d.properties.texts_from_here;
-  var color = "#"; //fall-back
-  if (ratio <= 0.5) {
-    color = "#F56666";
-  } else if (ratio <= 1.0) {
-    color = "#F50000";
-  }
-  return color;
-
+	var origin = d.key,
+		sourceN = 0,
+		targetN = 0;
+	if (origin in textsFromPlace) {
+		for (var year in textsFromPlace[origin]) {
+		    if (parseInt(year) <= endDate) {
+		    	sourceN += textsFromPlace[origin][year];
+		    }
+		}
+	}
+	for (var year in d.value) {
+	    if (parseInt(year) <= endDate) {
+	    	targetN += d.value[year];
+	    }		
+	}
+	return rdbu(Math.pow(sourceN * 4, 2.0)/(sourceN+targetN));
 }
+
 function flashOutline(selection) {
     selection.transition().duration(2000)
       .ease("linear")
@@ -497,7 +506,7 @@ var gradient = defs.append("svg:linearGradient")
   .attr("x2", "100%")
   .attr("y2", "0%");
 
-var gradientColors = palette_edges.reverse(); //[palette_edges[0], palette_edges[9]];
+var gradientColors = palette_edges;
 gradient.selectAll("stop")
 	.data(gradientColors)
 	.enter().append("svg:stop")
