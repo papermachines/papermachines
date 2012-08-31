@@ -33,6 +33,8 @@ Annotates files using the DBpedia Spotlight service, providing a look at what na
 ### Topic Modeling
 Shows the proportional prevalence of different "topics" (collections of words likely to co-occur) in the corpus, by time or by subcollection. This uses the [MALLET](http://mallet.cs.umass.edu) package to perform [latent Dirichlet allocation](http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation), and by default displays the 5 most "coherent" topics, based on a metric devised by [Mimno et al.](http://www.cs.princeton.edu/~mimno/papers/mimno-semantic-emnlp.pdf)
 
+Note that clicking "Save" in this display will open a new window with the graph displayed free of interactive controls; this window may be saved as an ".SVG" file or captured via screenshot. It will also, in the original window, preserve the current selection of topics, search terms, and time scale as a permalink; please bookmark this if you wish to return to a specific view with interactive controls intact.
+
 ### Classification
 This allows you to train the computer to infer the common features of the documents under each subcollection; subsequently, a set of texts in a different folder can be sorted automatically based on this training. At the moment, the probability distribution for each text is given in plain text; the ability to automatically generate a new collection according to this sorting is forthcoming.
 
