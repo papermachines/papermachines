@@ -1,6 +1,7 @@
 Zotero.PaperMachines = {
 	DB: null,
 	schema: {
+		'files_to_extract': "CREATE TABLE files_to_extract (filename VARCHAR(255), itemID INTEGER, outfile VARCHAR(255), collection VARCHAR(255));",
 		'doc_files': "CREATE TABLE doc_files (itemID INTEGER PRIMARY KEY, filename VARCHAR(255));",
 		'collections': "CREATE TABLE collections (id INTEGER PRIMARY KEY, parent VARCHAR(255), child VARCHAR(255), FOREIGN KEY(parent) REFERENCES collection_docs(collection), FOREIGN KEY(child) REFERENCES collection_docs(collection), UNIQUE(parent, child) ON CONFLICT IGNORE);",
 		'collection_docs': "CREATE TABLE collection_docs (id INTEGER PRIMARY KEY, collection VARCHAR(255), itemID INTEGER, FOREIGN KEY(itemID) REFERENCES doc_files(itemID), UNIQUE(collection, itemID) ON CONFLICT IGNORE);",
@@ -10,6 +11,7 @@ Zotero.PaperMachines = {
 	processQuery: "SELECT * FROM processed_collections WHERE process_path = ?;",
 	pm_dir: null,
 	csv_dir: null,
+	extract_csv_dir: null,
 	out_dir: null,
 	log_dir: null,
 	install_dir: null,
@@ -128,6 +130,7 @@ Zotero.PaperMachines = {
 
 		this.pm_dir = this._getOrCreateDir("papermachines", Zotero.getZoteroDirectory());
 		this.csv_dir = this._getOrCreateDir("csv");
+		this.extract_csv_dir = this._getOrCreateDir("extractcsv");
 		this.out_dir = this._getOrCreateDir("out");
 		this.processors_dir = this._getOrCreateDir("processors");
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
@@ -158,6 +161,7 @@ Zotero.PaperMachines = {
 		}
 
 		this.DB.query("UPDATE processed_collections SET status = 'failed' WHERE status = 'running';");
+		this.DB.query("DELETE from files_to_extract;");
 
 		win.setTimeout(Zotero.PaperMachines.replaceOnCollectionSelected, 5000);
 
@@ -168,15 +172,21 @@ Zotero.PaperMachines = {
 	extractText: function () {
 		var itemGroup = ZoteroPane.getItemGroup();
 		var queue = new Zotero.PaperMachines._Sequence(function() {
-			Zotero.hideZoteroPaneOverlay();
 			Zotero.UnresponsiveScriptIndicator.enable();
+			Zotero.hideZoteroPaneOverlay();
+			var dir = Zotero.getZoteroDirectory();
+			dir.append(Zotero.Fulltext.pdfConverterFileName);
+			Zotero.PaperMachines.openWindowOrTab("zotero://papermachines/extract/" + Zotero.PaperMachines.getItemGroupID(itemGroup) + "/" + encodeURIComponent(dir.path));
 		});
 
 		Zotero.UnresponsiveScriptIndicator.disable();
 
 		queue.grandTotal = Zotero.PaperMachines.countItemsInGroup(itemGroup) || 1000;
 
+		Zotero.showZoteroPaneProgressMeter("Searching for files to extract");
+
 		this.captureCollectionTreeStructure(itemGroup);
+
 
 		this.processItemGroup(itemGroup, function (group) {
 			queue.add(Zotero.PaperMachines.extractFromItemGroup, group, queue);
@@ -267,7 +277,11 @@ Zotero.PaperMachines = {
 		var proc = Components.classes["@mozilla.org/process/util;1"]
 			.createInstance(Components.interfaces.nsIProcess);
 
-		var csv = Zotero.PaperMachines.buildCSV(thisGroup);
+		if (processor == "extract") {
+			var csv = Zotero.PaperMachines.buildExtractCSV(thisID);
+		} else {
+			var csv = Zotero.PaperMachines.buildCSV(thisGroup);
+		}
 
 		var progressFile = Zotero.PaperMachines._getOrCreateFile(processor + thisID + "progress.html", Zotero.PaperMachines.out_dir);
 		var outFile = Zotero.PaperMachines.out_dir.clone();
@@ -376,6 +390,47 @@ Zotero.PaperMachines = {
 
 		var wordCloudURI = "zotero://papermachines/wordcloud/" + thisID;
 		Zotero.PaperMachines.replaceTagsBoxWithWordCloud(wordCloudURI);
+	},
+	buildExtractCSV: function (thisID) {
+		var query = "SELECT filename, itemID, outfile, collection FROM files_to_extract;";
+		var docs = this.DB.query(query);
+
+		var csv_file = this.extract_csv_dir.clone();
+		csv_file.append(thisID + ".csv");
+	
+		var csv_str = "";
+		var header = ["filename", "itemID", "outfile", "collection"];
+		csv_str += header.join(",") + "\n";
+		for (var i in docs) {
+			var row = [];
+			for (var k in header) {
+				var val;
+				if (header[k] in docs[i]) {
+					val = docs[i][header[k]];
+				}
+
+				if (typeof val == "string") {
+					val = val.replace(/"/g, ""); //remove quotes
+					if (val.indexOf(',') != -1) {
+						val = '"' + val + '"';
+					}
+				}
+
+				row.push(val);			
+			}
+			csv_str += row.join(",") + "\n";
+		}
+		Zotero.File.putContents(csv_file, csv_str);
+		return csv_file;
+	},
+	addExtractedToDB: function(json_data) {
+		var docs = JSON.parse(json_data);
+		for (var i in docs) {
+			var doc = docs[i];
+			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO doc_files (itemID, filename) VALUES (?,?)", [doc.itemID, doc.filename]);
+			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO collection_docs (collection,itemID) VALUES (?,?)", [doc.collection, doc.itemID]);
+			Zotero.PaperMachines.DB.query("DELETE FROM files_to_extract WHERE itemID = ?;", [doc.itemID]);
+		}
 	},
 	buildCSV: function(collection) {
 		var id = this.getItemGroupID(collection);
@@ -617,39 +672,32 @@ Zotero.PaperMachines = {
 		return Zotero.PaperMachines._sanitizeFilename(filename) + ".txt";
 	},
 	processItem: function(itemGroupName, item, dir, i, queue) {
-		Zotero.showZoteroPaneProgressMeter(itemGroupName, true);
 		var percentDone = (parseInt(i)+queue.runningTotal)*100.0/queue.grandTotal;
+		Zotero.updateZoteroPaneProgressMeter(percentDone);
 		var outFile = dir.clone();
 		outFile.append(Zotero.PaperMachines.getFilenameForItem(item));
 
-		if(outFile.exists()) {
+		if (outFile.exists()) {
+			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO doc_files (itemID, filename) VALUES (?,?)", [item.id, outFile.path]);
 			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO collection_docs (collection,itemID) VALUES (?,?)", [dir.leafName, item.id]);			
-			Zotero.updateZoteroPaneProgressMeter(percentDone);
 			queue.runningTotal += 1;
 			queue.next();
 			return;
 		}
 
-		var fulltext = "";
-
 		var attachments = item.getAttachments(false);
+		var recognizedAttachments = false;
 		for (a in attachments) {
 			var a_item = Zotero.Items.get(attachments[a]);
 			if (a_item.attachmentMIMEType == 'application/pdf'
 			   || a_item.attachmentMIMEType == 'text/html') {
-				fulltext += a_item.attachmentText;
+			   	recognizedAttachments = true;
+				var orig_file = a_item.getFile().path;
+				if (orig_file) {
+					Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [orig_file, item.id, outFile.path, dir.leafName]);					
+				}
 			}
 		}
-		if (fulltext != "") {
-			Zotero.File.putContents(outFile, fulltext);
-
-			Zotero.PaperMachines.DB.beginTransaction();
-			Zotero.PaperMachines.DB.query("INSERT INTO doc_files (itemID, filename) VALUES (?,?)", [item.id, outFile.path]);
-			Zotero.PaperMachines.DB.query("INSERT INTO collection_docs (collection,itemID) VALUES (?,?)", [dir.leafName, item.id]);
-			Zotero.PaperMachines.DB.commitTransaction();
-
-		}
-		Zotero.updateZoteroPaneProgressMeter(percentDone);
 		queue.runningTotal += 1;
 		queue.next();
 	},
@@ -722,7 +770,14 @@ Zotero.PaperMachines = {
 			var prog_str = Zotero.File.getContents(progTextFile);
 			var iterString = prog_str.match(/(?:<)\d+/g);
 			iterations = parseInt(iterString.slice(-1)[0].substring(1));
-		} catch (e) { }
+			if (iterations == 1000) {
+				var extracted = Components.classes["@mozilla.org/file/local;1"]
+					.createInstance(Components.interfaces.nsILocalFile);
+				extracted.initWithPath(processResult["progressfile"].replace("progress.html",".json"))
+				var extracted_str = Zotero.File.getContents(extracted);
+				Zotero.PaperMachines.addExtractedToDB(extracted_str);
+			}
+		} catch (e) { Zotero.PaperMachines.LOG(e.name +": " + e.message);}
 
 
 		var collectionName = thisGroup.getName();

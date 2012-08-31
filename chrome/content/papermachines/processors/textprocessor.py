@@ -67,7 +67,7 @@ class TextProcessor:
 				self.progress_initialized = True
 
 			self.count += 1
-			self.progress_file.write('<' + str(self.count*1000.0/float(self.total)) + '>\n')
+			self.progress_file.write('<' + str(int(self.count*1000.0/float(self.total))) + '>\n')
 			self.progress_file.flush()
 
 	def write_html(self, user_params):
