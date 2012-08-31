@@ -15,11 +15,14 @@ In order to run Paper Machines, you will need the following (note that Python an
 * Python ([download for Windows](http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi))
 * Java ([download for Windows/Mac/Linux/etc.](http://java.com/en/download/index.jsp))
 
+## Installation
+Paper Machines should work either in Zotero for Firefox or Zotero Standalone, though the latter has not been tested extensively. To install, click <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.1.3.xpi" hash="sha1:b3fc68745b0dd6630a1ad8e88a0590f04899548b" onclick="return install(event);">here</a> while using Firefox. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
+
 ## Usage
 To begin, right-click (control-click for Mac) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization.
 
 ### Word Cloud
-Displays words scaled according to the frequency of their occurrence. An [oft-maligned](http://www.niemanlab.org/2011/10/word-clouds-considered-harmful/), but still arguably useful way to get a quick impression of the most common words in your collection. Either a single word cloud or multiple word clouds (divided up by subcollection) can be generated; by default, the single word cloud will appear in the Tags pane of Zotero.
+Displays words scaled according to the frequency of their occurrence. An [oft-maligned](http://www.niemanlab.org/2011/10/word-clouds-considered-harmful/), but still arguably useful way to get a quick impression of the most common words in your collection. Either a basic word cloud, a word cloud with [TF-IDF](http://en.wikipedia.org/wiki/Tf*idf) filtering to remove unimportant words, or multiple word clouds (divided up by subcollection) can be generated; by default, the basic word cloud will appear in the Tags pane of Zotero once text has been extracted.
 
 ### Phrase Net
 Finds phrases that follow a certain pattern, such as "x and y," and displays the most common pairings. This method is derived from a [Many Eyes visualization](http://www-958.ibm.com/software/data/cognos/manyeyes/page/Phrase_Net.html)).

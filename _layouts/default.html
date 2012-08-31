@@ -5,6 +5,28 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Paper Machines</title>
     
+    <script type="application/javascript">
+    <!--
+    function install (aEvent)
+    {
+      var params = {
+        "Paper Machines": { URL: aEvent.target.href,
+//                 IconURL: aEvent.target.getAttribute("iconURL"),
+                 Hash: aEvent.target.getAttribute("hash"),
+                 toString: function () { return this.URL; }
+        }
+      };
+      if ("InstallTrigger" in window) {
+        InstallTrigger.install(params);
+        return false;
+      } else {
+        return true;
+      }
+
+    }
+    -->
+    </script>
+
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
@@ -19,7 +41,7 @@
         <p>A Zotero extension for analysis and visualization in the digital humanities.</p>
         <p class="view"><a href="http://github.com/chrisjr/papermachines">View the Project on GitHub <small>chrisjr/papermachines</small></a></p>
         <ul>
-          <li><a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.1.3.xpi">Download <strong>Extension</strong></a></li>
+          <li onclick="return install(event);"><a onclick="return install(event);" href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.1.3.xpi" hash="sha1:1b4868bf5b1d31c9dff0098707b661a14bd76311">Install <strong>Extension</strong></a></li>
           <li><a href="examples.html">View <strong>Examples</strong></a></li>
           <li><a href="docs.html">Fork on <strong>GitHub</strong></a></li>
         </ul>
