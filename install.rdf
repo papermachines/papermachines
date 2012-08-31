@@ -6,7 +6,7 @@
 		<em:id>papermachines@chrisjr.org</em:id>
 		<em:name>Paper Machines</em:name>
 		<em:version>0.1.3</em:version>
-		<em:description>A sample plugin for Zotero</em:description>
+		<em:description>A Zotero extension for analysis and visualization in the digital humanities.</em:description>
 		<em:creator>Chris Johnson-Roberson</em:creator>
 		<em:unpack>true</em:unpack>
 <!--		<em:updateURL>https://www.zotero.org/download/plugins.rdf</em:updateURL> -->
