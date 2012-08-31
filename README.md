@@ -13,6 +13,9 @@ In order to run Paper Machines, you will need the following (note that Python an
 * Python ([download for Windows](http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi))
 * Java ([download for Windows/Mac/Linux/etc.](http://java.com/en/download/index.jsp))
 
+## Installation
+Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, click <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.1.4.xpi" hash="sha1:0fb5d8188d73341ba530216452ef19a37942ac32" onclick="return install(event);">here</a> while using Firefox. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
+
 ## Usage
 To begin, right-click (control-click for Mac) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization.
 

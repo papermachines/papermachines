@@ -1,11 +1,11 @@
 Zotero.PaperMachines = {
 	DB: null,
 	schema: {
-		'files_to_extract': "CREATE TABLE files_to_extract (filename VARCHAR(255), itemID INTEGER, outfile VARCHAR(255), collection VARCHAR(255));",
+		'files_to_extract': "CREATE TABLE files_to_extract (filename VARCHAR(255), itemID INTEGER, outfile VARCHAR(255), collection VARCHAR(255), UNIQUE(filename, itemID) ON CONFLICT IGNORE);",
 		'doc_files': "CREATE TABLE doc_files (itemID INTEGER PRIMARY KEY, filename VARCHAR(255));",
 		'collections': "CREATE TABLE collections (id INTEGER PRIMARY KEY, parent VARCHAR(255), child VARCHAR(255), FOREIGN KEY(parent) REFERENCES collection_docs(collection), FOREIGN KEY(child) REFERENCES collection_docs(collection), UNIQUE(parent, child) ON CONFLICT IGNORE);",
 		'collection_docs': "CREATE TABLE collection_docs (id INTEGER PRIMARY KEY, collection VARCHAR(255), itemID INTEGER, FOREIGN KEY(itemID) REFERENCES doc_files(itemID), UNIQUE(collection, itemID) ON CONFLICT IGNORE);",
-		'processed_collections': "CREATE TABLE processed_collections (id INTEGER PRIMARY KEY, process_path VARCHAR(255), collection VARCHAR(255), processor VARCHAR(255), status VARCHAR(255), progressfile VARCHAR(255), outfile VARCHAR(255), lastModified DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(collection) REFERENCES collection_docs(collection), UNIQUE(process_path) ON CONFLICT REPLACE);",
+		'processed_collections': "CREATE TABLE processed_collections (id INTEGER PRIMARY KEY, process_path VARCHAR(255), collection VARCHAR(255), processor VARCHAR(255), status VARCHAR(255), progressfile VARCHAR(255), outfile VARCHAR(255), timeStamp DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(collection) REFERENCES collection_docs(collection), UNIQUE(process_path) ON CONFLICT REPLACE); CREATE TRIGGER insert_processed_collections_timeStamp AFTER INSERT ON processed_collections BEGIN UPDATE processed_collections SET timeStamp = DATETIME('NOW') WHERE rowid = new.rowid; END; CREATE TRIGGER update_processed_collections_timeStamp AFTER UPDATE ON processed_collections BEGIN UPDATE processed_collections SET timeStamp = DATETIME('NOW') WHERE rowid = new.rowid; END;",
 		'datasets': "CREATE TABLE datasets (id INTEGER PRIMARY KEY, type VARCHAR(255), path VARCHAR(255))"
 	},
 	processQuery: "SELECT * FROM processed_collections WHERE process_path = ?;",
@@ -77,10 +77,28 @@ Zotero.PaperMachines = {
 						if (processResult) {
 							switch (processResult["status"]) {
 								case "done":
+									if (processResult["processor"] == "extract") {
+										var finished_path = processResult["progressfile"].replace("progress.html",".json");
+										Zotero.PaperMachines.addExtractedToDB(finished_path);										
+									}
+
 									file = Components.classes["@mozilla.org/file/local;1"]
 										.createInstance(Components.interfaces.nsILocalFile);
 									file.initWithPath(processResult["outfile"]);
-									if (!file.exists()) {
+
+									var mostRecentExtractionQuery = "SELECT MAX(timeStamp) FROM processed_collections " +
+										"WHERE processor='extract' AND collection = ? OR collection in " +
+										"(SELECT parent FROM collections WHERE child = ?);";
+
+									var c = processResult["collection"];
+									var mostRecentExtraction = Zotero.PaperMachines.DB.valueQuery(mostRecentExtractionQuery, [c, c]);
+
+									if (mostRecentExtraction && processResult["timeStamp"] < mostRecentExtraction) {
+										Zotero.PaperMachines.DB.query("UPDATE processed_collections SET status = 'failed' WHERE process_path = ?;", [path]);
+										file = false;
+									}
+
+									if (!file || !file.exists()) {
 										file = false;
 										Zotero.PaperMachines.DB.query("UPDATE processed_collections SET status = 'failed' WHERE process_path = ?;", [path]);
 										// Zotero.PaperMachines._runProcessPath(path);
@@ -171,12 +189,21 @@ Zotero.PaperMachines = {
 	},
 	extractText: function () {
 		var itemGroup = ZoteroPane.getItemGroup();
+		var id = this.getItemGroupID(itemGroup);
+
+		var pdftotext = Zotero.getZoteroDirectory();
+		pdftotext.append(Zotero.Fulltext.pdfConverterFileName);
+
+		var path = "zotero://papermachines/extract/" + Zotero.PaperMachines.getItemGroupID(itemGroup) + "/" + encodeURIComponent(pdftotext.path);
+		this.DB.beginTransaction();
+		this.DB.query("UPDATE processed_collections SET status = 'failed' WHERE processor='extract' AND collection = ?;", [id]);
+		this.DB.query("DELETE FROM collection_docs WHERE collection = ? OR collection IN (SELECT child FROM collections WHERE parent = ?);", [id, id]);
+		this.DB.commitTransaction();
+
 		var queue = new Zotero.PaperMachines._Sequence(function() {
 			Zotero.UnresponsiveScriptIndicator.enable();
 			Zotero.hideZoteroPaneOverlay();
-			var dir = Zotero.getZoteroDirectory();
-			dir.append(Zotero.Fulltext.pdfConverterFileName);
-			Zotero.PaperMachines.openWindowOrTab("zotero://papermachines/extract/" + Zotero.PaperMachines.getItemGroupID(itemGroup) + "/" + encodeURIComponent(dir.path));
+			Zotero.PaperMachines.openWindowOrTab(path);
 		});
 
 		Zotero.UnresponsiveScriptIndicator.disable();
@@ -186,7 +213,6 @@ Zotero.PaperMachines = {
 		Zotero.showZoteroPaneProgressMeter("Searching for files to extract");
 
 		this.captureCollectionTreeStructure(itemGroup);
-
 
 		this.processItemGroup(itemGroup, function (group) {
 			queue.add(Zotero.PaperMachines.extractFromItemGroup, group, queue);
@@ -436,6 +462,35 @@ Zotero.PaperMachines = {
 			Zotero.PaperMachines.DB.query("DELETE FROM files_to_extract WHERE itemID = ?;", [doc.itemID]);
 		}
 	},
+	buildDocArray: function(collection) {
+		var docs = [];
+		this.processItemGroup(collection, function (itemGroup) {
+			var thisGroup = Zotero.PaperMachines.getItemGroupID(itemGroup);
+			var groupName = itemGroup.getName();
+
+			if ("getItems" in itemGroup) {
+				var items = itemGroup.getItems();
+			} else if ("getChildItems" in itemGroup) {
+				var items = itemGroup.getChildItems();
+			}
+
+			for (var i in items) {
+				var item = items[i];
+				if (item.isRegularItem()) {
+					var filename = Zotero.PaperMachines.findItemInDB(item);
+					if (filename) {
+						docs.push({"itemID": item.id, "filename": filename, "label": groupName});
+					}
+				}
+			}
+		});
+		// var query = "SELECT itemID, filename FROM doc_files WHERE itemID IN " +
+		// 			"(SELECT itemID FROM collection_docs WHERE collection = ? OR collection IN " +
+		// 			"(SELECT child FROM collections WHERE parent = ?));";
+
+		// var docs = this.DB.query(query, [id, id]);
+		return docs;
+	},
 	buildCSV: function(collection) {
 		var id = this.getItemGroupID(collection);
 		if (!id) return false;
@@ -450,13 +505,8 @@ Zotero.PaperMachines = {
 		var header = ["filename", "itemID", "title", "label", "key", "year", "date", "place"];
 		csv_str += header.join(",") + "\n";
 
-		var query = "SELECT itemID, filename FROM doc_files WHERE itemID IN " +
-					"(SELECT itemID FROM collection_docs WHERE collection = ? OR collection IN " +
-					"(SELECT child FROM collections WHERE parent = ?));";
-
-		var docs = this.DB.query(query, [id, id]);
-
-		if (!docs) return false;
+		var docs = this.buildDocArray(collection);
+		if (docs.length == 0) return false;
 
 		for (var i in docs) {
 			var row = [];
@@ -592,7 +642,18 @@ Zotero.PaperMachines = {
 		return this.DB.valueQuery("SELECT collection FROM collection_docs WHERE itemID = ? LIMIT 1;", [item.id]);
 	},
 	findItemInDB: function (item) {
-		return this.DB.valueQuery("SELECT COUNT(*) FROM doc_files WHERE itemID = ?;",[item.id]);
+		var filename = this.DB.valueQuery("SELECT filename FROM doc_files WHERE itemID = ?;",[item.id]);
+		var existent = false;
+		if (filename) {
+			var text = Components.classes["@mozilla.org/file/local;1"]
+				.createInstance(Components.interfaces.nsILocalFile);
+			text.initWithPath(filename);
+			existent = text.exists();
+			if (!existent) {
+				this.DB.query("DELETE FROM doc_files WHERE filename = ?;", [docs[i]["filename"]]);
+			}
+		}
+		return existent ? filename : false;
 	},
 	countItemsInGroup: function (itemGroup) {
 		var count = 0;
@@ -676,13 +737,13 @@ Zotero.PaperMachines = {
 		return Zotero.PaperMachines._sanitizeFilename(filename) + ".txt";
 	},
 	processItem: function(itemGroupName, item, dir, i, queue) {
+		Zotero.PaperMachines.LOG(item.id);
 		var percentDone = (parseInt(i)+queue.runningTotal)*100.0/queue.grandTotal;
 		Zotero.updateZoteroPaneProgressMeter(percentDone);
 		var outFile = dir.clone();
 		outFile.append(Zotero.PaperMachines.getFilenameForItem(item));
 
 		if (outFile.exists()) {
-			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO doc_files (itemID, filename) VALUES (?,?)", [item.id, outFile.path]);
 			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO collection_docs (collection,itemID) VALUES (?,?)", [dir.leafName, item.id]);			
 			queue.runningTotal += 1;
 			queue.next();
@@ -774,10 +835,6 @@ Zotero.PaperMachines = {
 			var prog_str = Zotero.File.getContents(progTextFile);
 			var iterString = prog_str.match(/(?:<)\d+/g);
 			iterations = parseInt(iterString.slice(-1)[0].substring(1));
-			if (iterations == 1000) {
-				var finished_path = processResult["progressfile"].replace("progress.html",".json");
-				Zotero.PaperMachines.addExtractedToDB(finished_path);
-			}
 		} catch (e) { Zotero.PaperMachines.LOG(e.name +": " + e.message);}
 
 
