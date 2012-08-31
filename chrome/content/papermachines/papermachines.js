@@ -423,7 +423,11 @@ Zotero.PaperMachines = {
 		Zotero.File.putContents(csv_file, csv_str);
 		return csv_file;
 	},
-	addExtractedToDB: function(json_data) {
+	addExtractedToDB: function(path) {
+		var extracted = Components.classes["@mozilla.org/file/local;1"]
+					.createInstance(Components.interfaces.nsILocalFile);
+		extracted.initWithPath(path);
+		var json_data = Zotero.File.getContents(extracted);
 		var docs = JSON.parse(json_data);
 		for (var i in docs) {
 			var doc = docs[i];
@@ -771,11 +775,8 @@ Zotero.PaperMachines = {
 			var iterString = prog_str.match(/(?:<)\d+/g);
 			iterations = parseInt(iterString.slice(-1)[0].substring(1));
 			if (iterations == 1000) {
-				var extracted = Components.classes["@mozilla.org/file/local;1"]
-					.createInstance(Components.interfaces.nsILocalFile);
-				extracted.initWithPath(processResult["progressfile"].replace("progress.html",".json"))
-				var extracted_str = Zotero.File.getContents(extracted);
-				Zotero.PaperMachines.addExtractedToDB(extracted_str);
+				var finished_path = processResult["progressfile"].replace("progress.html",".json");
+				Zotero.PaperMachines.addExtractedToDB(finished_path);
 			}
 		} catch (e) { Zotero.PaperMachines.LOG(e.name +": " + e.message);}
 

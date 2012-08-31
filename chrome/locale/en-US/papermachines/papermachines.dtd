@@ -3,7 +3,8 @@
 <!ENTITY papermachines.collectionmenu.extract_text			"Extract Text for Paper Machines">
 
 <!ENTITY papermachines.collectionmenu.wordcloud				"Word Cloud">
-<!ENTITY papermachines.collectionmenu.wordcloud_large		"Single Word Cloud">
+<!ENTITY papermachines.collectionmenu.wordcloud_large		"Word Cloud">
+<!ENTITY papermachines.collectionmenu.wordcloud_large		"Word Cloud (TF-IDF filtered)">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection">
 <!ENTITY papermachines.collectionmenu.phrasenet				"Phrase Net">
 <!ENTITY papermachines.collectionmenu.geoparse				"Geoparser">

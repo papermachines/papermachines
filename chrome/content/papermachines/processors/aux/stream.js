@@ -246,8 +246,8 @@ function resetColors() {
     return;
   }
 
-  var newLabelColors = shuffle(activeTopicLabels.slice());
-  // var newLabelColors = activeTopicLabels.slice();
+  // var newLabelColors = shuffle(activeTopicLabels.slice());
+  var newLabelColors = activeTopicLabels.slice();
   if (newLabelColors.length <= 10) {
     graphColors = d3.scale.category10();
   } else {
@@ -741,7 +741,7 @@ function save() {
     url += "&popup=" + popups.attr("data-year");  
   }
 
-  console.log(url);
+  saveSVG();
   window.location.href = url;
 }
 
@@ -1173,5 +1173,5 @@ function saveSVG() {
     xml += "</style>";  
     xml += d3.select("svg")[0][0].innerHTML;
     xml += "</svg>";
-    window.location.href = "data:application/svg+xml," + encodeURIComponent(xml);
+    window.open("data:image/svg+xml," + encodeURIComponent(xml));
 }

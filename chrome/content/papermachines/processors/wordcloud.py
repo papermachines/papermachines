@@ -16,6 +16,7 @@ class WordCloud(textprocessor.TextProcessor):
 		self.tfidf_scoring = False
 
 	def _findTfIdfScores(self):
+		self.freqs = {}
 		self.tf_by_doc = {}
 		self.max_tf = {}
 		self.df = {}
@@ -35,13 +36,20 @@ class WordCloud(textprocessor.TextProcessor):
 						self.tf_by_doc[filename][stem] += 1
 				# max_tf_d = max(self.tf_by_doc[filename].values())
 				for stem in self.tf_by_doc[filename].keys():
+					if stem not in self.freqs:
+						self.freqs[stem] = 0
+					self.freqs[stem] += self.tf_by_doc[filename][stem]
 					self.tf_by_doc[filename][stem] /= float(flen) #max_tf_d
 					if stem not in self.max_tf or self.max_tf[stem] < self.tf_by_doc[filename][stem]:
 						self.max_tf[stem] = self.tf_by_doc[filename][stem]
 				self.update_progress()
 		n = float(len(self.files))
 		self.idf = {term: math.log10(n/df) for term, df in self.df.iteritems()}
-		self.tfidf = {term: self.max_tf[term] * self.idf[term] for term in self.max_tf.keys() if self.df[term] > 5}
+		self.tfidf = {term: self.max_tf[term] * self.idf[term] for term in self.max_tf.keys()}
+		tfidf_values = self.tfidf.values()
+		top_terms = min(int(len(self.freqs.keys()) * 0.7), 5000)
+		min_score = sorted(tfidf_values, reverse=True)[min(top_terms, len(tfidf_values) - 1)]
+		self.filtered_freqs = {term: freq for term, freq in self.freqs.iteritems() if self.tfidf[term] > min_score and self.df[term] > 5}
 
 	def _topN(self, freqs, n = None):
 		if n is None:
@@ -82,7 +90,7 @@ class WordCloud(textprocessor.TextProcessor):
 
 		if self.tfidf_scoring:
 			self._findTfIdfScores()
-			freqs = self._topN(self.tfidf)
+			freqs = self._topN(self.filtered_freqs)
 		else:
 			freqs = self._findWordFreqs(self.files)
 
