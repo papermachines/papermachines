@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import csv, sys, os, shutil
+import csv, sys, os, shutil, logging
 	
 def merge_dfr_dirs(dirlist):
 	merged_dir =  dirlist[-1] + "-merged"

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys, os, json, cStringIO, tempfile, logging, traceback, codecs, math
+from datetime import datetime, timedelta
 import wordcloud_multiple
 
 class WordCloudChronological(wordcloud_multiple.MultipleWordClouds):
@@ -8,21 +9,54 @@ class WordCloudChronological(wordcloud_multiple.MultipleWordClouds):
 	"""
 	def _basic_params(self):
 		self.name = "wordcloud_chronological"
-		self.width = "300"
-		self.height = "150"
+		self.template_filename = os.path.join(self.cwd, "templates", "wordcloud_multiple.html")
+		self.width = "483"
+		self.height = "300"
 		self.fontsize = "[10,32]"
-		self.n = 50
-		self.tfidf_scoring = True
+		self.n = 100
+		self.tfidf_scoring = False
 		self.MWW = False
 		if len(self.extra_args) > 0:
 			self.interval = self.extra_args[0]
+		else:
+			self.interval = "90"
 
 	def _split_into_labels(self):
-		years = [item["year"] for item in self.metadata.values()]
-		for filename, data in self.metadata.iteritems():
-			if data["label"] not in self.labels:
-				self.labels[data["label"]] = set()
-			self.labels[data["label"]].add(filename)
+		datestr_to_datetime = {}
+		for filename in self.metadata.keys():
+			date_str = self.metadata[filename]["date"]
+			cleaned_date = date_str[0:10]
+			if "-00" in cleaned_date:
+				cleaned_date = cleaned_date[0:4] + "-01-01"
+			datestr_to_datetime[date_str] = datetime.strptime(cleaned_date, "%Y-%m-%d")
+		datetimes = sorted(datestr_to_datetime.values())
+		start_date = datetimes[0]
+		end_date = datetimes[-1]
+
+		if self.interval.isdigit():
+			interval = timedelta(int(self.interval))
+		else:
+			interval = timedelta(90)
+
+		intervals = []
+		interval_names = []
+		start = end = start_date
+		while end <= end_date:
+			end += interval
+			intervals.append((start,end))
+			interval_names.append(start.isoformat()[0:10].replace('-','/') + '-' + end.isoformat()[0:10].replace('-','/'))
+			start = end
+
+		for filename, metadata in self.metadata.iteritems():
+			label = ""
+			for i in range(len(intervals)):
+				interval = intervals[i]
+				if interval[0] <= datestr_to_datetime[metadata["date"]] < interval[1]:
+					label = interval_names[i]
+					break
+			if label not in self.labels:
+				self.labels[label] = set()
+			self.labels[label].add(filename)
 
 if __name__ == "__main__":
 	try:

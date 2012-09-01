@@ -17,7 +17,7 @@ Zotero.PaperMachines = {
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
-	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparse", "dbpedia"],
+	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparse", "dbpedia", "export-output"],
 	processNames: null, // see locale files
 	prompts: null,
 	processesThatPrompt: {
@@ -34,7 +34,13 @@ Zotero.PaperMachines = {
 				}
 			})
 			return Zotero.PaperMachines.selectFromOptions("mallet_classify-file", classifiers);
-		}
+		},
+		"wordcloud_chronological": function () {
+			return Zotero.PaperMachines.textPrompt("wordcloud_chronological", "90");
+		},
+		"mallet_lda_jstor": function () {
+			return Zotero.PaperMachines.filePrompt("mallet_lda_jstor", "multi", [".zip"]);
+		},
 	},
 	communicationObjects: {},
 	noTagsString: "",
@@ -68,6 +74,9 @@ Zotero.PaperMachines = {
 					_uri = "data:application/json," + encodeURIComponent(JSON.stringify(ids));
 				} else {
 					var file1 = Zotero.PaperMachines.out_dir.clone();
+					if (pathParts.indexOf("aux") != -1) {
+						file1.append("aux");
+					}
 					file1.append(pathParts.slice(-1)[0]);					
 
 					if (file1.exists()) {
@@ -245,6 +254,12 @@ Zotero.PaperMachines = {
 	_getOrCreateFile: function(file, parent) {
 		parent = parent || this.pm_dir;
 		return this._getOrCreateNode(file, parent, false);
+	},
+	_getLocalFile: function (path) {
+		var file = Components.classes["@mozilla.org/file/local;1"]
+			.createInstance(Components.interfaces.nsILocalFile);
+		file.initWithPath(path);
+		return file;
 	},
 	_getOrCreateNode: function (node, parent, dir_or_file) {
 		parent = parent || this.pm_dir;
@@ -450,9 +465,7 @@ Zotero.PaperMachines = {
 		return csv_file;
 	},
 	addExtractedToDB: function(path) {
-		var extracted = Components.classes["@mozilla.org/file/local;1"]
-					.createInstance(Components.interfaces.nsILocalFile);
-		extracted.initWithPath(path);
+		var extracted = Zotero.PaperMachines._getLocalFile(path);
 		var json_data = Zotero.File.getContents(extracted);
 		var docs = JSON.parse(json_data);
 		for (var i in docs) {
@@ -623,9 +636,7 @@ Zotero.PaperMachines = {
 		var place = false;
 
 		if (path) {
-			var geoparseFile = Components.classes["@mozilla.org/file/local;1"]
-				.createInstance(Components.interfaces.nsILocalFile);
-			geoparseFile.initWithPath(path.replace(".txt", "_geoparse.json"));
+			var geoparseFile = Zotero.PaperMachines._getLocalFile(path.replace(".txt", "_geoparse.json"));
 			if (geoparseFile.exists()) {
 				var geoparse = JSON.parse(Zotero.File.getContents(geoparseFile));
 				if (geoparse["city"]) {
@@ -645,9 +656,7 @@ Zotero.PaperMachines = {
 		var filename = this.DB.valueQuery("SELECT filename FROM doc_files WHERE itemID = ?;",[item.id]);
 		var existent = false;
 		if (filename) {
-			var text = Components.classes["@mozilla.org/file/local;1"]
-				.createInstance(Components.interfaces.nsILocalFile);
-			text.initWithPath(filename);
+			var text = Zotero.PaperMachines._getLocalFile(filename);
 			existent = text.exists();
 			if (!existent) {
 				this.DB.query("DELETE FROM doc_files WHERE filename = ?;", [docs[i]["filename"]]);
@@ -788,9 +797,10 @@ Zotero.PaperMachines = {
 
 			this._copyAllFiles(procs_dir, this.processors_dir);
 		}
-		this.aux_dir = this.processors_dir.clone();
-		this.aux_dir.append("aux");
-		this._moveAllFiles(this.aux_dir, this.out_dir);
+		this.aux_dir = this._getOrCreateDir("aux", this.processors_dir);
+
+		var new_aux = this._getOrCreateDir("aux", this.out_dir);
+		this._copyAllFiles(this.aux_dir, new_aux);
 	},
 	_copyOrMoveAllFiles: function (copy_or_move, source, target, recursive) {
 		var files = source.directoryEntries;
@@ -828,10 +838,7 @@ Zotero.PaperMachines = {
 		var iterations = false;
 
 		try {
-			var progTextFile = Components.classes["@mozilla.org/file/local;1"]
-				.createInstance(Components.interfaces.nsILocalFile);
-			progTextFile.initWithPath(processResult["progressfile"].replace(".html",".txt"))
-
+			var progTextFile = Zotero.PaperMachines._getLocalFile(processResult["progressfile"].replace(".html",".txt"));
 			var prog_str = Zotero.File.getContents(progTextFile);
 			var iterString = prog_str.match(/(?:<)\d+/g);
 			iterations = parseInt(iterString.slice(-1)[0].substring(1));
@@ -874,6 +881,35 @@ Zotero.PaperMachines = {
 		// 	}
 		// });
 	},
+	exportOutput: function () {
+		var thisGroup = ZoteroPane.getItemGroup();
+		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
+		var collectionName = thisGroup.getName();
+
+		var export_dir = this.filePrompt("export_dir", "getfolder");
+		if (export_dir) {
+			var query = "SELECT processor, outfile FROM processed_collections " +
+				"WHERE status = 'done' AND processor != 'extract' AND collection = ?;";
+			var processes = this.DB.query(query, [thisID]);
+			var options = [];
+			for (var i in processes) {
+				var processResult = processes[i],
+					process = processResult["processor"],
+					outfile = processResult["outfile"];
+				options.push({"name": this.processNames[process], "label": " ", "value": outfile});
+			}
+			var export_processes = Zotero.PaperMachines.selectFromOptions("export_processes", options, "multiplecheck");
+			if (export_processes && export_processes.length > 0) {
+				var new_dir = this._getOrCreateDir(collectionName + " visualizations", export_dir);
+				var new_aux = this._getOrCreateDir("aux", new_dir);
+				this._copyAllFiles(this.aux_dir, new_aux);
+				for (var i in export_processes) {
+					var file = Zotero.PaperMachines._getLocalFile(export_processes[i]);
+					file.copyTo(new_dir, file.leafName);
+				}
+			}
+		}
+	},
 	resetOutput: function () {
 		if (Zotero.PaperMachines.yesNoPrompt("resetOutput")) {
 			var thisID = this.getThisGroupID();
@@ -892,13 +928,66 @@ Zotero.PaperMachines = {
 		s.addCondition("quicksearch-everything", "contains", str);
 		return s.search();
 	},
-	selectFromOptions: function(prompt, options) {
-		var params = {"dataIn": {"type": "select", "prompt": Zotero.PaperMachines.prompts[prompt], "options": options}, "dataOut": null};
+	filePrompt: function(prompt, mode, filters) {
+		const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+		var fp_mode;
+		switch (mode) {
+			case "save":
+				fp_mode = nsIFilePicker.modeSave;
+				break;
+			case "getfolder":
+				fp_mode = nsIFilePicker.modeGetFolder;
+				break;
+			case "multi":
+				fp_mode = nsIFilePicker.modeOpenMultiple;
+				break;
+			case "open":
+			default:
+				fp_mode = nsIFilePicker.modeOpen;
+		}
+		var fp = Components.classes["@mozilla.org/filepicker;1"]
+			.createInstance(nsIFilePicker);
+		fp.init(window, Zotero.PaperMachines.prompts[prompt], fp_mode);
+		if (filters) {
+			for (var i in filters) {
+				fp.appendFilter(i, filters[i]);
+			}			
+		} else {
+			fp.appendFilters(nsIFilePicker.filterAll)
+		}
+		var rv = fp.show();
+		if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
+			switch (mode) {
+				case "multi":
+					var files = fp.files;
+					var paths = [];
+					while (files.hasMoreElements()) 
+					{
+						var arg = files.getNext().QueryInterface(Components.interfaces.nsILocalFile).path;
+						paths.push(arg);
+					}
+					return paths;
+					break;
+				case "getfolder":
+					return fp.file;
+				case "open":
+				case "save":
+				default:
+					return [fp.file.path];
+			}
+		}
+	},
+	selectFromOptions: function(prompt, options, multiple) {
+		var type = "select";
+		if (multiple) type = multiple;
+		var params = {"dataIn": {"type": type, "prompt": Zotero.PaperMachines.prompts[prompt], "options": options}, "dataOut": null};
 		
 		return Zotero.PaperMachines._promptWithParams(params);
 	},
-	textPrompt: function(prompt) {
-		var params = {"dataIn": {"type": "text", "prompt": Zotero.PaperMachines.prompts[prompt]}, "dataOut": null};
+	textPrompt: function(prompt, default_text) {
+		if (!default_text) var default_text = "";
+		var params = {"dataIn": {"type": "text", "default": default_text, "prompt": Zotero.PaperMachines.prompts[prompt]}, "dataOut": null};
 		return Zotero.PaperMachines._promptWithParams(params);
 	},
 	yesNoPrompt: function(prompt) {

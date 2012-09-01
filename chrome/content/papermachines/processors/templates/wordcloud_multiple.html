@@ -2,8 +2,8 @@
 <html>
   <head>
     <title>Multiple Word Clouds: COLLECTION_NAME</title>
-<script src="d3.v2.js"></script>
-<script src="d3.layout.cloud.js"></script>
+<script src="aux/d3.v2.js"></script>
+<script src="aux/d3.layout.cloud.js"></script>
 </head>
 <body>
 <script>
@@ -14,14 +14,19 @@ var color = d3.scale.category10().domain(d3.range(10));
 var width = WIDTH, height = HEIGHT;
 
 var clouds = CLOUDS;
+var order = ORDER;
+var cloudVis = {};
 
-function draw(label, words) {
-  var vis = d3.select("body").append("svg")
+for (var i in order) {
+  cloudVis[order[i]] = d3.select("body").append("svg")
       .attr("width", width)
       .attr("height", height + 16)
     .append("g")
       .attr("transform", "translate(" + width/2 + "," + height/2 + ")");
+}
 
+function draw(label, words) {
+  var vis = cloudVis[label];
   vis.selectAll("text.cloud")
       .data(words)
     .enter().append("text")
@@ -37,10 +42,11 @@ function draw(label, words) {
   vis.append("text")
     .attr("transform", "translate(0," + ((height/2)) + ")")
     .attr("class", "label")
+    .attr("text-anchor", "middle")
     .text(label);
 
 }  
-for (var i in clouds) {
+order.forEach(function (i) {
   var data = clouds[i];
   var vals = data.map(function (d) { return +d.value});
   fontSize.domain([d3.min(vals), d3.max(vals)]);
@@ -55,9 +61,7 @@ for (var i in clouds) {
     .fontSize(function(d) { return fontSize(+d.value); })
     .on("end", (myDraw)(i))
     .start();
-}
-
-
+});
 </script>
 </body>
 </html>

@@ -22,6 +22,8 @@
 				oncommand="Zotero.PaperMachines.runProcess('wordcloud_large', 'tfidf')"/>
 			<menuitem id="wordcloud_multiple" label="&papermachines.collectionmenu.wordcloud_multiple;"
 				oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple')"/>
+			<menuitem id="wordcloud_chronological" label="&papermachines.collectionmenu.wordcloud_chronological;"
+				oncommand="Zotero.PaperMachines.runProcess('wordcloud_chronological')"/>				
 			</menupopup>
 		</menu>
 		<menu id="phrasenet" label="&papermachines.collectionmenu.phrasenet;" disabled="true">
@@ -54,6 +56,8 @@
 			<menupopup id="mallet-menu">
 				<menuitem id="mallet_lda" label="&papermachines.collectionmenu.mallet_lda;"
 					oncommand="Zotero.PaperMachines.runProcess('mallet_lda')"/>
+				<menuitem id="mallet_lda_jstor" label="&papermachines.collectionmenu.mallet_lda_jstor;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet_lda_jstor')"/>
 				<menuitem id="mallet_categorical" label="&papermachines.collectionmenu.mallet_lda_categorical;"
 					oncommand="Zotero.PaperMachines.runProcess('mallet_lda_categorical')"/>
 			</menupopup>
@@ -68,6 +72,8 @@
 		</menu>
 
 		<menuseparator hidden="false"/>
+		<menuitem id="export-output" label="&papermachines.collectionmenu.export_output;"
+			oncommand="Zotero.PaperMachines.exportOutput()"/>
 		<menuitem id="reset-output" label="&papermachines.collectionmenu.reset_output;"
 			oncommand="Zotero.PaperMachines.resetOutput()"/>
 	</menupopup>

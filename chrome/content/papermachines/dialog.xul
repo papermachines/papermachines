@@ -20,6 +20,7 @@
 		<spacer flex="1"/>
 		<listbox id="zotero-papermachines-list" context="zoteroPaperMachinesContext" hidden="true"></listbox>
 		<textbox id="zotero-papermachines-textbox" hidden="true"/>
+		<vbox id="zotero-papermachines-checkboxes" hidden="true"/>
 		<spacer flex="1"/>
 		<hbox>
 			<button dlgtype="cancel" label="&papermachines.dialog.cancel;"/>

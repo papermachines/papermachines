@@ -6,18 +6,22 @@
 <!ENTITY papermachines.collectionmenu.wordcloud_large		"Word Cloud">
 <!ENTITY papermachines.collectionmenu.wordcloud_large_tfidf	"Word Cloud (TF-IDF filtered)">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection">
+<!ENTITY papermachines.collectionmenu.wordcloud_chronological	"Word Clouds by Time Interval">
+
 <!ENTITY papermachines.collectionmenu.phrasenet				"Phrase Net">
 <!ENTITY papermachines.collectionmenu.geoparse				"Geoparser">
 <!ENTITY papermachines.collectionmenu.dbpedia				"DBPedia Annotation">
 
 <!ENTITY papermachines.collectionmenu.topicmodeling			"Topic Modeling">
 <!ENTITY papermachines.collectionmenu.mallet_lda				"By Time">
+<!ENTITY papermachines.collectionmenu.mallet_lda_jstor			"By Time (With JSTOR DFR)">
 <!ENTITY papermachines.collectionmenu.mallet_lda_categorical	"By Subcollection">
 
 <!ENTITY papermachines.collectionmenu.mallet_classify			"Classification">
 <!ENTITY papermachines.collectionmenu.mallet_train-classifier	"Train Classifier">
 <!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test Classification">
 
+<!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines">
 
 <!ENTITY papermachines.itemmenu.text_in_topic_view			"Show Text in Topic View">

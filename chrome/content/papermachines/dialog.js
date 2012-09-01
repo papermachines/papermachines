@@ -20,6 +20,21 @@ Zotero_PaperMachines_Dialog.init = function () {
             break;
         case "text":
             textbox.hidden = false;
+            intro.hidden = false;
+            intro.label = this.io.dataIn["prompt"];
+            document.getElementById("zotero-papermachines-textbox").value = this.io.dataIn["default"];
+            break;
+        case "multiplecheck":
+            var checkboxes = document.getElementById("zotero-papermachines-checkboxes");
+            checkboxes.hidden = false;
+            intro.hidden = false;
+            intro.label = this.io.dataIn["prompt"];
+            this.io.dataIn["options"].forEach(function (item) {
+                var checkbox = document.createElement('checkbox');
+                checkbox.setAttribute('label', item.name);
+                checkbox.setUserData('value', item.value, null);
+                checkboxes.appendChild(checkbox);
+            });
             break;
         case "multiple":
             list.selType = "multiple";
@@ -52,17 +67,30 @@ Zotero_PaperMachines_Dialog.acceptSelection = function() {
             this.io.dataOut = true;
             break;
         case "text":
-            this.io.dataOut = document.getElementById("zotero-papermachines-textbox").value;
+            this.io.dataOut = [document.getElementById("zotero-papermachines-textbox").value];
+            break;
+        case "multiplecheck":
+            var checkboxes = document.getElementById("zotero-papermachines-checkboxes");
+            this.io.dataOut = [];
+            while (checkboxes.hasChildNodes()) {
+                var item = checkboxes.childNodes[0];
+                if (item.getAttribute("checked")) {
+                    this.io.dataOut.push(item.getUserData("value"));                    
+                }
+                checkboxes.removeChild(item);
+            }
+            break;
         case "multiple":
             var list = document.getElementById("zotero-papermachines-list");
             this.io.dataOut = [];
             list.selectedItems.forEach(function (item) {
                 this.io.dataOut.push(item.getUserData("value"));                
             });
+            break;
         case "select":
         default:
             var list = document.getElementById("zotero-papermachines-list");
-            this.io.dataOut = list.selectedItem.getUserData("value");
+            this.io.dataOut = [list.selectedItem.getUserData("value")];
             break;
     }
 	return true;

@@ -89,9 +89,12 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		all_files = set(self.files)
 		if self.tfidf_scoring:
 			self._findTfIdfScores()
-			self.top_tfidf_words = [item["text"] for item in self._topN(self.tfidf, 150)]
+			# self.top_tfidf_words = [item["text"] for item in self._topN(self.filtered_freqs, 150)]
+			self.top_tfidf_words = self.filtered_freqs.keys()
 
-		for label, filenames in self.labels.iteritems():
+		self.label_order = sorted(self.labels.keys())
+		for label in self.label_order:
+			filenames = self.labels[label]
 			logging.info("finding word frequencies for " + str(label))
 			if self.tfidf_scoring and self.MWW:
 				label_set = set(filenames)
@@ -110,11 +113,13 @@ class MultipleWordClouds(wordcloud.WordCloud):
 							if weight > tf_maxes[term]:
 								tf_maxes[term] = weight
 				tfidf_for_labelset = {term: weight * self.idf[term] for term, weight in tf_maxes.iteritems()}
-				clouds[label] = self._topN(tfidf_for_labelset)
+				filtered_freqs_for_labelset = {term: freq for term, freq in self.filtered_freqs.iteritems() if term in tfidf_for_labelset}
+				clouds[label] = self._topN(filtered_freqs_for_labelset)
 			else:
 				clouds[label] = self._findWordFreqs(filenames)
 
 		params = {"CLOUDS": json.dumps(clouds),
+				"ORDER": json.dumps(self.label_order),
 				"WIDTH": self.width,
 				"HEIGHT": self.height,
 				"FONTSIZE": self.fontsize

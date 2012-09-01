@@ -48,9 +48,9 @@ class Extract(textprocessor.TextProcessor):
 				text = u''
 				for filename in filenames:
 					if filename.lower().endswith(".pdf"):
-						import_args = [self.pdftotext, filename, '-']
+						import_args = [self.pdftotext, '-enc', 'UTF-8', '-nopgbrk', filename, '-']
 						import_proc = subprocess.Popen(import_args, stdout = subprocess.PIPE)
-						text += unicode(import_proc.communicate()[0], errors="ignore")
+						text += import_proc.communicate()[0].decode('utf-8')
 					if filename.lower().endswith(".html"):
 						text += strip_tags(codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read())
 				with codecs.open(out_file, 'w', encoding="utf-8") as f:
