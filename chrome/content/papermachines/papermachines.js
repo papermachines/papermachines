@@ -746,7 +746,6 @@ Zotero.PaperMachines = {
 		return Zotero.PaperMachines._sanitizeFilename(filename) + ".txt";
 	},
 	processItem: function(itemGroupName, item, dir, i, queue) {
-		Zotero.PaperMachines.LOG(item.id);
 		var percentDone = (parseInt(i)+queue.runningTotal)*100.0/queue.grandTotal;
 		Zotero.updateZoteroPaneProgressMeter(percentDone);
 		var outFile = dir.clone();

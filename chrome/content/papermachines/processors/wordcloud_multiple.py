@@ -12,8 +12,18 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		self.height = "150"
 		self.fontsize = "[10,32]"
 		self.n = 50
-		self.tfidf_scoring = True
+		self.tfidf_scoring = False
 		self.MWW = False
+		self.dunning = False
+		if len(self.extra_args) > 0:
+			if self.extra_args[0] == "tfidf":
+				self.tfidf_scoring = True
+			elif self.extra_args[0] == "mww":
+				self.tfidf_scoring = True
+				self.MWW = True
+			elif self.extra_args[0] == "dunning":
+				self.tfidf_scoring = True
+				self.dunning = True
 
 	def _rank_simple(self, vector):
 	    return sorted(range(len(vector)), key=vector.__getitem__)
@@ -62,16 +72,55 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		rho = u_a / (n_a*n_b)
 		return rho
 
-	def _held_out(self, word, label_set, other_set):
-		ranks_by_set = [[],[]]
+	def _dunning_held_out(self, word, label_set, other_set):
 		sets = [label_set, other_set]
+		count_total = [0.0, 0.0, 0.0, 0.0]
 		for i in range(len(sets)):
 			for filename in sets[i]:
 				if word in self.tf_by_doc[filename]:
-					ranks_by_set[i].append(self.tf_by_doc[filename][word] * self.idf[word])
+					count_total[i] += self.tf_by_doc[filename][word]
+				count_total[i + 2] += sum(self.tf_by_doc[filename].values())
+			# count_total[i] = sum([word_weights[word] for filename, word_weights in self.tf_by_doc.iteritems() if filename in sets[i] and word in word_weights])
+			# count_total[i + 2] = sum([sum(word_weights.values()) for filename, word_weights in self.tf_by_doc.iteritems() if filename in sets[i]])
+		a, b, c, d = [float(x) for x in count_total]
+		if any([x == 0 for x in count_total]):
+			return 0
+		E1 = c*((a+b)/(c+d))
+		E2 = d*((a+b)/(c+d))
+		G2 = 2.0*((a*math.log(a/E1)) + (b*math.log(b/E2)))
+		return G2
+
+	def _dunning(self, word, label_set):
+		count_total = [0.0, self.freqs[word], 0.0, self.total_word_count]
+		for filename in label_set:
+			if word in self.tf_by_doc[filename]:
+				count_total[0] += self.tf_by_doc[filename][word]
+			count_total[2] += sum(self.tf_by_doc[filename].values())
+		a, b, c, d = [float(x) for x in count_total]
+		if any([x == 0 for x in count_total]):
+			return 0
+		E1 = c*((a+b)/(c+d))
+		E2 = d*((a+b)/(c+d))
+		G2 = 2.0*((a*math.log(a/E1)) + (b*math.log(b/E2)))
+		return G2
+
+	def _held_out(self, word, label_set, other_set):
+		ranks_by_set = [[],[]]
+		sets = [label_set, other_set]
+		appears_in_label_set = False
+		for i in range(len(sets)):
+			for filename in sets[i]:
+				if word in self.tf_by_doc[filename]:
+					ranks_by_set[i].append(self.tf_by_doc[filename][word])
+					if i == 0:
+						appears_in_label_set = True
+				# 	ranks_by_set[i].append(self.tf_by_doc[filename][word] * self.idf[word])
 				else:
 					ranks_by_set[i].append(0)
-		return self._mannWhitney(ranks_by_set[0], ranks_by_set[1])
+		if not appears_in_label_set:
+			return 0.0
+		else:
+			return self._mannWhitney(ranks_by_set[0], ranks_by_set[1])
 
 	def _split_into_labels(self):
 		for filename, data in self.metadata.iteritems():
@@ -88,7 +137,10 @@ class MultipleWordClouds(wordcloud.WordCloud):
 
 		all_files = set(self.files)
 		if self.tfidf_scoring:
-			self._findTfIdfScores()
+			if self.dunning:
+				self._findTfIdfScores(scale=False)
+			else:
+				self._findTfIdfScores()
 			# self.top_tfidf_words = [item["text"] for item in self._topN(self.filtered_freqs, 150)]
 			self.top_tfidf_words = self.filtered_freqs.keys()
 
@@ -103,6 +155,18 @@ class MultipleWordClouds(wordcloud.WordCloud):
 				for word in self.top_tfidf_words:
 					word_rho[word] = self._held_out(word, label_set, other_set)
 				clouds[label] = self._topN(word_rho)
+			elif self.tfidf_scoring and self.dunning:
+				label_set = set(filenames)
+				other_set = all_files - label_set
+				word_G2 = {}
+				self.total_word_count = sum(self.freqs.values())
+				for word in self.top_tfidf_words:
+					G2 = self._dunning_held_out(word, label_set, other_set)
+					# G2 = self._dunning(word, label_set)
+					if G2 > 15.13: # critical value for p < 0.001
+						word_G2[word] = G2
+				clouds[label] = self._topN(word_G2)
+
 			elif self.tfidf_scoring:
 				tf_maxes = {}
 				for filename in filenames:

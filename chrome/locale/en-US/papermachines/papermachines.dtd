@@ -4,9 +4,17 @@
 
 <!ENTITY papermachines.collectionmenu.wordcloud				"Word Cloud">
 <!ENTITY papermachines.collectionmenu.wordcloud_large		"Word Cloud">
-<!ENTITY papermachines.collectionmenu.wordcloud_large_tfidf	"Word Cloud (TF-IDF filtered)">
-<!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection">
+<!ENTITY papermachines.collectionmenu.wordcloud_large_tfidf	"Word Cloud (tf*idf filtered)">
+<!ENTITY papermachines.collectionmenu.wordcloud_multiple_menu	"Multiple Word Clouds">
 <!ENTITY papermachines.collectionmenu.wordcloud_chronological	"Word Clouds by Time Interval">
+<!ENTITY papermachines.collectionmenu.wordcloud_chronological_tfidf		"Word Clouds by Time Interval (tf*idf)">
+<!ENTITY papermachines.collectionmenu.wordcloud_chronological_dunning	"Word Clouds by Time Interval (Dunning's log-likelihood)">
+<!ENTITY papermachines.collectionmenu.wordcloud_chronological_mww	"Word Clouds by Time Interval (Mann-Whitney U)">
+<!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection">
+<!ENTITY papermachines.collectionmenu.wordcloud_multiple_tfidf	"Word Clouds by Subcollection (tf*idf)">
+<!ENTITY papermachines.collectionmenu.wordcloud_multiple_dunning	"Word Clouds by Subcollection (Dunning's log-likelihood)">
+<!ENTITY papermachines.collectionmenu.wordcloud_multiple_mww	"Word Clouds by Subcollection (Mann-Whitney U)">
+
 
 <!ENTITY papermachines.collectionmenu.phrasenet				"Phrase Net">
 <!ENTITY papermachines.collectionmenu.geoparse				"Geoparser">

@@ -41,7 +41,7 @@ class Extract(textprocessor.TextProcessor):
 		saved = []
 		for itemID, filenames in itemIDs.iteritems():
 			try:
-				out_file = self.metadata[filename]["outfile"]
+				out_file = self.metadata[filenames[0]]["outfile"]
 				out_dir = os.path.dirname(out_file)
 				if not os.path.exists(out_dir):
 					os.makedirs(out_dir)

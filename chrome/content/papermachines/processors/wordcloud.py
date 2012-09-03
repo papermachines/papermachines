@@ -15,7 +15,7 @@ class WordCloud(textprocessor.TextProcessor):
 		self.n = 50
 		self.tfidf_scoring = False
 
-	def _findTfIdfScores(self):
+	def _findTfIdfScores(self, scale=True):
 		self.freqs = {}
 		self.tf_by_doc = {}
 		self.max_tf = {}
@@ -39,9 +39,14 @@ class WordCloud(textprocessor.TextProcessor):
 					if stem not in self.freqs:
 						self.freqs[stem] = 0
 					self.freqs[stem] += self.tf_by_doc[filename][stem]
-					self.tf_by_doc[filename][stem] /= float(flen) #max_tf_d
-					if stem not in self.max_tf or self.max_tf[stem] < self.tf_by_doc[filename][stem]:
-						self.max_tf[stem] = self.tf_by_doc[filename][stem]
+					if scale:
+						self.tf_by_doc[filename][stem] /= float(flen) #max_tf_d
+						this_tf = self.tf_by_doc[filename][stem]
+					else:
+						this_tf = self.tf_by_doc[filename][stem] / float(flen)
+
+					if stem not in self.max_tf or self.max_tf[stem] < this_tf:
+						self.max_tf[stem] = this_tf
 				self.update_progress()
 		n = float(len(self.files))
 		self.idf = {term: math.log10(n/df) for term, df in self.df.iteritems()}
@@ -79,7 +84,7 @@ class WordCloud(textprocessor.TextProcessor):
 	def _tokenizeAndStem(self, line):
 		# uncomment for Porter stemming (slower, but groups words with their plurals, etc.)
 		# return [stem(word.strip('.,')) for word in line.split() if word.lower() not in self.stopwords and len(word) > 3]
-		return [word.lower() for word in line.split() if word.lower() not in self.stopwords and word.isalpha()]
+		return [word.lower() for word in line.split() if word.lower() not in self.stopwords and word.isalpha() and len(word) >= 3]
 
 	def process(self):
 		logging.info("starting to process")

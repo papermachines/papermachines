@@ -16,14 +16,31 @@
 			oncommand="Zotero.PaperMachines.extractText()"/>
 		<menu id="wordcloud" label="&papermachines.collectionmenu.wordcloud;" disabled="true">
 			<menupopup id="wordcloud-menu">
-			<menuitem id="wordcloud_large" label="&papermachines.collectionmenu.wordcloud_large;"
-				oncommand="Zotero.PaperMachines.runProcess('wordcloud_large')"/>
-			<menuitem id="wordcloud_large_tfidf" label="&papermachines.collectionmenu.wordcloud_large_tfidf;"
-				oncommand="Zotero.PaperMachines.runProcess('wordcloud_large', 'tfidf')"/>
-			<menuitem id="wordcloud_multiple" label="&papermachines.collectionmenu.wordcloud_multiple;"
-				oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple')"/>
-			<menuitem id="wordcloud_chronological" label="&papermachines.collectionmenu.wordcloud_chronological;"
-				oncommand="Zotero.PaperMachines.runProcess('wordcloud_chronological')"/>				
+				<menuitem id="wordcloud_large" label="&papermachines.collectionmenu.wordcloud_large;"
+					oncommand="Zotero.PaperMachines.runProcess('wordcloud_large')"/>
+				<menuitem id="wordcloud_large_tfidf" label="&papermachines.collectionmenu.wordcloud_large_tfidf;"
+					oncommand="Zotero.PaperMachines.runProcess('wordcloud_large', 'tfidf')"/>
+				<menu id="wordcloud_multiple_options" label="&papermachines.collectionmenu.wordcloud_multiple_menu;">
+					<menupopup id="wordcloud-multiple-menu">
+						<menuitem id="wordcloud_multiple" label="&papermachines.collectionmenu.wordcloud_multiple;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple')"/>
+						<menuitem id="wordcloud_multiple_tfidf" label="&papermachines.collectionmenu.wordcloud_multiple_tfidf;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple', 'tfidf')"/>
+						<menuitem id="wordcloud_multiple_dunning" label="&papermachines.collectionmenu.wordcloud_multiple_dunning;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple', 'dunning')"/>
+						<menuitem id="wordcloud_multiple_mww" label="&papermachines.collectionmenu.wordcloud_multiple_mww;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple', 'mww')"/>
+						<menuitem id="wordcloud_chronological" label="&papermachines.collectionmenu.wordcloud_chronological;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_chronological')"/>
+						<menuitem id="wordcloud_chronological_tfidf" label="&papermachines.collectionmenu.wordcloud_chronological_tfidf;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_chronological', 'tfidf')"/>
+						<menuitem id="wordcloud_chronological" label="&papermachines.collectionmenu.wordcloud_chronological_dunning;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_chronological', 'dunning')"/>
+						<menuitem id="wordcloud_chronological_mww" label="&papermachines.collectionmenu.wordcloud_chronological_mww;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_chronological', 'mwww')"/>
+
+					</menupopup>
+				</menu>
 			</menupopup>
 		</menu>
 		<menu id="phrasenet" label="&papermachines.collectionmenu.phrasenet;" disabled="true">
