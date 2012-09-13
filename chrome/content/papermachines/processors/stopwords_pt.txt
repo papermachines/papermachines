@@ -282,3 +282,7 @@ setembro
 outubro
 novembro
 dezembro
+bmw
+motors
+auto
+honda

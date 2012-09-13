@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json
+import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json, operator
+from itertools import izip
 
 class TextProcessor:
 	"""
@@ -69,6 +70,15 @@ class TextProcessor:
 			self.count += 1
 			self.progress_file.write('<' + str(int(self.count*1000.0/float(self.total))) + '>\n')
 			self.progress_file.flush()
+
+	def xpartition(self, seq, n=2):
+		return izip(*(iter(seq),) * n)
+
+	def argmax(self, obj):
+		if hasattr(obj, "index"):
+			return obj.index(max(obj))
+		elif hasattr(obj, "iteritems"):
+			return max(obj.iteritems(), key=operator.itemgetter(1))[0]
 
 	def write_html(self, user_params):
 		logging.info("writing HTML")

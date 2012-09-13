@@ -70,6 +70,8 @@ class Mallet(textprocessor.TextProcessor):
 				for doi, text in self._import_dfr(self.dfr_dir):
 					f.write(u'\t'.join([doi, self.metadata[doi]["label"], text]) + u'\n')
 					self.docs.append(doi)
+		with codecs.open(os.path.join(self.mallet_out_dir, "dmap"), 'w', encoding='utf-8') as dmap:
+			dmap.writelines([x + u'\n' for x in self.docs])
 		self.doc_count = len(self.docs)
 
 	def _tfidf_filter(self, top_terms = None, min_df = 5):
@@ -152,6 +154,8 @@ class Mallet(textprocessor.TextProcessor):
 						self.index[word].append(self.metadata[filename]["itemID"])
 				else:
 					self.docs.remove(filename)
+		with codecs.open(os.path.join(self.mallet_out_dir, "dmap"), 'w', encoding='utf-8') as dmap:
+			dmap.writelines([x + u'\n' for x in self.docs])
 		logging.info("tf-idf complete; retained {:} of {:} words; minimum tf-idf score: {:}".format(len(new_vocab.keys()), len(vocab.keys()), min_score))
 
 	def _setup_mallet_command(self):
@@ -181,7 +185,7 @@ class Mallet(textprocessor.TextProcessor):
 				self._import_files()
 		else:
 			if len(self.extra_args) > 0 and self.dfr:
-				self._import_dfr_metadata(self.extra_args[0])
+				self._import_dfr_metadata(self.dfr_dir)
 			self.docs = []
 			self.index = {}
 			with codecs.open(self.texts_file, 'r', 'utf-8') as f:
@@ -211,17 +215,21 @@ class Mallet(textprocessor.TextProcessor):
 		if tfidf and not self.dry_run:
 			self._tfidf_filter()
 
+		with codecs.open(os.path.join(self.mallet_out_dir, "metadata.json"), 'w', encoding='utf-8') as meta_file:
+			json.dump(self.metadata, meta_file)
+
 		import_args = self.mallet + ["cc.mallet.classify.tui.Csv2Vectors", 
 			"--remove-stopwords",
 			"--stoplist-file", self.stoplist, 
 			"--input", self.texts_file,
+			"--line-regex", "^([^\\t]*)[\\t]([^\\t]*)[\\t](.*)$",
 			"--token-regex", '[\p{L}\p{M}]+',
 			"--output", self.instance_file]
 		if sequence:
 			import_args.append("--keep-sequence")
 
 		if not self.dry_run and not os.path.exists(self.instance_file):
-			import_return = subprocess.call(import_args, stdout=self.progress_file)	
+			import_return = subprocess.call(import_args, stdout=self.progress_file)
 	
 	def process(self):
 		"""

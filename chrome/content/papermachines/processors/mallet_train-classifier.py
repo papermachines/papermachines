@@ -18,7 +18,7 @@ class MalletClassifier(mallet.Mallet):
 		process_args = self.mallet + ["cc.mallet.classify.tui.Vectors2Classify",
 			"--input", self.instance_file,
 			"--output-classifier", self.mallet_output,
-			"--trainer", "MaxEnt",
+			"--trainer", "NaiveBayes",
 			"--noOverwriteProgressMessages", "true"]
 
 		logging.info("begin training classifier")

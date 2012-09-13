@@ -74,8 +74,8 @@ Zotero.PaperMachines = {
 					_uri = "data:application/json," + encodeURIComponent(JSON.stringify(ids));
 				} else {
 					var file1 = Zotero.PaperMachines.out_dir.clone();
-					if (pathParts.indexOf("aux") != -1) {
-						file1.append("aux");
+					if (pathParts.indexOf("support") != -1) {
+						file1.append("support");
 					}
 					file1.append(pathParts.slice(-1)[0]);					
 
@@ -559,7 +559,7 @@ Zotero.PaperMachines = {
 	},
 	captureCollectionTreeStructure: function (collection) {
 		this.processItemGroup(collection, function (itemGroup) {
-			if (itemGroup.isCollection()) {
+			if ("isCollection" in itemGroup && itemGroup.isCollection()) {
 				var thisCollection = itemGroup.hasOwnProperty("ref") ? itemGroup.ref : itemGroup;
 				var childID = Zotero.PaperMachines.getItemGroupID(itemGroup);
 
@@ -596,7 +596,7 @@ Zotero.PaperMachines = {
 	traverseItemGroup: function (itemGroup) {
 		var itemGroups = [];
 		itemGroups.push(itemGroup);
-		if (itemGroup.isCollection()) {
+		if ("isCollection" in itemGroup && itemGroup.isCollection()) {
 			var currentCollection = ("ref" in itemGroup) ? itemGroup.ref : itemGroup;
 			if (currentCollection.hasChildCollections()) {
 				var children = currentCollection.getChildCollections();
@@ -670,7 +670,7 @@ Zotero.PaperMachines = {
 			" AND itemID in (SELECT sourceItemID FROM itemAttachments WHERE " +
 			"mimeType = 'application/pdf' OR mimeType = 'text/html');";
 		this.processItemGroup(itemGroup, function (itemGroup) {
-			if (itemGroup.isCollection()) {
+			if ("isCollection" in itemGroup && itemGroup.isCollection()) {
 				var id = (itemGroup.hasOwnProperty("ref") ? itemGroup.ref.id : itemGroup.id);
 				count += Zotero.DB.valueQuery(query, [id]);
 			}
@@ -690,7 +690,7 @@ Zotero.PaperMachines = {
 	},
 	getItemGroupID: function (itemGroup) {
 		if (!itemGroup) return null;
-		if (typeof itemGroup.isCollection === "function" && itemGroup.isCollection()) {
+		if (typeof itemGroup.isCollection === "function" && "isCollection" in itemGroup && itemGroup.isCollection()) {
 			if (itemGroup.hasOwnProperty("ref")) {
 				return (itemGroup.ref.libraryID != null ? itemGroup.ref.libraryID.toString() : "") + "C" + itemGroup.ref.id.toString();				
 			} else {

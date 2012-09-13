@@ -47,6 +47,25 @@ class MalletLDA(mallet.Mallet):
 			for j in range(i+1,len(topics)):
 				self.correlations[str(i) + ',' + str(j)] = self._cov(topics[i], topics[j]) / (self.stdevs[i] * self.stdevs[j])
 	
+	def _sort_into_intervals(self):
+		years = set()
+		fname_to_year = {}
+
+		fnames = self.metadata.keys()
+		for filename in fnames:
+			x = self.metadata[filename]
+			if x['year'].isdigit() and x['year'] != '0000':
+				year = int(x['year'])
+			else:
+				year = 2012
+			years.add(year)
+			fname_to_year[filename] = year
+
+		years = sorted(years)
+		self.intervals = years
+		self.fname_to_interval = fname_to_year
+		self.fname_to_index = {fname: years.index(year) for fname, year in fname_to_year.iteritems()}
+
 	def process(self):
 		"""
 		run LDA, creating an output file divided by time
@@ -89,33 +108,15 @@ class MalletLDA(mallet.Mallet):
 				for word in elem.iter("word"):
 					wordProbs[topic].append({'text': word.text, 'prob': word.get("prob")})
 
-		xpartition = lambda seq, n=2: izip(*(iter(seq),) * n)
-
-
-		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in file(self.mallet_files['topic-keys']).readlines()]} 
-
-		years = set()
-		fname_to_year = {}
-
-		fnames = self.metadata.keys()
-		for filename in fnames:
-			x = self.metadata[filename]
-			if x['year'].isdigit() and x['year'] != '0000':
-				year = int(x['year'])
-			else:
-				year = 2012
-			years.add(year)
-			fname_to_year[filename] = year
-
-		years = sorted(years)
-		self.years = years
-		fname_to_index = {fname: years.index(year) for fname, year in fname_to_year.iteritems()}
+		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in file(self.mallet_files['topic-keys']).readlines()]}
 
 		weights_by_topic = []
 		doc_metadata = {}
 
+		self._sort_into_intervals()
+
 		for i in range(self.topics):
-			weights_by_topic.append([{'x': str(j), 'y': [], 'topic': i} for j in years])		
+			weights_by_topic.append([{'x': str(j), 'y': [], 'topic': i} for j in self.intervals])		
 
 		for line in file(self.mallet_files['doc-topics']):
 			try:
@@ -131,11 +132,11 @@ class MalletLDA(mallet.Mallet):
 
 				doc_metadata[itemid] = {"label": self.metadata[filename]["label"], "title": self.metadata[filename]["title"]}
 
-				freqs = {int(y[0]): float(y[1]) for y in xpartition(values)}
+				freqs = {int(y[0]): float(y[1]) for y in self.xpartition(values)}
 				main_topic = None
 				topic_max = 0.0
 				for i in freqs.keys():
-					weights_by_topic[i][fname_to_index[filename]]['y'].append({"itemID": itemid, "ratio": freqs[i]})
+					weights_by_topic[i][self.fname_to_index[filename]]['y'].append({"itemID": itemid, "ratio": freqs[i]})
 					if freqs[i] > topic_max:
 						main_topic = i
 						topic_max = freqs[i]
