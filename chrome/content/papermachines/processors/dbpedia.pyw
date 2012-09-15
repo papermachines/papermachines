@@ -21,7 +21,7 @@ class DBpedia(textprocessor.TextProcessor):
 		req = urllib2.Request(self.url, data, self.headers)
 		response = urllib2.urlopen(req)
 		annotation = response.read()
-		encoding = req.headers.get('content-type', 'charset=latin1').split('charset=')[-1]
+		encoding = req.headers.get('content-type', 'charset=utf8').split('charset=')[-1]
 
 		return unicode(annotation, encoding)
 

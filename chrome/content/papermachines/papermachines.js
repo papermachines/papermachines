@@ -796,9 +796,9 @@ Zotero.PaperMachines = {
 
 			this._copyAllFiles(procs_dir, this.processors_dir);
 		}
-		this.aux_dir = this._getOrCreateDir("aux", this.processors_dir);
+		this.aux_dir = this._getOrCreateDir("support", this.processors_dir);
 
-		var new_aux = this._getOrCreateDir("aux", this.out_dir);
+		var new_aux = this._getOrCreateDir("support", this.out_dir);
 		this._copyAllFiles(this.aux_dir, new_aux);
 	},
 	_copyOrMoveAllFiles: function (copy_or_move, source, target, recursive) {
@@ -900,7 +900,7 @@ Zotero.PaperMachines = {
 			var export_processes = Zotero.PaperMachines.selectFromOptions("export_processes", options, "multiplecheck");
 			if (export_processes && export_processes.length > 0) {
 				var new_dir = this._getOrCreateDir(collectionName + " visualizations", export_dir);
-				var new_aux = this._getOrCreateDir("aux", new_dir);
+				var new_aux = this._getOrCreateDir("support", new_dir);
 				this._copyAllFiles(this.aux_dir, new_aux);
 				for (var i in export_processes) {
 					var file = Zotero.PaperMachines._getLocalFile(export_processes[i]);
