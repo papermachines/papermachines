@@ -9,11 +9,18 @@ class TextProcessor:
 
 	def __init__(self, track_progress=True):
 		# take in command line options
-		self.cwd = sys.argv[1]
-		csv_file = sys.argv[2]
-		self.out_dir = sys.argv[3]
-		self.collection_name = sys.argv[4]
-		self.extra_args = sys.argv[5:]
+
+		self.args_filename = sys.argv[1]
+		self.args_basename = os.path.basename(self.args_filename).replace(".json", "")
+
+		with codecs.open(self.args_filename, 'r', encoding='utf-8') as args_file:
+			args = json.load(args_file)
+
+		self.cwd = args[0]
+		csv_file = args[1]
+		self.out_dir = args[2]
+		self.collection_name = args[3]
+		self.extra_args = args[4:]
 
 		self.collection = os.path.basename(csv_file).replace(".csv","")
 
@@ -26,7 +33,7 @@ class TextProcessor:
 			self.stoplist = os.path.join(self.cwd, "stopwords.txt")
 			self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
 
-		logging.basicConfig(filename=os.path.join(sys.argv[3], "logs", self.name + ".log"), level=logging.INFO)
+		logging.basicConfig(filename=os.path.join(self.out_dir, "logs", self.name + ".log"), level=logging.INFO)
 
 		logging.info("command: " + ' '.join([x.replace(' ','''\ ''') for x in sys.argv]))
 
@@ -86,8 +93,7 @@ class TextProcessor:
 		params.update(user_params)
 		try:
 			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
-			additional_arg_str = "_" + "_".join([urllib.quote_plus(x).replace('+',"%20") for x in self.extra_args]) if len(self.extra_args) > 0 else ""
-			out_filename = getattr(self, "out_filename", os.path.join(self.out_dir, self.name + self.collection + additional_arg_str + ".html"))
+			out_filename = getattr(self, "out_filename", os.path.join(self.out_dir, self.name + self.collection + "-" + self.args_basename + ".html"))
 			with file(out_filename, 'w') as outfile:
 				with file(template_filename) as template:
 					template_str = template.read()

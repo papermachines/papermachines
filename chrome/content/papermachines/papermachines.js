@@ -14,6 +14,7 @@ Zotero.PaperMachines = {
 	extract_csv_dir: null,
 	out_dir: null,
 	log_dir: null,
+	args_dir: null,
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
@@ -48,7 +49,7 @@ Zotero.PaperMachines = {
 	SCHEME: "zotero://papermachines",
 
 	channel: {
-		INTERFACE_URI: "chrome://papermachines/content/processors/aux/nowordcloud.html",
+		INTERFACE_URI: "chrome://papermachines/content/processors/support/nowordcloud.html",
 		newChannel: function (uri) {
 			var ioService = Components.classes["@mozilla.org/network/io-service;1"]
 				.getService(Components.interfaces.nsIIOService);
@@ -161,6 +162,7 @@ Zotero.PaperMachines = {
 		this.out_dir = this._getOrCreateDir("out");
 		this.processors_dir = this._getOrCreateDir("processors");
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
+		this.args_dir = this._getOrCreateDir("args");
 
 		this.getStringsFromBundle();
 
@@ -327,16 +329,22 @@ Zotero.PaperMachines = {
 		var progressFile = Zotero.PaperMachines._getOrCreateFile(processor + thisID + "progress.html", Zotero.PaperMachines.out_dir);
 		var outFile = Zotero.PaperMachines.out_dir.clone();
 
-		var additional_args_str = additional_args.length > 0 ? "_" + encodeURIComponent(additional_args.join("_")) : "";
-		outFile.append(processor + thisID + additional_args_str + ".html");
+		var args = [Zotero.PaperMachines.processors_dir.path, csv.path, Zotero.PaperMachines.out_dir.path, collectionName];
+		args = args.concat(additional_args);
+
+		var args_str = JSON.stringify(args);
+		var args_hash = Zotero.PaperMachines.argsHash(args_str);
+		var argsHashFilename = args_hash + ".json";
+		var argFile = Zotero.PaperMachines._getOrCreateFile(argsHashFilename, Zotero.PaperMachines.args_dir);
+		Zotero.File.putContents(argFile, args_str);
+
+		var procArgs = [argFile.path];
+
+		outFile.append(processor + thisID + "-" + args_hash + ".html");
 
 		var sql = "INSERT OR REPLACE INTO processed_collections (process_path, collection, processor, status, progressfile, outfile) " +
 			" values (?, ?, ?, ?, ?, ?);";
 		Zotero.PaperMachines.DB.query(sql, [processPath, thisID, processor, "running", progressFile.path, outFile.path]);
-
-		var args = [Zotero.PaperMachines.processors_dir.path, csv.path, Zotero.PaperMachines.out_dir.path, collectionName];
-
-		args = args.concat(additional_args);
 
 		var callback = function (finished) {
 			if (finished) {
@@ -351,7 +359,7 @@ Zotero.PaperMachines = {
 		var observer = new this.processObserver(processor, processPath, callback);
 
 		proc.init(proc_file);
-		proc.runAsync(args, args.length, observer);
+		proc.runAsync(procArgs, procArgs.length, observer);
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
 		const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -980,6 +988,20 @@ Zotero.PaperMachines = {
 					return [fp.file.path];
 			}
 		}
+	},
+	argsHash: function (args_str) {
+		return Zotero.PaperMachines.hashCode(args_str);
+	},
+	hashCode: function (str) {
+		var r = 0;
+		for (var i = 0; i < str.length; i++) {
+			r = (r << 5) - r + str.charCodeAt(i);
+			r &= r;
+		}
+		if (r < 0) {
+			r = r + 0xFFFFFFFF + 1;
+		}
+		return r.toString(16);
 	},
 	selectFromOptions: function(prompt, options, multiple) {
 		var type = "select";
