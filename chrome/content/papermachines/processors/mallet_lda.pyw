@@ -151,9 +151,12 @@ class MalletLDA(mallet.Mallet):
 			topic_sums = []	
 			for year in topic:
 				sum = 0.0
-				for doc in year['y']:
-					sum += doc['ratio']
-				topic_sums.append(sum / float(len(year['y'])))
+				if len(year['y']) != 0:
+					for doc in year['y']:
+						sum += doc['ratio']
+					topic_sums.append(sum / float(len(year['y'])))
+				else:
+					topic_sums.append(0)
 			topics_by_year.append(topic_sums)
 
 		self.topics_by_year = topics_by_year

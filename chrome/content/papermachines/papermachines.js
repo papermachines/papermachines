@@ -313,7 +313,7 @@ Zotero.PaperMachines = {
 		}
 
 		var proc_file = Zotero.PaperMachines.processors_dir.clone();
-		proc_file.append(processor + ".py");
+		proc_file.append(processor + ".pyw");
 
 		var proc = Components.classes["@mozilla.org/process/util;1"]
 			.createInstance(Components.interfaces.nsIProcess);
@@ -813,6 +813,10 @@ Zotero.PaperMachines = {
 				}
 				if (copy_or_move) {
 					f.copyTo(target, f.leafName);
+					if (f.leafName.indexOf(".pyw") != -1) {
+						var regpy = f.leafName.replace(".pyw", ".py");
+						f.copyTo(target, regpy);
+					}
 				} else {
 					f.moveTo(target, f.leafName);
 				}

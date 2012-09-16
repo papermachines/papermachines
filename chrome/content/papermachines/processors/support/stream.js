@@ -121,7 +121,7 @@ var layout = d3.layout.stack().offset("silhouette");
 
 topicLabels = {};
 for (i in labels) {
-  if (labels[i].allocation_ratio > 0) {
+  if (labels[i].allocation_ratio > 0.0) {
     topicLabels[i] = labels[i];
     topicLabels[i]["active"] = true;
   }
