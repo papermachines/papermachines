@@ -308,7 +308,7 @@ Zotero.PaperMachines = {
 
 		var processName = processor + thisID;
 		var thisGroup = Zotero.PaperMachines.getGroupByID(thisID);
-		var collectionName = thisGroup.getName();
+		var collectionName = thisGroup.name || thisGroup.getName();
 
 		if (Zotero.PaperMachines._checkIfRunning(processPath)) {
 			return;
@@ -621,7 +621,7 @@ Zotero.PaperMachines = {
 						itemGroups.push(Zotero.PaperMachines.traverseItemGroup(children[i]));
 					}
 				}
-			} else if (itemGroup.isGroup()) {
+			} else if ("isGroup" in itemGroup && itemGroup.isGroup()) {
 				if (itemGroup.ref.hasCollections()) {
 					var children = itemGroup.ref.getCollections();
 					for (var i in children) {
@@ -723,6 +723,10 @@ Zotero.PaperMachines = {
 			return Zotero.Collections.get(id.split("C")[1]);
 		} else if (id == "L") {
 			return ZoteroPane.collectionsView._dataItems[0][0];
+		} else {
+			try {
+				return Zotero.Groups.getByLibraryID(id);
+			} catch (e) {  return false; }
 		}
 	},
 	getNameOfGroup: function (id) {
@@ -866,7 +870,7 @@ Zotero.PaperMachines = {
 		} catch (e) { Zotero.PaperMachines.LOG(e.name +": " + e.message);}
 
 
-		var collectionName = thisGroup.getName();
+		var collectionName = thisGroup.name || thisGroup.getName();
 		var progbar_str = '<html><head><meta http-equiv="refresh" content="2;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
 			try {
@@ -905,7 +909,7 @@ Zotero.PaperMachines = {
 	exportOutput: function () {
 		var thisGroup = ZoteroPane.getItemGroup();
 		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
-		var collectionName = thisGroup.getName();
+		var collectionName = thisGroup.name || thisGroup.getName();
 
 		var export_dir = this.filePrompt("export_dir", "getfolder");
 		if (export_dir) {
