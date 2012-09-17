@@ -839,7 +839,14 @@ function getDocsForYear(year) {
         if (topicLabels[mainTopic] && topicLabels[mainTopic]["active"]) {
           my_color = graphColors(mainTopic);
         }
-        docs += "<span style='color: " + my_color + ";' id='doc" + id + "'>"+ title + "</span><br/>";
+        docs += "<a style='color: " + my_color + ";' id='doc" + id + "' href='";
+
+        if (id.indexOf("10.") != -1) {
+          docs += "http://jstor.org/discover/" + id + "'>" 
+        } else {
+          docs += "zotero://select/item/" + id + "'>" 
+        }
+        docs += title + "</a><br/>";
       }
       
       d3.select("#popup" + i).html(docs);

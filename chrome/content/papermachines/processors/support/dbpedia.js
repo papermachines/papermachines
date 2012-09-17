@@ -15,7 +15,7 @@ for (var i in data) {
 	for (var item in data[i]) {
 		sum += data[i][item];
 		if (!overallWeight.hasOwnProperty(item)){
-			overallWeight[item] = {"name": item, "value": 1, "group": "document"};
+			overallWeight[item] = {"name": docMetadata[item]["title"].substring(0,20), "value": 1, "id": item, "url": "zotero://select/item/" + item, "group": "document"};
 		} else {
 			// overallWeight[item]["value"] += 1;
 		}
@@ -25,7 +25,7 @@ for (var i in data) {
 			nameLinks[name].push(item);
 		}
 	}
-	overallWeight[i] = {"name": name, "value": sum, "url": i, "group": "entity"};
+	overallWeight[i] = {"name": name, "id": name, "value": sum, "url": i, "group": "entity"};
 }
 var nodeValues = d3.values(overallWeight).map(function (d) { return +d.value; });
 nodeValues.sort(d3.ascending);
@@ -38,7 +38,7 @@ nodeIndex = {};
 nodeValues = [];
 
 nodes.forEach(function (d, i) {
-	nodeIndex[d.name] = i;
+	nodeIndex[d.id] = i;
 });
 
 
@@ -88,7 +88,7 @@ node.call(force.drag);
 var anchorLink = vis.selectAll("line.anchorLink").data(labelAnchorLinks)//.enter().append("svg:line").attr("class", "anchorLink").style("stroke", "#999");
 
 var anchorNode = vis.selectAll("g.anchorNode").data(labelAnchors).enter().append("svg:g").attr("class", "anchorNode")
-	.on("click", function (d) { window.open(d.node.url);});
+	.on("click", function (d) { if (d.node.url.indexOf("zotero") != -1) window.location.href = d.node.url; else window.open(d.node.url);});
 anchorNode.append("svg:circle").attr("r", 0);
 
 
