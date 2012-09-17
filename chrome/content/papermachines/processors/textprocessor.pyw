@@ -94,8 +94,8 @@ class TextProcessor:
 		try:
 			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
 			out_filename = getattr(self, "out_filename", os.path.join(self.out_dir, self.name + self.collection + "-" + self.args_basename + ".html"))
-			with file(out_filename, 'w') as outfile:
-				with file(template_filename) as template:
+			with codecs.open(out_filename, 'w', encoding='utf-8') as outfile:
+				with codecs.open(template_filename, 'r', encoding='utf-8') as template:
 					template_str = template.read()
 					for k, v in params.iteritems():
 						template_str = template_str.replace(k, v)

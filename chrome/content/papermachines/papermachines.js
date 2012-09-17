@@ -603,24 +603,29 @@ Zotero.PaperMachines = {
 	},
 	traverseItemGroup: function (itemGroup) {
 		var itemGroups = [];
-		itemGroups.push(itemGroup);
-		if ("isCollection" in itemGroup && itemGroup.isCollection()) {
-			var currentCollection = ("ref" in itemGroup) ? itemGroup.ref : itemGroup;
-			if (currentCollection.hasChildCollections()) {
-				var children = currentCollection.getChildCollections();
-				for (var i in children) {
-					itemGroups.push(Zotero.PaperMachines.traverseItemGroup(children[i]));
+		if ("isLibrary" in itemGroup && itemGroup.isLibrary()) {
+			if (itemGroup.id == "L") {
+				var collectionKeys = Zotero.DB.columnQuery("SELECT key from collections WHERE libraryID IS NULL;");
+				itemGroups = collectionKeys.map(function(d) { return Zotero.Collections.getByLibraryAndKey(null, d); });
+			}
+		} else {
+			if ("isCollection" in itemGroup && itemGroup.isCollection()) {
+				itemGroups.push(itemGroup);
+				var currentCollection = ("ref" in itemGroup) ? itemGroup.ref : itemGroup;
+				if (currentCollection.hasChildCollections()) {
+					var children = currentCollection.getChildCollections();
+					for (var i in children) {
+						itemGroups.push(Zotero.PaperMachines.traverseItemGroup(children[i]));
+					}
+				}
+			} else if (itemGroup.isGroup()) {
+				if (itemGroup.ref.hasCollections()) {
+					var children = itemGroup.ref.getCollections();
+					for (var i in children) {
+						itemGroups.push(Zotero.PaperMachines.traverseItemGroup(children[i]));
+					}				
 				}
 			}
-		} else if (itemGroup.isGroup()) {
-			if (itemGroup.ref.hasCollections()) {
-				var children = itemGroup.ref.getCollections();
-				for (var i in children) {
-					itemGroups.push(Zotero.PaperMachines.traverseItemGroup(children[i]));
-				}				
-			}
-		} else if (itemGroup.isLibrary()) {
-			// TODO
 		}
 		return itemGroups;
 	},
@@ -698,13 +703,13 @@ Zotero.PaperMachines = {
 	},
 	getItemGroupID: function (itemGroup) {
 		if (!itemGroup) return null;
-		if (typeof itemGroup.isCollection === "function" && "isCollection" in itemGroup && itemGroup.isCollection()) {
+		if ("isCollection" in itemGroup && itemGroup.isCollection()) {
 			if (itemGroup.hasOwnProperty("ref")) {
 				return (itemGroup.ref.libraryID != null ? itemGroup.ref.libraryID.toString() : "") + "C" + itemGroup.ref.id.toString();				
 			} else {
 				return (itemGroup.libraryID != null ? itemGroup.libraryID.toString() : "") + "C" + itemGroup.id.toString();								
 			}
-		} else if (typeof itemGroup.isGroup === "function" && itemGroup.isGroup()) {
+		} else if ("isGroup" in itemGroup && itemGroup.isGroup()) {
 			return itemGroup.ref.libraryID;
 		} else {
 			return itemGroup.id;
@@ -713,6 +718,8 @@ Zotero.PaperMachines = {
 	getGroupByID: function (id) {
 		if (id.indexOf("C") != -1) {
 			return Zotero.Collections.get(id.split("C")[1]);
+		} else if (id == "L") {
+			return ZoteroPane.collectionsView._dataItems[0][0];
 		}
 	},
 	getNameOfGroup: function (id) {
