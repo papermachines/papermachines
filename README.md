@@ -14,7 +14,7 @@ In order to run Paper Machines, you will need the following (note that Python an
 * Java ([download for Windows/Mac/Linux/etc.](http://java.com/en/download/index.jsp))
 
 ## Installation
-Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.1.7.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
+Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.1.9.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
 
 ## Usage
 To begin, right-click (control-click for Mac) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization. Once these processes have been run, selecting "Export Output of Paper Machines" will allow you to choose which visualizations to export.
@@ -41,6 +41,9 @@ The topic model can be supplemented with datasets from [JSTOR Data For Research]
 
 ### Classification
 This allows you to train the computer to infer the common features of the documents under each subcollection; subsequently, a set of texts in a different folder can be sorted automatically based on this training. At the moment, the probability distribution for each text is given in plain text; the ability to automatically generate a new collection according to this sorting is forthcoming.
+
+### Select Stoplists
+A command at the bottom of the context menu allows you to switch between stoplists for different languages, choosing a list of common words to be excluded from analysis. Currently English and Portuguese are available, with English as the default.
 
 ## Acknowledgements
 Thanks to Google Summer of Code for funding this work, and to [Matthew Battles](http://metalab.harvard.edu/people/) and [Jo Guldi](http://www.joguldi.com/) for overseeing it. My gratitude also to the creators of all the open-source projects and services upon which this work relies:

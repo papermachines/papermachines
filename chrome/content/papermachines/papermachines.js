@@ -164,6 +164,8 @@ Zotero.PaperMachines = {
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
 		this.args_dir = this._getOrCreateDir("args");
 
+		this.selectStoplist("en");
+
 		this.getStringsFromBundle();
 
 		try {
@@ -1023,6 +1025,10 @@ Zotero.PaperMachines = {
 		var params = {"dataIn": {"type": type, "prompt": Zotero.PaperMachines.prompts[prompt], "options": options}, "dataOut": null};
 		
 		return Zotero.PaperMachines._promptWithParams(params);
+	},
+	selectStoplist: function (lang) {
+		var stopfile = Zotero.PaperMachines._getOrCreateFile("stopwords_" + lang + ".txt", Zotero.PaperMachines.processors_dir);
+		stopfile.copyTo(Zotero.PaperMachines.processors_dir, "stopwords.txt");
 	},
 	textPrompt: function(prompt, default_text) {
 		if (!default_text) var default_text = "";

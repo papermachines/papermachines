@@ -32,6 +32,12 @@
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines">
 
+
+<!ENTITY papermachines.collectionmenu.select_stoplist		"Select Stoplist for Paper Machines">
+
+<!ENTITY papermachines.stoplists.en 						"English">
+<!ENTITY papermachines.stoplists.pt 						"Portuguese">
+
 <!ENTITY papermachines.itemmenu.text_in_topic_view			"Show Text in Topic View">
 <!ENTITY papermachines.itemmenu.text_in_map_view			"Locate Text in Map View">
 

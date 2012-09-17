@@ -93,6 +93,15 @@
 			oncommand="Zotero.PaperMachines.exportOutput()"/>
 		<menuitem id="reset-output" label="&papermachines.collectionmenu.reset_output;"
 			oncommand="Zotero.PaperMachines.resetOutput()"/>
+
+		<menu id="select-stoplist" label="&papermachines.collectionmenu.select_stoplist;">
+			<menupopup id="select-stoplist-menu">
+			<menuitem id="stoplist_en" label="&papermachines.stoplists.en;"
+				oncommand="Zotero.PaperMachines.selectStoplist('en');"/>
+			<menuitem id="stoplist_pt" label="&papermachines.stoplists.pt;"
+				oncommand="Zotero.PaperMachines.selectStoplist('pt');"/>
+			</menupopup>
+		</menu>
 	</menupopup>
 	<menupopup id="zotero-itemmenu">
 		<menuseparator hidden="false"/>
