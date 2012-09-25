@@ -71,7 +71,19 @@ class MalletLDA(mallet.Mallet):
 		run LDA, creating an output file divided by time
 		"""
 
-		self._setup_mallet_instances(sequence=True, tfidf=True)
+		if self.named_args is not None:
+			self.tfidf = self.named_args["tfidf"]
+			self.min_df = int(self.named_args["min_df"])
+			self.stemming = self.named_args["stemming"]
+			self.topics = int(self.named_args["topics"])
+		else:
+			self.tfidf = True
+			self.min_df = 5
+			self.topics = 50
+			self.stemming = True
+
+
+		self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, stemming=self.stemming)
 
 		self.mallet_files = {'state': os.path.join(self.mallet_out_dir, "topic-state.gz"),
 			'doc-topics': os.path.join(self.mallet_out_dir, "doc-topics.txt"),

@@ -11,9 +11,7 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
 		self.categorical = True
 		self.template_name = "mallet_lda_MI"
 		self.dry_run = False
-		self.dfr = len(self.extra_args) > 0
-		if self.dfr:
-			self.dfr_dir = self.extra_args[0]
+		self.mallet_out_dir = self.extra_args[0]
 
 	def _mutualInformation(self, X, Y):
 		probs = {}
@@ -66,9 +64,9 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
 		return mi
 
 	def process(self):
-		if self.dfr:
-			self._import_dfr_metadata(self.dfr_dir)
-
+		self.metadata = json.load(codecs.open(os.path.join(self.mallet_out_dir, "metadata.json"), 'r', encoding='utf-8'))
+		self.files = self.metadata.keys()
+		
 		self.classify_file = os.path.join(self.out_dir, "mallet_classify-file" + self.collection + ".json")
 		if os.path.exists(self.classify_file):
 			with codecs.open(self.classify_file, 'r', encoding='utf-8') as f:
@@ -80,8 +78,6 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
 
 		self.labels = set([x["label"] for x in self.metadata.values()])
 
-		self.mallet_out_dir = os.path.join(self.out_dir, "mallet_lda" + self.collection)
-		self.metadata = json.load(codecs.open(os.path.join(self.mallet_out_dir, "metadata.json"), 'r', encoding='utf-8'))
 		self.doc_topics = os.path.join(self.mallet_out_dir, "doc-topics.txt")
 		self.docs = [x.strip() for x in codecs.open(os.path.join(self.mallet_out_dir, "dmap"), 'r', encoding='utf-8')]
 

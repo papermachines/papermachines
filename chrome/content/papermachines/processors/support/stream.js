@@ -283,6 +283,8 @@ function sumUpData(graphIndex, origData) {
 
   var firstRun = dataSummed.length == 0;
 
+  var ordinalDocs = {};
+
   origData.forEach(function (d, i) {
     if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
       var length = graph[graphIndex].data.push([]);
@@ -304,10 +306,10 @@ function sumUpData(graphIndex, origData) {
               var label = docMetadata[f.itemID]["label"];
               // if (categorical) {
                 categories[label][i].y += f.ratio;
-                if (!graph[graphIndex].contributingDocsOrdinal.hasOwnProperty(label)) {
-                  graph[graphIndex].contributingDocsOrdinal[label] = {};
+                if (!ordinalDocs.hasOwnProperty(label)) {
+                  ordinalDocs[label] = {};
                 }
-                graph[graphIndex].contributingDocsOrdinal[label][f.itemID] = true;
+                ordinalDocs[label][f.itemID] = true;
               // }
             }
           });
@@ -322,6 +324,10 @@ function sumUpData(graphIndex, origData) {
   //   var i = graph[graphIndex].data[j][0].topic;
   //   findTopicProportionAndStdev(i, graph[graphIndex].contributingDocs, graph[graphIndex].data[j]);
   // }
+  for (var label in ordinalDocs) {
+    graph[graphIndex].contributingDocsOrdinal[label] = d3.keys(ordinalDocs[label]);    
+  }
+
 
     graph[graphIndex].data.forEach(function (d,i) {
       d.forEach(function (e) {
@@ -385,7 +391,7 @@ function sumUpData(graphIndex, origData) {
       var categoriesSorted = d3.keys(categories);
       categoriesSorted.sort();
       categoriesSorted.forEach(function (category) {
-        var s = d3.keys(graph[graphIndex].contributingDocsOrdinal[category]).length || 1;
+        var s = graph[graphIndex].contributingDocsOrdinal[category].length || 1;
         for (var i in activeTopics) {
           var datum = categories[category][activeTopics[i]];
           datum.y /= s;
@@ -486,6 +492,7 @@ function createCategoricalGraph (i) {
   bars.enter().append("g")
       .attr("class", "bar graph" + i.toString())
       .attr("transform", function(d) { return "translate(" + (xOrdinal(d.x) - (barWidth / 2)) + ",0)"; })
+      .on("click", getDocsForCategory)
     .append("rect")
       .attr("width", barWidth)
       .attr("x", 0)
@@ -826,35 +833,45 @@ function getDocs(d, i, p) {
   getDocsForYear(year);
 }
 
-function getDocsForYear(year) {
-  for (var i in graph) {
-    if (graph[i].contributingDocs.hasOwnProperty(year)) {
-      var docs = "";
-      for (var doc in graph[i].contributingDocs[year]) {
-        var id = graph[i].contributingDocs[year][doc];
-        var title = docMetadata[id]["title"];
-        if (title == "\t") title = id;
-        var mainTopic = docMetadata[id]["main_topic"];
-        var my_color = "#666";
-        if (topicLabels[mainTopic] && topicLabels[mainTopic]["active"]) {
-          my_color = graphColors(mainTopic);
-        }
-        docs += "<a style='color: " + my_color + ";' id='doc" + id + "' href='";
+function getDocsForCategory(d) {
+  var category = d.x;
 
-        if (id.indexOf("10.") != -1) {
-          docs += "http://jstor.org/discover/" + id + "'>" 
-        } else {
-          docs += "zotero://select/item/" + id + "'>" 
-        }
-        docs += title + "</a><br/>";
+  getSpecifiedDocs(category, xOrdinal, function (d) { return d; }, graph[0].contributingDocsOrdinal);
+}
+
+function getDocsForYear(year) {
+  getSpecifiedDocs(year, x, function (year) { return new Date(year, 0, 1); }, graph[0].contributingDocs);
+}
+
+
+function getSpecifiedDocs(xval, xfunc, xaccessor, contributing) {
+  var i = 0;
+  if (contributing.hasOwnProperty(xval)) {
+    var docs = "";
+    for (var doc in contributing[xval]) {
+      var id = contributing[xval][doc];
+      var title = docMetadata[id]["title"];
+      if (title == "\t") title = id;
+      var mainTopic = docMetadata[id]["main_topic"];
+      var my_color = "#666";
+      if (topicLabels[mainTopic] && topicLabels[mainTopic]["active"]) {
+        my_color = graphColors(mainTopic);
       }
-      
-      d3.select("#popup" + i).html(docs);
-      d3.select("#popupHolder" + i).style("display", "block");
-      d3.select("#popupHolder" + i).style("left", x(new Date(year, 0, 1)) + "px");      
-      d3.select("#popupHolder" + i).style("top", height/2 + "px");
-      d3.select("#popupHolder" + i).attr("data-year", year);
+      docs += "<a style='color: " + my_color + ";' id='doc" + id + "' href='";
+
+      if (id.indexOf("10.") != -1) {
+        docs += "http://jstor.org/discover/" + id + "'>" 
+      } else {
+        docs += "zotero://select/item/" + id + "'>" 
+      }
+      docs += title + "</a><br/>";
     }
+      
+    d3.select("#popup" + i).html(docs);
+    d3.select("#popupHolder" + i).style("display", "block");
+    d3.select("#popupHolder" + i).style("left", xfunc(xaccessor(xval)) + "px");      
+    d3.select("#popupHolder" + i).style("top", height/2 + "px");
+    d3.select("#popupHolder" + i).attr("data-year", year);
   }
 }
 

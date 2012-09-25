@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, shutil, logging, tempfile, time, subprocess, math, re, urllib, json, codecs, csv, traceback
+import sys, os, shutil, logging, tempfile, time, subprocess, math, re, urllib, json, codecs, csv, traceback, platform
 import xml.etree.ElementTree as et
 from lib.porter2 import stem
 import copy
@@ -74,7 +74,8 @@ class Mallet(textprocessor.TextProcessor):
 			dmap.writelines([x + u'\n' for x in self.docs])
 		self.doc_count = len(self.docs)
 
-	def _tfidf_filter(self, top_terms = None, min_df = 5):
+	def _tfidf_filter(self, top_terms = None):
+		min_df = getattr(self, "min_df", 5)
 		vocab = {}
 		inverse_vocab = {}
 		df = {}
@@ -160,9 +161,14 @@ class Mallet(textprocessor.TextProcessor):
 
 	def _setup_mallet_command(self):
 		self.mallet_cp_dir = os.path.join(self.cwd, "lib", "mallet-2.0.7", "dist")
-		self.mallet_classpath = os.path.join(self.mallet_cp_dir, "mallet.jar") + ":" + os.path.join(self.mallet_cp_dir, "mallet-deps.jar")
+		if self.sys == "Windows":
+			classpath_sep = u';'
+		else:
+			classpath_sep = u':'
 
-		self.mallet = "java -Xmx1g -ea -Djava.awt.headless=true -Dfile.encoding=UTF-8 -server".split(' ')
+		self.mallet_classpath = os.path.join(self.mallet_cp_dir, "mallet.jar") + classpath_sep + os.path.join(self.mallet_cp_dir, "mallet-deps.jar")
+
+		self.mallet = "java -Xmx1g -ea -Djava.awt.headless=true -Dfile.encoding=UTF-8".split(' ')
 		self.mallet += ["-classpath", self.mallet_classpath]
 
 		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection)

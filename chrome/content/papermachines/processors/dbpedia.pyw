@@ -41,15 +41,15 @@ class DBpedia(textprocessor.TextProcessor):
 				logging.info("processing " + filename)
 				self.update_progress()
 				try:
-					out_filename = filename.replace(".txt", "_dbpedia.json")
-					if os.path.exists(out_filename):
-						annotated[out_filename] = filename
+					annotated_filename = filename.replace(".txt", "_dbpedia.json")
+					if os.path.exists(annotated_filename):
+						annotated[annotated_filename] = filename
 					else:
 						with codecs.open(filename, 'r', encoding='utf-8') as f:
 							annotation = self._get_annotated(f.read())
 							if len(annotation) > 0:
-								annotated[out_filename] = filename
-								with codecs.open(out_filename, 'w', encoding='utf-8') as out:
+								annotated[annotated_filename] = filename
+								with codecs.open(annotated_filename, 'w', encoding='utf-8') as out:
 									out.write(annotation)
 				except (KeyboardInterrupt, SystemExit):
 					raise
@@ -57,9 +57,9 @@ class DBpedia(textprocessor.TextProcessor):
 					logging.error(traceback.format_exc())
 		else:
 			for filename in self.files:
-				out_filename = filename.replace(".txt", "_dbpedia.json")
-				if os.path.exists(out_filename):
-					annotated[out_filename] = filename
+				annotated_filename = filename.replace(".txt", "_dbpedia.json")
+				if os.path.exists(annotated_filename):
+					annotated[annotated_filename] = filename
 
 		uris_to_docs = {}
 		for json_annotation, filename in annotated.iteritems():

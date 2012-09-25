@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://zotero/skin/zotero.css" type="text/css"?>
+<?xml-stylesheet href="chrome://papermachines/skin/dialog.css" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://papermachines/locale/papermachines.dtd">
+
+<dialog xmlns:html="http://www.w3.org/1999/xhtml"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	title="&papermachines.dialog.title;" width="400" height="330"
+	persist="width height screenX screenY"
+	ondialogaccept="return Zotero_PaperMachines_ProcessParams.acceptSelection();"
+	id="zotero-papermachines"
+	onload="Zotero_PaperMachines_ProcessParams.init()">
+	
+	<script src="chrome://papermachines/content/process_params.js"/>
+	
+	<vbox id="zotero-papermachines-params-container" flex="1">
+		<caption id="zotero-papermachines-params-intro"/>
+		<vbox id="zotero-papermachines-params-vbox"/>
+		<spacer flex="1"/>
+		<hbox>
+			<button dlgtype="cancel" label="&papermachines.dialog.cancel;"/>
+			<button dlgtype="accept" label="&papermachines.dialog.accept;"/>
+		</hbox>
+	</vbox>
+</dialog>

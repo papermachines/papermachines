@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json, operator
+import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json, operator, platform
 from itertools import izip
 
 class TextProcessor:
@@ -8,6 +8,8 @@ class TextProcessor:
 	"""
 
 	def __init__(self, track_progress=True):
+		self.sys = platform.system()
+		
 		# take in command line options
 
 		self.args_filename = sys.argv[1]
@@ -22,6 +24,13 @@ class TextProcessor:
 		self.collection_name = args[3]
 		self.extra_args = args[4:]
 
+		if "json" in self.extra_args:
+			json_starts_at = self.extra_args.index("json")
+			self.named_args = json.loads(self.extra_args[json_starts_at + 1])
+			self.extra_args = self.extra_args[:json_starts_at]
+		else:
+			self.named_args = None
+
 		self.collection = os.path.basename(csv_file).replace(".csv","")
 
 		self.require_stopwords = True # load stopwords by default
@@ -33,7 +42,10 @@ class TextProcessor:
 			self.stoplist = os.path.join(self.cwd, "stopwords.txt")
 			self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
 
-		logging.basicConfig(filename=os.path.join(self.out_dir, "logs", self.name + ".log"), level=logging.INFO)
+		self.out_filename = os.path.join(self.out_dir, self.name + self.collection + "-" + self.args_basename + ".html")
+
+		# logging.basicConfig(filename=os.path.join(self.out_dir, "logs", self.name + ".log"), level=logging.INFO)
+		logging.basicConfig(filename=self.out_filename.replace(".html", ".log"), filemode='w', level=logging.INFO)
 
 		logging.info("command: " + ' '.join([x.replace(' ','''\ ''') for x in sys.argv]))
 
@@ -93,8 +105,8 @@ class TextProcessor:
 		params.update(user_params)
 		try:
 			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
-			out_filename = getattr(self, "out_filename", os.path.join(self.out_dir, self.name + self.collection + "-" + self.args_basename + ".html"))
-			with codecs.open(out_filename, 'w', encoding='utf-8') as outfile:
+
+			with codecs.open(self.out_filename, 'w', encoding='utf-8') as outfile:
 				with codecs.open(template_filename, 'r', encoding='utf-8') as template:
 					template_str = template.read()
 					for k, v in params.iteritems():
