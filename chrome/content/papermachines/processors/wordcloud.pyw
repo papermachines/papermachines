@@ -54,7 +54,7 @@ class WordCloud(textprocessor.TextProcessor):
 		tfidf_values = self.tfidf.values()
 		top_terms = min(int(len(self.freqs.keys()) * 0.7), 5000)
 		min_score = sorted(tfidf_values, reverse=True)[min(top_terms, len(tfidf_values) - 1)]
-		self.filtered_freqs = {term: freq for term, freq in self.freqs.iteritems() if self.tfidf[term] > min_score and self.df[term] > 5}
+		self.filtered_freqs = {term: freq for term, freq in self.freqs.iteritems() if self.tfidf[term] > min_score and self.df[term] > 3}
 
 	def _topN(self, freqs, n = None):
 		if n is None:
