@@ -1227,9 +1227,17 @@ Zotero.PaperMachines = {
 			win.gBrowser.selectedTab = win.gBrowser.addTab(url);			
 		}
 	},
-	openPreferences: function () {
-		var features = "chrome,titlebar,toolbar,centerscreen,modal";
-		window.open("chrome://papermachines/content/options.xul", "Preferences", features);
+	openPreferences : function() {
+	  if (null == this._preferencesWindow || this._preferencesWindow.closed) {
+	    var instantApply = Application.prefs.get("browser.preferences.instantApply");
+	    var features = "chrome,titlebar,toolbar,centerscreen" +
+	      (instantApply.value ? ",dialog=no" : ",modal");
+	 
+	    this._preferencesWindow =
+	      window.openDialog("chrome://papermachines/content/options.xul", "papermachines-prefs-window", features);
+	  }
+	 
+	  this._preferencesWindow.focus();
 	},
 	evtListener: function (evt) {
 		var node = evt.target, doc = node.ownerDocument;

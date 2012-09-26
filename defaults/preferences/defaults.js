@@ -6,7 +6,7 @@ pref("extensions.papermachines.lda.beta", "0.01");
 pref("extensions.papermachines.lda.burn_in", 200);
 
 pref("extensions.papermachines.lda.optimize_interval", 0);
-pref("extensions.papermachines.lda.symmetric_alpha", true);
+pref("extensions.papermachines.lda.symmetric_alpha", false);
 
 pref("extensions.papermachines.lda.stemming", true);
 pref("extensions.papermachines.lda.tfidf", true);

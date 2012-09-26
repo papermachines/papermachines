@@ -42,7 +42,7 @@
 <!ENTITY papermachines.prefs.advanced					"Advanced Options">
 <!ENTITY papermachines.prefs.reset						"Reset to Defaults">
 
-<!ENTITY papermachines.prefs.general.lang				"Language">
+<!ENTITY papermachines.prefs.general.lang				"Stoplist Language: ">
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">
 <!ENTITY papermachines.prefs.lda.iterations				"Number of iterations: ">
 <!ENTITY papermachines.prefs.lda.burn_in				"Burn-in (iterations before estimating hyperparameters): ">
