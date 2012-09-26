@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://papermachines/locale/papermachines.dtd">
+
+ 
+<prefwindow id="papermachines-prefs"
+     title="Paper Machines Options"
+     instantApply="true"
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ 
+<script src="chrome://papermachines/content/options.js"/>
+
+<prefpane id="papermachines-general-pane" label="General Settings">
+  <preferences>
+    <preference id="pref_lang" name="extensions.papermachines.general.lang" type="unichar"/>
+  </preferences>
+ 
+  <hbox align="center">
+    <menulist preference="pref_lang">
+      <menupopup>
+        <menuitem label="English" value="en"/>
+        <menuitem label="Portuguese" value="pt"/>
+      </menupopup>
+    </menulist>
+  </hbox>
+</prefpane>
+
+<prefpane id="papermachines-lda-pane" label="&papermachines.collectionmenu.topicmodeling;">
+  <preferences>
+    <preference id="pref_lda_topics" name="extensions.papermachines.lda.topics" type="int"/>
+    <preference id="pref_lda_iterations" name="extensions.papermachines.lda.iterations" type="int"/>
+    <preference id="pref_lda_alpha" name="extensions.papermachines.lda.alpha" type="string"/>
+    <preference id="pref_lda_beta" name="extensions.papermachines.lda.beta" type="string"/>
+    <preference id="pref_lda_burn_in" name="extensions.papermachines.lda.burn_in" type="int"/>
+    <preference id="pref_lda_optimize_interval" name="extensions.papermachines.lda.optimize_interval" type="int"/>
+    <preference id="pref_lda_symmetric_alpha" name="extensions.papermachines.lda.symmetric_alpha" type="bool"/>
+    <preference id="pref_lda_stemming" name="extensions.papermachines.lda.stemming" type="bool"/>
+    <preference id="pref_lda_tfidf" name="extensions.papermachines.lda.tfidf" type="bool"/>
+  </preferences>
+ 
+  <vbox>
+    <hbox align="center">
+      <label control="lda_topics" value="&papermachines.prefs.lda.topics;"/>
+      <textbox preference="pref_lda_topics" id="lda_topics" maxlength="3"/>
+    </hbox>
+    <separator class="groove-thin"/>
+    <caption value="&papermachines.prefs.advanced;"/>
+    <hbox align="center">
+      <label control="lda_iterations" value="&papermachines.prefs.lda.iterations;"/>
+      <textbox preference="pref_lda_iterations" id="lda_iterations" maxlength="4"/>
+    </hbox>
+
+    <hbox align="center">
+      <label control="lda_alpha" value="&papermachines.prefs.lda.alpha;"/>
+      <textbox preference="pref_lda_alpha" id="lda_alpha" maxlength="4"/>
+    </hbox>
+
+    <hbox align="center">
+      <label control="lda_beta" value="&papermachines.prefs.lda.beta;"/>
+      <textbox preference="pref_lda_beta" id="lda_beta" maxlength="4"/>
+    </hbox>
+
+    <hbox align="center">
+      <label control="lda_burn_in" value="&papermachines.prefs.lda.burn_in;"/>
+      <textbox preference="pref_lda_burn_in" id="lda_burn_in" maxlength="4"/>
+    </hbox>
+    <hbox align="center">
+      <label control="lda_optimize_interval" value="&papermachines.prefs.lda.optimize_interval;"/>
+      <textbox preference="pref_lda_optimize_interval" id="lda_optimize_interval" maxlength="4"/>
+    </hbox>
+
+    <checkbox preference="pref_lda_symmetric_alpha" label="&papermachines.prefs.lda.symmetric_alpha;" id="lda_symmetric_alpha"/>
+    <checkbox preference="pref_lda_stemming" label="&papermachines.prefs.lda.stemming;" id="lda_stemming"/>
+    <checkbox preference="pref_lda_tfidf" label="&papermachines.prefs.lda.tfidf;" id="lda_tfidf"/>
+    <spacer flex="1"/>
+    <button id="reset-to-defaults" label="&papermachines.prefs.reset;" oncommand="Zotero_PaperMachines_resetPrefsForPane('lda');"/>
+  </vbox>
+</prefpane>
+
+ 
+</prefwindow>

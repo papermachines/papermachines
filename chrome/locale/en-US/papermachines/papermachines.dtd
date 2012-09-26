@@ -6,35 +6,28 @@
 <!ENTITY papermachines.collectionmenu.wordcloud_large		"Word Cloud">
 <!ENTITY papermachines.collectionmenu.wordcloud_large_tfidf	"Word Cloud (tf*idf filtered)">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple_menu	"Multiple Word Clouds">
-<!ENTITY papermachines.collectionmenu.wordcloud_chronological	"Word Clouds by Time Interval">
-<!ENTITY papermachines.collectionmenu.wordcloud_chronological_tfidf		"Word Clouds by Time Interval (tf*idf)">
-<!ENTITY papermachines.collectionmenu.wordcloud_chronological_dunning	"Word Clouds by Time Interval (Dunning's log-likelihood)">
-<!ENTITY papermachines.collectionmenu.wordcloud_chronological_mww	"Word Clouds by Time Interval (Mann-Whitney U)">
-<!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection">
-<!ENTITY papermachines.collectionmenu.wordcloud_multiple_tfidf	"Word Clouds by Subcollection (tf*idf)">
-<!ENTITY papermachines.collectionmenu.wordcloud_multiple_dunning	"Word Clouds by Subcollection (Dunning's log-likelihood)">
-<!ENTITY papermachines.collectionmenu.wordcloud_multiple_mww	"Word Clouds by Subcollection (Mann-Whitney U)">
-
+<!ENTITY papermachines.collectionmenu.wordcloud_chronological	"Word Clouds by Time Interval...">
+<!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection...">
 
 <!ENTITY papermachines.collectionmenu.phrasenet				"Phrase Net">
 <!ENTITY papermachines.collectionmenu.geoparse				"Geoparser">
 <!ENTITY papermachines.collectionmenu.dbpedia				"DBPedia Annotation">
 
 <!ENTITY papermachines.collectionmenu.topicmodeling			"Topic Modeling">
-<!ENTITY papermachines.collectionmenu.mallet_lda				"By Time">
-<!ENTITY papermachines.collectionmenu.mallet_lda_jstor			"By Time (With JSTOR DFR)">
-<!ENTITY papermachines.collectionmenu.mallet_lda_categorical	"By Subcollection">
+<!ENTITY papermachines.collectionmenu.mallet_lda				"By Time...">
+<!ENTITY papermachines.collectionmenu.mallet_lda_jstor			"By Time (With JSTOR DFR)...">
+<!ENTITY papermachines.collectionmenu.mallet_lda_categorical	"By Subcollection...">
 <!ENTITY papermachines.collectionmenu.mallet_lda_MI		"Mutual Information">
 
 <!ENTITY papermachines.collectionmenu.mallet_classify			"Classification">
 <!ENTITY papermachines.collectionmenu.mallet_train-classifier	"Train Classifier">
-<!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test Classification">
+<!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test Classification...">
 
-<!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines">
-<!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines">
+<!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">
+<!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines...">
 
 
-<!ENTITY papermachines.collectionmenu.select_stoplist		"Select Stoplist for Paper Machines">
+<!ENTITY papermachines.collectionmenu.preferences		"Paper Machines Preferences...">
 
 <!ENTITY papermachines.stoplists.en 						"English">
 <!ENTITY papermachines.stoplists.pt 						"Portuguese">
@@ -45,3 +38,22 @@
 <!ENTITY papermachines.dialog.title							"Paper Machines">
 <!ENTITY papermachines.dialog.cancel						"Cancel">
 <!ENTITY papermachines.dialog.accept						"OK">
+
+<!ENTITY papermachines.prefs.advanced					"Advanced Options">
+<!ENTITY papermachines.prefs.reset						"Reset to Defaults">
+
+<!ENTITY papermachines.prefs.general.lang				"Language">
+<!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">
+<!ENTITY papermachines.prefs.lda.iterations				"Number of iterations: ">
+<!ENTITY papermachines.prefs.lda.burn_in				"Burn-in (iterations before estimating hyperparameters): ">
+<!ENTITY papermachines.prefs.lda.optimize_interval		"Iterations between estimation of hyperparameters: ">
+<!ENTITY papermachines.prefs.lda.alpha					"Alpha (smoothing over topic distribution): ">
+<!ENTITY papermachines.prefs.lda.beta					"Beta (smoothing over unigram distribution): ">
+
+<!ENTITY papermachines.prefs.lda.symmetric_alpha		"Symmetric alpha (may eliminate small topics, but may spread common words over several topics)">
+
+<!ENTITY papermachines.prefs.lda.stemming				"Porter stemming">
+<!ENTITY papermachines.prefs.lda.tfidf					"tf*idf filtering">
+<!ENTITY papermachines.prefs.lda.min_df					"min doc frequency for tf*idf">
+
+

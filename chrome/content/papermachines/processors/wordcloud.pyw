@@ -61,6 +61,8 @@ class WordCloud(textprocessor.TextProcessor):
 			n = self.n
 		final_freqs = []
 		top_freqs = sorted(freqs.values())
+		if len(top_freqs) == 0:
+			return []
 		min_freq = top_freqs[-min(n,len(top_freqs))] # find nth frequency from end, or start of list
 		for word, freq in freqs.iteritems():
 			if freq >= min_freq:

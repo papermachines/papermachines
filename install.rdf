@@ -10,6 +10,7 @@
 		<em:creator>Chris Johnson-Roberson</em:creator>
 		<em:homepageURL>http://chrisjr.github.com/papermachines/</em:homepageURL>
 		<em:unpack>true</em:unpack>
+		<em:optionsURL>chrome://papermachines/content/options.xul</em:optionsURL>
 		<em:updateURL>http://cloud.github.com/downloads/chrisjr/papermachines/plugins.rdf</em:updateURL>
 		<em:updateKey>
 		MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDMzBTH2FmT/UOju1AmcinTiHIyRnnZuk

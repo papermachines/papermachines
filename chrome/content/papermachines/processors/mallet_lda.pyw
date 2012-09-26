@@ -76,11 +76,23 @@ class MalletLDA(mallet.Mallet):
 			self.min_df = int(self.named_args["min_df"])
 			self.stemming = self.named_args["stemming"]
 			self.topics = int(self.named_args["topics"])
+			self.iterations = int(self.named_args["iterations"])
+			self.alpha = self.named_args["alpha"]
+			self.beta = self.named_args["beta"]
+			self.symmetric_alpha = str(self.named_args["symmetric_alpha"]).lower()
+			self.optimize_interval = self.named_args["optimize_interval"]
+			self.burn_in = int(self.named_args["burn_in"])
 		else:
 			self.tfidf = True
 			self.min_df = 5
 			self.topics = 50
 			self.stemming = True
+			self.iterations = 1000
+			self.alpha = "50.0"
+			self.beta = "0.01"
+			self.burn_in = 200
+			self.symmetric_alpha = "true"
+			self.optimize_interval = 0
 
 
 		self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, stemming=self.stemming)
@@ -93,6 +105,12 @@ class MalletLDA(mallet.Mallet):
 		process_args = self.mallet + ["cc.mallet.topics.tui.TopicTrainer",
 			"--input", self.instance_file,
 			"--num-topics", str(self.topics),
+			"--num-iterations", str(self.iterations),
+			"--optimize-interval", str(self.optimize_interval),
+			"--optimize-burn-in", str(self.burn_in),
+			"--use-symmetric-alpha", self.symmetric_alpha,
+			"--alpha", self.alpha,
+			"--beta", self.beta,
 			"--output-state", self.mallet_files['state'],
 			"--output-doc-topics", self.mallet_files['doc-topics'],
 			"--output-topic-keys", self.mallet_files['topic-keys'],

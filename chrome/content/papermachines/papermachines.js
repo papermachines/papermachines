@@ -22,6 +22,12 @@ Zotero.PaperMachines = {
 	processNames: null, // see locale files
 	prompts: null,
 	paramLabels: null,
+	lang: null,
+	wordcloudFilters: [{"name": "none (raw frequency)", "label": " ", "value": "plain"},
+				{"name": "tf*idf", "label": " ", "value": "tfidf"},
+				{"name": "Dunning's log-likelihood", "label": " ", "value": "dunning"},
+				{"name": "Mann-Whitney U", "label": " ", "value": "mww"},
+	],
 	processesThatPrompt: {
 		"mallet_classify-file": function () {
 			// get list of classifiers
@@ -38,12 +44,37 @@ Zotero.PaperMachines = {
 			return Zotero.PaperMachines.selectFromOptions("mallet_classify-file", classifiers);
 		},
 		"wordcloud_chronological": function () {
-			return Zotero.PaperMachines.textPrompt("wordcloud_chronological", "90");
+			var filter = Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
+			if (!filter) return false;
+
+			var interval = Zotero.PaperMachines.textPrompt("wordcloud_chronological", "90");
+			if (!interval) return false;
+
+			return filter.concat(interval);
 		},
 		"mallet_lda_jstor": function () {
-			return Zotero.PaperMachines.filePrompt("mallet_lda_jstor", "multi", [".zip"]);
+			var argArray = Zotero.PaperMachines.filePrompt("mallet_lda_jstor", "multi", [".zip"]);
+			if (argArray) {
+				var params = Zotero.PaperMachines.promptForProcessParams("mallet_lda");
+				if (params) {
+					argArray = argArray.concat(["json", JSON.stringify(params)]);
+					return argArray;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
 		},
 		"mallet_lda": function () {
+			var params = Zotero.PaperMachines.promptForProcessParams("mallet_lda");
+			if (params) {
+				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
+		"mallet_lda_categorical": function () {
 			var params = Zotero.PaperMachines.promptForProcessParams("mallet_lda");
 			if (params) {
 				return ["json", JSON.stringify(params)];
@@ -68,6 +99,9 @@ Zotero.PaperMachines = {
 				alert(Zotero.PaperMachines.prompts["mallet_lda_MI"]);
 				return false;
 			}
+		},
+		"wordcloud_multiple": function () {
+			return Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
 		},
 	},
 	communicationObjects: {},
@@ -193,7 +227,11 @@ Zotero.PaperMachines = {
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
 		this.args_dir = this._getOrCreateDir("args");
 
-		this.selectStoplist("en");
+		Components.utils.import("chrome://papermachines/content/Preferences.jsm");
+
+		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
+
+		this.selectStoplist(stoplist_lang);
 
 		this.getStringsFromBundle();
 
@@ -1113,16 +1151,23 @@ Zotero.PaperMachines = {
 		}
 	},
 	processDefaults: {
-		"mallet_lda": [{"name": "topics", "type": "text", "value": 50},
-			{"name": "stemming", "type": "check", "value": false},
-			{"name": "tfidf", "type": "check", "value": true},
-			{"name": "min_df", "type": "text", "value": 5}
+		"mallet_lda": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
+			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations"},
+			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
+			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
+			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df"},
+			{"name": "alpha", "type": "text", "pref": "extensions.papermachines.lda.alpha"},
+			{"name": "beta", "type": "text", "pref": "extensions.papermachines.lda.beta"},
+			{"name": "burn_in", "type": "text", "pref": "extensions.papermachines.lda.burn_in"},
+			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval"},
+			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha"},
 		]
 	},
 	promptForProcessParams: function(process) {
 		var items = Zotero.PaperMachines.processDefaults[process];
 		for (var i in items) {
 			items[i].label = Zotero.PaperMachines.paramLabels[process][items[i].name];
+			items[i].value = Preferences.get(items[i].pref);
 		}
 		var intro = Zotero.PaperMachines.processNames[process];
 		return Zotero.PaperMachines._promptForProcessParams(intro, items);
@@ -1181,6 +1226,10 @@ Zotero.PaperMachines = {
 				.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
 			win.gBrowser.selectedTab = win.gBrowser.addTab(url);			
 		}
+	},
+	openPreferences: function () {
+		var features = "chrome,titlebar,toolbar,centerscreen,modal";
+		window.open("chrome://papermachines/content/options.xul", "Preferences", features);
 	},
 	evtListener: function (evt) {
 		var node = evt.target, doc = node.ownerDocument;
