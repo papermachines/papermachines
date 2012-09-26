@@ -1177,7 +1177,7 @@ Zotero.PaperMachines = {
 		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
 			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
 
-		win.openDialog("chrome://papermachines/content/process_params.xul", "", "chrome, dialog, modal", params);
+		win.openDialog("chrome://papermachines/content/process_params.xul", "", "chrome, dialog, modal, width=400, height=500", params);
 
 		if (params.dataOut != null) {
 			return params.dataOut;
