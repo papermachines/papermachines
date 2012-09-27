@@ -1,4 +1,10 @@
 pref("extensions.papermachines.general.lang", "en");
+
+pref("extensions.papermachines.import.title", "Issue");
+pref("extensions.papermachines.import.pubtitle", "The Daily News");
+pref("extensions.papermachines.import.dateformat", "%m.%d.%y");
+pref("extensions.papermachines.import.startingoffset", 1);
+
 pref("extensions.papermachines.lda.topics", 50);
 pref("extensions.papermachines.lda.iterations", 1000);
 pref("extensions.papermachines.lda.alpha", "50.0");

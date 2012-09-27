@@ -44,6 +44,8 @@ Zotero_PaperMachines_Dialog.init = function () {
             intro.label = this.io.dataIn["prompt"];
             list.hidden = false;
 
+            var idx = 0, selectedIdx = -1;
+
             this.io.dataIn["options"].forEach(function (item) {
                 var row = document.createElement('listitem');
                 var cell = document.createElement('listcell');
@@ -56,7 +58,16 @@ Zotero_PaperMachines_Dialog.init = function () {
 
                 row.setUserData("value", item.value, null);
                 list.appendChild(row);
+                if ("default" in item) {
+                    selectedIdx = idx;
+                }
+
+                idx++;
             });
+
+            if (selectedIdx > -1) {
+                list.selectedIndex = selectedIdx;                
+            }
             break;
     }
 };

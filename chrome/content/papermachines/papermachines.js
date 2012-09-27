@@ -23,7 +23,7 @@ Zotero.PaperMachines = {
 	prompts: null,
 	paramLabels: null,
 	lang: null,
-	wordcloudFilters: [{"name": "none (raw frequency)", "label": " ", "value": "plain"},
+	wordcloudFilters: [{"name": "none (raw frequency)", "label": " ", "value": "plain", "default": true},
 				{"name": "tf*idf", "label": " ", "value": "tfidf"},
 				{"name": "Dunning's log-likelihood", "label": " ", "value": "dunning"},
 				{"name": "Mann-Whitney U", "label": " ", "value": "mww"},
@@ -227,7 +227,9 @@ Zotero.PaperMachines = {
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
 		this.args_dir = this._getOrCreateDir("args");
 
-		Components.utils.import("chrome://papermachines/content/Preferences.jsm");
+		Components.utils.import("chrome://papermachines/content/Preferences.js");
+		Components.utils.import("chrome://papermachines/content/strptime.js");
+
 
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 
@@ -1150,7 +1152,7 @@ Zotero.PaperMachines = {
 			return false;
 		}
 	},
-	processDefaults: {
+	processParamLists: {
 		"mallet_lda": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations"},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
@@ -1161,13 +1163,20 @@ Zotero.PaperMachines = {
 			{"name": "burn_in", "type": "text", "pref": "extensions.papermachines.lda.burn_in"},
 			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval"},
 			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha"},
+		],
+		"bulk_import": [{"name": "title", "type": "text", "pref": "extensions.papermachines.import.title"},
+			{"name": "pubtitle", "type": "text", "pref": "extensions.papermachines.import.pubtitle"},
+			{"name": "dateformat", "type": "text", "pref": "extensions.papermachines.import.dateformat"},
+			{"name": "startingoffset", "type": "text", "pref": "extensions.papermachines.import.startingoffset"},
 		]
 	},
 	promptForProcessParams: function(process) {
-		var items = Zotero.PaperMachines.processDefaults[process];
+		var items = Zotero.PaperMachines.processParamLists[process];
 		for (var i in items) {
 			items[i].label = Zotero.PaperMachines.paramLabels[process][items[i].name];
-			items[i].value = Preferences.get(items[i].pref);
+			if ("pref" in items[i]) {
+				items[i].value = Preferences.get(items[i].pref);				
+			}
 		}
 		var intro = Zotero.PaperMachines.processNames[process];
 		return Zotero.PaperMachines._promptForProcessParams(intro, items);
@@ -1185,7 +1194,84 @@ Zotero.PaperMachines = {
 			return false;
 		}
 	},
+	RISfields: {
+		"title": "TI",
+		"journaltitle": "T2",
+		"date": "DA",
+		"language": "LA",
+		"year": "PY"
+	},
+	generateRIS: function (items) {
+		var ris = "";
+		for (var i in items) {
+			var item = items[i];
 
+			var myRis = "TY  - " + item.type + "\n";	// type must come first
+			for (var field in Zotero.PaperMachines.RISfields) {
+				if (field in item) {
+					myRis += Zotero.PaperMachines.RISfields[field] + "  - " + item[field] + "\n";
+				}
+			}
+			if ("files" in item) {
+				for (var j in item.files) {
+					var f = item.files[j];
+					myRis += "L1  - " + f + "\n";
+				}
+			}
+			myRis += "ER  - \n\n";
+			ris += myRis;
+		}
+		return ris;
+	},
+	bulkImport: function () {
+		var import_dir = this.filePrompt("import_dir", "getfolder");
+		if (import_dir) {
+			var params = Zotero.PaperMachines.promptForProcessParams("bulk_import");
+			if (params) {
+				var items = [];
+				var found_obj = {};
+				var n = params["startingoffset"] || 1;
+				Zotero.PaperMachines.findPDFsInDir(import_dir, found_obj);
+				for (var dir_name in found_obj) {
+					var date = false;
+					var files = found_obj[dir_name].map(function (fname) { return "file://" + fname;});
+					var item = {"type": "NEWS", "title": params["title"] + " " + n.toString(), "pubtitle": params["pubtitle"], "files": files};
+					try {
+						date = strptime(dir_name, params["dateformat"]);
+					} catch (e) {
+						Zotero.PaperMachines.LOG("Date not understood: " + dir_name);
+						Zotero.PaperMachines.LOG(e.name + ": " + e.message);
+					}
+					if (date) {
+						item.date = date.toISOString().replace(/-/g,"/").substring(0,10) + "/"; // 2012/09/12/
+					}
+					items.push(item);
+					n++;
+				}
+				var ris_str = Zotero.PaperMachines.generateRIS(items);
+				var ris_file = Zotero.PaperMachines._getOrCreateFile(import_dir.leafName + ".ris", import_dir);
+				Zotero.File.putContents(ris_file, ris_str);
+
+				Zotero.UnresponsiveScriptIndicator.disable();
+				Zotero_File_Interface.importFile(ris_file);
+				Zotero.UnresponsiveScriptIndicator.enable();
+			}
+		}
+	},
+	findPDFsInDir: function (dir, found_obj) {
+		var files = dir.directoryEntries;
+		while (files.hasMoreElements()) {
+			var f = files.getNext().QueryInterface(Components.interfaces.nsIFile);
+			if (f.isFile() && f.leafName.toLowerCase().indexOf(".pdf") != -1) {
+				if (!(dir.leafName in found_obj)) {
+					found_obj[dir.leafName] = [];
+				}
+				found_obj[dir.leafName].push(f.path);
+			} else if (f.isDirectory()) {
+				Zotero.PaperMachines.findPDFsInDir(f, found_obj);
+			}
+		}
+	},
 	LOG: function(msg) {
 	  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
 									 .getService(Components.interfaces.nsIConsoleService);

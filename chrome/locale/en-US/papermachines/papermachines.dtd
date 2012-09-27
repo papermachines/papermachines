@@ -23,6 +23,7 @@
 <!ENTITY papermachines.collectionmenu.mallet_train-classifier	"Train Classifier">
 <!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test Classification...">
 
+<!ENTITY papermachines.collectionmenu.bulk_import			"Periodical Import...">
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines...">
 
@@ -41,6 +42,15 @@
 
 <!ENTITY papermachines.prefs.advanced					"Advanced Options">
 <!ENTITY papermachines.prefs.reset						"Reset to Defaults">
+
+<!ENTITY papermachines.prefs.after_close				"Changes will take effect after the application is closed.">
+<!ENTITY papermachines.prefs.general					"General Settings">
+
+<!ENTITY papermachines.prefs.import						"Periodical Import">
+<!ENTITY papermachines.prefs.import.title				"Title Prefix">
+<!ENTITY papermachines.prefs.import.pubtitle			"Publication Title">
+<!ENTITY papermachines.prefs.import.dateformat			"Date Format">
+<!ENTITY papermachines.prefs.import.startingoffset		"Starting Offset">
 
 <!ENTITY papermachines.prefs.general.lang				"Stoplist Language: ">
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">

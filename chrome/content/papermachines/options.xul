@@ -10,13 +10,13 @@
  
 <script src="chrome://papermachines/content/options.js"/>
 
-<prefpane id="papermachines-general-pane" label="General Settings">
+<prefpane id="papermachines-general-pane" label="&papermachines.prefs.general;">
   <preferences>
     <preference id="pref_lang" name="extensions.papermachines.general.lang" type="unichar"/>
   </preferences>
  
-  <vbox>
-     <groupbox orient="horizontal">
+   <groupbox orient="vertical">
+     <vbox>
       <label control="lang" value="&papermachines.prefs.general.lang;"/>
       <menulist id="lang" preference="pref_lang">
         <menupopup>
@@ -24,8 +24,10 @@
           <menuitem label="Portuguese" value="pt"/>
         </menupopup>
       </menulist>
-    </groupbox>
-  </vbox>
+      <separator class="groove-thin"/>
+     <caption label="&papermachines.prefs.after_close;"/>
+    </vbox>
+  </groupbox>
 </prefpane>
 
 <prefpane id="papermachines-lda-pane" label="&papermachines.collectionmenu.topicmodeling;">
@@ -41,14 +43,15 @@
     <preference id="pref_lda_tfidf" name="extensions.papermachines.lda.tfidf" type="bool"/>
   </preferences>
  
-  <groupbox orient="vertical">
     <vbox>
       <hbox align="center">
         <label control="lda_topics" value="&papermachines.prefs.lda.topics;"/>
         <textbox preference="pref_lda_topics" id="lda_topics" maxlength="3"/>
       </hbox>
       <separator class="groove-thin"/>
-      <caption value="&papermachines.prefs.advanced;"/>
+      <groupbox orient="vertical">
+
+      <caption label="&papermachines.prefs.advanced;"/>
       <hbox align="center">
         <label control="lda_iterations" value="&papermachines.prefs.lda.iterations;"/>
         <textbox preference="pref_lda_iterations" id="lda_iterations" maxlength="4"/>
@@ -76,8 +79,42 @@
       <checkbox preference="pref_lda_symmetric_alpha" label="&papermachines.prefs.lda.symmetric_alpha;" id="lda_symmetric_alpha"/>
       <checkbox preference="pref_lda_stemming" label="&papermachines.prefs.lda.stemming;" id="lda_stemming"/>
       <checkbox preference="pref_lda_tfidf" label="&papermachines.prefs.lda.tfidf;" id="lda_tfidf"/>
+
+  </groupbox>
       <spacer flex="1"/>
-      <button id="reset-to-defaults" label="&papermachines.prefs.reset;" oncommand="Zotero_PaperMachines_resetPrefsForPane('lda');"/>
+
+      <button id="reset-to-defaults" label="&papermachines.prefs.reset;" oncommand="Zotero_PaperMachines_Options.resetPrefsForPane('lda');"/>
+
+    </vbox>
+</prefpane>
+
+<prefpane id="papermachines-import-pane" label="&papermachines.prefs.import;">
+  <preferences>
+    <preference id="pref_import_title" name="extensions.papermachines.import.title" type="unichar"/>
+    <preference id="pref_import_pubtitle" name="extensions.papermachines.import.pubtitle" type="unichar"/>
+    <preference id="pref_import_dateformat" name="extensions.papermachines.import.dateformat" type="unichar"/>
+    <preference id="pref_import_startingoffset" name="extensions.papermachines.import.startingoffset" type="int"/>
+
+  </preferences>
+ 
+   <groupbox orient="horizontal">
+    <vbox>
+      <hbox align="center">
+        <label control="import_title" value="&papermachines.prefs.import.title;"/>
+        <textbox preference="pref_import_title" id="import_title" maxlength="25"/>
+      </hbox>
+      <hbox align="center">
+        <label control="import_pubtitle" value="&papermachines.prefs.import.pubtitle;"/>
+        <textbox preference="pref_import_pubtitle" id="import_pubtitle" maxlength="25"/>
+      </hbox>
+      <hbox align="center">
+        <label control="import_dateformat" value="&papermachines.prefs.import.dateformat;"/>
+        <textbox preference="pref_import_dateformat" id="import_dateformat" maxlength="25"/>
+      </hbox>
+      <hbox align="center">
+        <label control="import_startingoffset" value="&papermachines.prefs.import.startingoffset;"/>
+        <textbox preference="pref_import_startingoffset" id="import_startingoffset" maxlength="25"/>
+      </hbox>
     </vbox>
   </groupbox>
 </prefpane>
