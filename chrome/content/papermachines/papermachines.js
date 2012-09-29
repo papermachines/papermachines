@@ -153,9 +153,7 @@ Zotero.PaperMachines = {
 										Zotero.PaperMachines.addExtractedToDB(finished_path);										
 									}
 
-									file = Components.classes["@mozilla.org/file/local;1"]
-										.createInstance(Components.interfaces.nsILocalFile);
-									file.initWithPath(processResult["outfile"]);
+									file = Zotero.PaperMachines._getLocalFile(processResult["outfile"]);
 
 									var mostRecentExtractionQuery = "SELECT MAX(timeStamp) FROM processed_collections " +
 										"WHERE processor='extract' AND collection = ? OR collection in " +
@@ -234,6 +232,8 @@ Zotero.PaperMachines = {
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 
 		this.selectStoplist(stoplist_lang);
+		// var jornal = Zotero.PaperMachines._getLocalFile("/Users/chrisjr/Documents/digaai/PDF JORNAL DOS SPORTS/EDICAO_863/Journal 1.pdf");
+		// alert(Zotero.PaperMachines.getDateFromPDF(jornal));
 
 		this.getStringsFromBundle();
 
@@ -1152,6 +1152,10 @@ Zotero.PaperMachines = {
 			return false;
 		}
 	},
+	customPhrasenet: function () {
+		var custom_str = Zotero.PaperMachines.textPrompt("phrasenet_custom", "x (?:leads to|causes|triggers) y");
+		Zotero.PaperMachines.runProcess('phrasenet', custom_str);
+	},
 	processParamLists: {
 		"mallet_lda": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations"},
@@ -1166,7 +1170,10 @@ Zotero.PaperMachines = {
 		],
 		"bulk_import": [{"name": "title", "type": "text", "pref": "extensions.papermachines.import.title"},
 			{"name": "pubtitle", "type": "text", "pref": "extensions.papermachines.import.pubtitle"},
+			{"name": "guessdate", "type": "check", "pref": "extensions.papermachines.import.guessdate"},
 			{"name": "dateformat", "type": "text", "pref": "extensions.papermachines.import.dateformat"},
+			{"name": "guessissue", "type": "check", "pref": "extensions.papermachines.import.guessissue"},
+			{"name": "issueregex", "type": "text", "pref": "extensions.papermachines.import.issueregex"},
 			{"name": "startingoffset", "type": "text", "pref": "extensions.papermachines.import.startingoffset"},
 		]
 	},
@@ -1196,7 +1203,7 @@ Zotero.PaperMachines = {
 	},
 	RISfields: {
 		"title": "TI",
-		"journaltitle": "T2",
+		"pubtitle": "T2",
 		"date": "DA",
 		"language": "LA",
 		"year": "PY"
@@ -1231,30 +1238,80 @@ Zotero.PaperMachines = {
 				var items = [];
 				var found_obj = {};
 				var n = params["startingoffset"] || 1;
+
 				Zotero.PaperMachines.findPDFsInDir(import_dir, found_obj);
-				for (var dir_name in found_obj) {
-					var date = false;
-					var files = found_obj[dir_name].map(function (fname) { return "file://" + fname;});
-					var item = {"type": "NEWS", "title": params["title"] + " " + n.toString(), "pubtitle": params["pubtitle"], "files": files};
-					try {
-						date = strptime(dir_name, params["dateformat"]);
-					} catch (e) {
-						Zotero.PaperMachines.LOG("Date not understood: " + dir_name);
-						Zotero.PaperMachines.LOG(e.name + ": " + e.message);
+
+				// build up associative array of dates/items, either using PDF metadata or dir names
+				var dated_items = {};
+
+				if (params["guessdate"]) {
+					for (var dir_name in found_obj) {
+						found_obj[dir_name].forEach(function (f) {
+							var date = Zotero.PaperMachines.getDateFromPDF(f);
+							if (date) {
+								var ris_date = date.toISOString().replace(/-/g,"/").substring(0,10) + "/"; // 2012/09/12/
+								if (!(ris_date in dated_items)) {
+									dated_items[ris_date] = {"type": "NEWS", "pubtitle": params["pubtitle"], "date": ris_date, "files": []};
+									if (params["guessissue"]) {
+										var issue = Zotero.PaperMachines.applyRegexToPDF(f, "(" + params["issueregex"] + ")");
+										if (issue) {
+											dated_items[ris_date]["title"] = issue[0];
+										}
+									} else {
+										dated_items[ris_date]["title"] = params["title"] + " " + n.toString();
+										n++;										
+									}
+								}
+								dated_items[ris_date]["files"].push("file://" + f.path);
+							} else {
+								var item = {"type": "NEWS", "title": params["title"] + " " + n.toString(), "pubtitle": params["pubtitle"], "files": ["file://" + f.path]};
+								if (params["guessissue"]) {
+									var issue = Zotero.PaperMachines.applyRegexToPDF(f, "(" + params["issueregex"] + ")");
+									if (issue) {
+										item["title"] = issue[0];
+									}
+								}
+								items.push(item);
+								n++;
+							}
+						});
 					}
-					if (date) {
-						item.date = date.toISOString().replace(/-/g,"/").substring(0,10) + "/"; // 2012/09/12/
+					for (var ris_date in dated_items) {
+						items.push(dated_items[ris_date]);
 					}
-					items.push(item);
-					n++;
+				} else {
+					for (var dir_name in found_obj) {
+						var date = false;
+						try {
+							date = strptime(dir_name, params["dateformat"]);
+						} catch (e) {
+							Zotero.PaperMachines.LOG("Date not understood: " + dir_name);
+							Zotero.PaperMachines.LOG(e.name + ": " + e.message);
+						}
+
+						var files = found_obj[dir_name].map(function (f) { return "file://" + f.path;});
+						var item = {"type": "NEWS", "title": params["title"] + " " + n.toString(), "pubtitle": params["pubtitle"], "files": files};
+						if (date) {
+							item.date = date.toISOString().replace(/-/g,"/").substring(0,10) + "/"; // 2012/09/12/
+						}
+						if (params["guessissue"]) {
+							var issue = Zotero.PaperMachines.applyRegexToPDF(found_obj[dir_name][0], "(" + params["issueregex"] + ")");
+							if (issue) {
+								item["title"] = issue[0];
+							}
+						}
+						items.push(item);
+						n++;
+					}
 				}
+
 				var ris_str = Zotero.PaperMachines.generateRIS(items);
 				var ris_file = Zotero.PaperMachines._getOrCreateFile(import_dir.leafName + ".ris", import_dir);
 				Zotero.File.putContents(ris_file, ris_str);
 
-				Zotero.UnresponsiveScriptIndicator.disable();
-				Zotero_File_Interface.importFile(ris_file);
-				Zotero.UnresponsiveScriptIndicator.enable();
+				// Zotero.UnresponsiveScriptIndicator.disable();
+				// Zotero_File_Interface.importFile(ris_file);
+				// Zotero.UnresponsiveScriptIndicator.enable();
 			}
 		}
 	},
@@ -1266,10 +1323,75 @@ Zotero.PaperMachines = {
 				if (!(dir.leafName in found_obj)) {
 					found_obj[dir.leafName] = [];
 				}
-				found_obj[dir.leafName].push(f.path);
+				found_obj[dir.leafName].push(f);
 			} else if (f.isDirectory()) {
 				Zotero.PaperMachines.findPDFsInDir(f, found_obj);
 			}
+		}
+	},
+	applyRegexToPDF: function (file, regex, regex2) {
+		var pdftotext = Zotero.getZoteroDirectory();
+		pdftotext.append(Zotero.Fulltext.pdfConverterFileName);
+
+		var textFile = file.parent;
+		textFile.append(file.leafName + ".txt");
+		Zotero.debug('Running pdftotext -enc UTF-8 -nopgbrk "' + file.path + '" "' + textFile.path + '"');
+		
+		var proc = Components.classes["@mozilla.org/process/util;1"].
+				createInstance(Components.interfaces.nsIProcess);
+		proc.init(pdftotext);
+		
+		var args = ['-enc', 'UTF-8', '-nopgbrk', file.path, textFile.path];
+		try {
+			proc.runw(true, args, args.length);
+		} catch (e) {
+			Zotero.PaperMachines.LOG("Error running pdftotext");
+			Zotero.PaperMachines.LOG(e.name + ": " + e.message);
+		}
+
+		var contents = Zotero.File.getContents(textFile);
+		textFile.remove(false);
+		if (regex2) {
+			return [contents.match(regex), contents.match(regex2)];
+		} else {
+			return contents.match(regex);			
+		}
+	},
+	getDateFromPDF: function (file) {
+		var pdfinfo = Zotero.getZoteroDirectory();
+		pdfinfo.append(Zotero.Fulltext.pdfInfoFileName);
+
+		var infoFile = file.parent;
+		infoFile.append(file.leafName + ".info");
+		Zotero.debug('Running pdfinfo "' + file.path + '" "' + infoFile.path + '"');
+		
+		var proc = Components.classes["@mozilla.org/process/util;1"].
+				createInstance(Components.interfaces.nsIProcess);
+		proc.init(pdfinfo);
+		
+		var args = [file.path, infoFile.path];
+		try {
+			proc.runw(true, args, args.length);
+		} catch (e) {
+			Zotero.PaperMachines.LOG("Error running pdfinfo");
+			Zotero.PaperMachines.LOG(e.name + ": " + e.message);
+		}
+		var contents = Zotero.File.getContents(infoFile);
+		infoFile.remove(false);
+
+		if (contents) {
+			try {
+				// Parse pdfinfo output
+				var date_str = contents.replace(/ +/g, ' ').match("CreationDate: (.+)")[0];
+				var date = strptime(date_str, "%A %B %d %H:%M:%S %Y")
+				return date;
+			} catch (e) {
+				Zotero.PaperMachines.LOG("Date could not be parsed");
+				Zotero.PaperMachines.LOG(e.name + ": " + e.message);
+				return false;
+			}
+		} else { 
+			return false;
 		}
 	},
 	LOG: function(msg) {

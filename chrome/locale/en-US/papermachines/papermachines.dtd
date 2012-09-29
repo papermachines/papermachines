@@ -23,7 +23,7 @@
 <!ENTITY papermachines.collectionmenu.mallet_train-classifier	"Train Classifier">
 <!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test Classification...">
 
-<!ENTITY papermachines.collectionmenu.bulk_import			"Periodical Import...">
+<!ENTITY papermachines.collectionmenu.bulk_import			"Periodical PDF Import...">
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines...">
 
@@ -49,6 +49,9 @@
 <!ENTITY papermachines.prefs.import						"Periodical Import">
 <!ENTITY papermachines.prefs.import.title				"Title Prefix">
 <!ENTITY papermachines.prefs.import.pubtitle			"Publication Title">
+<!ENTITY papermachines.prefs.import.guessdate			"Guess Date from PDF Metadata">
+<!ENTITY papermachines.prefs.import.guessissue			"Extract issue from PDF fulltext">
+<!ENTITY papermachines.prefs.import.issueregex			"Issue search pattern">
 <!ENTITY papermachines.prefs.import.dateformat			"Date Format">
 <!ENTITY papermachines.prefs.import.startingoffset		"Starting Offset">
 

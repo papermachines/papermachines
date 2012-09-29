@@ -92,9 +92,11 @@
   <preferences>
     <preference id="pref_import_title" name="extensions.papermachines.import.title" type="unichar"/>
     <preference id="pref_import_pubtitle" name="extensions.papermachines.import.pubtitle" type="unichar"/>
+    <preference id="pref_import_guessdate" name="extensions.papermachines.import.guessdate" type="bool"/>
+    <preference id="pref_import_guessissue" name="extensions.papermachines.import.guessissue" type="bool"/>
     <preference id="pref_import_dateformat" name="extensions.papermachines.import.dateformat" type="unichar"/>
+    <preference id="pref_import_issueregex" name="extensions.papermachines.import.issueregex" type="unichar"/>
     <preference id="pref_import_startingoffset" name="extensions.papermachines.import.startingoffset" type="int"/>
-
   </preferences>
  
    <groupbox orient="horizontal">
@@ -108,8 +110,18 @@
         <textbox preference="pref_import_pubtitle" id="import_pubtitle" maxlength="25"/>
       </hbox>
       <hbox align="center">
+        <checkbox id="import_guessdate" label="&papermachines.prefs.import.guessdate;" preference="pref_import_guessdate"/>
+      </hbox>
+      <hbox align="center">
         <label control="import_dateformat" value="&papermachines.prefs.import.dateformat;"/>
         <textbox preference="pref_import_dateformat" id="import_dateformat" maxlength="25"/>
+      </hbox>
+      <hbox align="center">
+        <checkbox id="import_guessissue" label="&papermachines.prefs.import.guessissue;" preference="pref_import_guessissue"/>
+      </hbox>
+      <hbox align="center">
+        <label control="import_issueregex" value="&papermachines.prefs.import.issueregex;"/>
+        <textbox preference="pref_import_issueregex" id="import_issueregex" maxlength="25"/>
       </hbox>
       <hbox align="center">
         <label control="import_startingoffset" value="&papermachines.prefs.import.startingoffset;"/>

@@ -2,7 +2,10 @@ pref("extensions.papermachines.general.lang", "en");
 
 pref("extensions.papermachines.import.title", "Issue");
 pref("extensions.papermachines.import.pubtitle", "The Daily News");
+pref("extensions.papermachines.import.guessdate", false);
 pref("extensions.papermachines.import.dateformat", "%m.%d.%y");
+pref("extensions.papermachines.import.guessissue", false);
+pref("extensions.papermachines.import.issueregex", "Issue [0-9]+|Vol[^I]+ Issue [0-9]+|EDIÇÃO [0-9]+");
 pref("extensions.papermachines.import.startingoffset", 1);
 
 pref("extensions.papermachines.lda.topics", 50);

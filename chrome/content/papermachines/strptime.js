@@ -38,11 +38,11 @@ strptime.fd = {
 	'B' : [ '[a-z]+', function (matched) { this.setUTCMonth(strptime.B[matched.slice(0, 3)]) } ],
 	'Y' : [ '[0-9]{4}', function (matched) { this.setUTCFullYear(+matched) } ],
 	'y' : [ '[0-9]{2}', function (matched) { this.setUTCFullYear(+matched + (+matched > (new Date().getYear() - 100) ? 1900 : 2000)) } ],
-	'm' : [ '[0-9]{0,2}', function (matched) { this.setUTCMonth(+matched - 1) } ],
-	'd' : [ '[0-9]{0,2}', function (matched) { this.setUTCDate(+matched) } ],
-	'H' : [ '[0-9]{0,2}', function (matched) { this.setUTCHours(+matched) } ],
-	'M' : [ '[0-9]{0,2}', function (matched) { this.setUTCMinutes(+matched) } ],
-	'S' : [ '[0-9]{0,2}', function (matched) { this.setUTCSeconds(+matched) } ],
+	'm' : [ '[0-9]{1,2}', function (matched) { this.setUTCMonth(+matched - 1) } ],
+	'd' : [ '[0-9]{1,2}', function (matched) { this.setUTCDate(+matched) } ],
+	'H' : [ '[0-9]{1,2}', function (matched) { this.setUTCHours(+matched) } ],
+	'M' : [ '[0-9]{2,2}', function (matched) { this.setUTCMinutes(+matched) } ],
+	'S' : [ '[0-9]{2,2}', function (matched) { this.setUTCSeconds(+matched) } ],
 	's' : [ '[0-9]+', function (matched) { this.setUTCMilliseconds(+matched) } ],
 	'Z' : [ 'UTC|Z|[+-][0-9][0-9]:?[0-9][0-9]', function (matched) {
 		if (matched == 'Z') return;
@@ -54,4 +54,5 @@ strptime.fd = {
 	'I' : [ '[0-9]{0,2}', function (matched) { this.setUTCHours(+matched) } ],
 	'p' : [ 'AM|PM', function (matched) { this.AMPM = matched } ]
 };
+
 strptime.B = { "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5, "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11 };

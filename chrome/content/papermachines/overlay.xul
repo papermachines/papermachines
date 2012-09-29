@@ -48,6 +48,9 @@
 					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x is y')"/>
 				<menuitem label="x [space] y"
 					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x y')"/>
+				<menuitem label="Custom..."
+					oncommand="Zotero.PaperMachines.customPhrasenet()"/>
+
 			</menupopup>
 		</menu>
 		<menuitem id="geoparse" label="&papermachines.collectionmenu.geoparse;"

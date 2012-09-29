@@ -19,11 +19,9 @@ class PhraseNet(textprocessor.TextProcessor):
 			with codecs.open(filename, 'r', encoding='utf8') as f:
 				logging.info("processing " + filename)
 				for re_match in pattern.finditer(f.read()):
-					match = re_match.groups()
+					match = [w.lower() for w in re_match.groups()]
 					if any([word in self.stopwords for word in match]):
 						continue
-
-					match = [w.lower() for w in match]
 
 					for word in match:
 						if not word in self.nodes:
@@ -53,9 +51,11 @@ class PhraseNet(textprocessor.TextProcessor):
 		else:
 			pattern_str = "x and y"
 
-		if "x" in pattern_str and "y" in pattern_str:
+		if pattern_str.count('x') == 1 and pattern_str.count('y') == 1:
 			pattern = pattern_str.replace('x', wordregex)
 			pattern = pattern.replace('y', wordregex)
+		else:
+			pattern = pattern_str
 
 		logging.info("extracting phrases according to pattern "+ repr(pattern))
 
