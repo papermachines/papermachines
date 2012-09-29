@@ -824,6 +824,12 @@ Zotero.PaperMachines = {
 					queue.add(Zotero.PaperMachines.processItem, itemGroup.getName(), item, dir, i, queue);					
 				} else {
 					Zotero.PaperMachines.DB.query("INSERT INTO collection_docs (collection,itemID) VALUES (?,?)", [thisGroup, item.id]);
+					if (Preferences.get("extensions.papermachines.general.extract_notes")) {
+						Zotero.PaperMachines._extractNotes(item, dir);
+					}
+					if (Preferences.get("extensions.papermachines.general.extract_tags")) {
+						Zotero.PaperMachines._extractTags(item, dir);
+					}					
 				}
 			}
 		}
@@ -849,37 +855,14 @@ Zotero.PaperMachines = {
 		var outFile = dir.clone();
 		outFile.append(Zotero.PaperMachines.getFilenameForItem(item));
 
-		var notesFile = dir.clone();
-		notesFile.append(outFile.leafName.replace(".txt", "_notes.html"));
-
 		var notes_str = "<html><head></head><body>";
 
-		var tagsFile = dir.clone();
-		tagsFile.append(outFile.leafName.replace(".txt", "_tags.txt"));
-
-		// if (outFile.exists()) {
-		// 	Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO collection_docs (collection,itemID) VALUES (?,?)", [dir.leafName, item.id]);
-		// 	if (gettingNotes) {
-		// 		Zotero.PaperMachines._extractNotes(item, notesFile, notes_str, outFile.path, dir.leafName);
-		// 	}
-
-		// 	if (gettingTags) {
-		// 		Zotero.PaperMachines._extractTags(item, tagsFile, tags_str, outFile.path, dir.leafName);
-		// 	}
-
-		// 	queue.runningTotal += 1;
-		// 	queue.next();
-		// 	return;
-		// }
-
 		var attachments = item.getAttachments(false);
-		var recognizedAttachments = false;
 		for (var a in attachments) {
 			var a_item = Zotero.Items.get(attachments[a]);
 			if ((a_item.attachmentMIMEType == 'application/pdf' && gettingPDF)
 			   || (a_item.attachmentMIMEType == 'text/html' && gettingHTML)
 			   || a_item.attachmentMIMEType == 'text/plain') {
-			   	recognizedAttachments = true;
 				var orig_file = a_item.getFile().path;
 				if (orig_file) {
 					Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [orig_file, item.id, outFile.path, dir.leafName]);					
@@ -892,17 +875,22 @@ Zotero.PaperMachines = {
 		}
 
 		if (gettingNotes) {
-			Zotero.PaperMachines._extractNotes(item, notesFile, notes_str, outFile.path, dir.leafName);
+			Zotero.PaperMachines._extractNotes(item, dir, notes_str);
 		}
 
 		if (gettingTags) {
-			Zotero.PaperMachines._extractTags(item, tagsFile, tags_str, outFile.path, dir.leafName);
+			Zotero.PaperMachines._extractTags(item, dir);
 		}
 
 		queue.runningTotal += 1;
 		queue.next();
 	},
-	_extractNotes: function (item, notesFile, notes_str, outFile_path, dir_leafName) {
+	_extractNotes: function (item, dir, notes_str) {
+		var notesFile = dir.clone();
+		notesFile.append(Zotero.PaperMachines.getFilenameForItem(item).replace(".txt", "_notes.html"));
+
+		notes_str = notes_str || "<html><head></head><body>";
+
 		var notes = item.getNotes(false);
 		for (var b in notes) {
 			var note = Zotero.Items.get(notes[b]);
@@ -912,14 +900,19 @@ Zotero.PaperMachines = {
 		notes_str += "</body></html>";
 
 		Zotero.File.putContents(notesFile, notes_str);
-		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [notesFile.path, item.id, outFile_path, dir_leafName]);
+		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [notesFile.path, item.id, notesFile.path.replace("_notes.html", ".txt"), dir.leafName]);
 	},
-	_extractTags: function () {
+	_extractTags: function (item, dir, tags_str) {
+		var tagsFile = dir.clone();
+		tagsFile.append(Zotero.PaperMachines.getFilenameForItem(item).replace(".txt", "_tags.txt"));
+
+		tags_str = tags_str || "";
+
 		var tags = item.getTags(false);
 		var tags_str = tags.map(function (d) { return d.name}).join(", ");
 
 		Zotero.File.putContents(tagsFile, tags_str);
-		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [tagsFile.path, item.id, outFile_path, dir_leafName]);
+		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [tagsFile.path, item.id, tagsFile.path.replace("_tags.txt", ".txt"), dir.leafName]);
 	},
 	_updateBundledFilesCallback: function (installLocation) {
 		this.install_dir = installLocation;
