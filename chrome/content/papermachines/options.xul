@@ -13,21 +13,34 @@
 <prefpane id="papermachines-general-pane" label="&papermachines.prefs.general;">
   <preferences>
     <preference id="pref_lang" name="extensions.papermachines.general.lang" type="unichar"/>
+    <preference id="pref_extract_pdf" name="extensions.papermachines.general.extract_pdf" type="bool"/>
+    <preference id="pref_extract_html" name="extensions.papermachines.general.extract_html" type="bool"/>
+    <preference id="pref_extract_notes" name="extensions.papermachines.general.extract_notes" type="bool"/>
+    <preference id="pref_extract_tags" name="extensions.papermachines.general.extract_tags" type="bool"/>
   </preferences>
  
-   <groupbox orient="vertical">
-     <vbox>
-      <label control="lang" value="&papermachines.prefs.general.lang;"/>
-      <menulist id="lang" preference="pref_lang">
-        <menupopup>
-          <menuitem label="English" value="en"/>
-          <menuitem label="Portuguese" value="pt"/>
-        </menupopup>
-      </menulist>
-      <separator class="groove-thin"/>
-     <caption label="&papermachines.prefs.after_close;"/>
-    </vbox>
-  </groupbox>
+   <vbox>
+     <groupbox orient="vertical">
+      <caption label="&papermachines.prefs.general;">
+        <label control="lang" value="&papermachines.prefs.general.lang;"/>
+        <menulist id="lang" preference="pref_lang">
+          <menupopup>
+            <menuitem label="English" value="en"/>
+            <menuitem label="Portuguese" value="pt"/>
+          </menupopup>
+        </menulist>
+    </groupbox>
+    <separator class="groove-thin"/>
+    <groupbox orient="horizontal">
+      <caption label="&papermachines.prefs.general.extract;"/>
+      <checkbox preference="pref_extract_pdf" label="&papermachines.prefs.general.extract_pdf;" id="extract_pdf"/>
+      <checkbox preference="pref_extract_html" label="&papermachines.prefs.general.extract_html;" id="extract_html"/>
+      <checkbox preference="pref_extract_notes" label="&papermachines.prefs.general.extract_notes;" id="extract_notes"/>
+      <checkbox preference="pref_extract_tags" label="&papermachines.prefs.general.extract_tags;" id="extract_tags"/>
+    </groupbox>
+    <separator class="groove-thin"/>
+    <label value="&papermachines.prefs.after_close;"/>
+  </vbox>
 </prefpane>
 
 <prefpane id="papermachines-lda-pane" label="&papermachines.collectionmenu.topicmodeling;">

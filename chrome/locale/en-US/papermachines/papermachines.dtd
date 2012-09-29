@@ -56,6 +56,12 @@
 <!ENTITY papermachines.prefs.import.startingoffset		"Starting Offset">
 
 <!ENTITY papermachines.prefs.general.lang				"Stoplist Language: ">
+<!ENTITY papermachines.prefs.general.extract			"Data to Extract">
+<!ENTITY papermachines.prefs.general.extract_html		"Web Snapshots">
+<!ENTITY papermachines.prefs.general.extract_pdf		"PDFs with OCR text">
+<!ENTITY papermachines.prefs.general.extract_notes		"Notes">
+<!ENTITY papermachines.prefs.general.extract_tags		"Tags">
+
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">
 <!ENTITY papermachines.prefs.lda.iterations				"Number of iterations: ">
 <!ENTITY papermachines.prefs.lda.burn_in				"Burn-in (iterations before estimating hyperparameters): ">

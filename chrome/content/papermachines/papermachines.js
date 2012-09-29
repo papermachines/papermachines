@@ -746,7 +746,7 @@ Zotero.PaperMachines = {
 			var text = Zotero.PaperMachines._getLocalFile(filename);
 			existent = text.exists();
 			if (!existent) {
-				this.DB.query("DELETE FROM doc_files WHERE filename = ?;", [docs[i]["filename"]]);
+				this.DB.query("DELETE FROM doc_files WHERE filename = ?;", [filename]);					
 			}
 		}
 		return existent ? filename : false;
@@ -841,31 +841,85 @@ Zotero.PaperMachines = {
 	processItem: function(itemGroupName, item, dir, i, queue) {
 		var percentDone = (parseInt(i)+queue.runningTotal)*100.0/queue.grandTotal;
 		Zotero.updateZoteroPaneProgressMeter(percentDone);
+		var gettingNotes = Preferences.get("extensions.papermachines.general.extract_notes");
+		var gettingTags = Preferences.get("extensions.papermachines.general.extract_tags");
+		var gettingPDF = Preferences.get("extensions.papermachines.general.extract_pdf");
+		var gettingHTML = Preferences.get("extensions.papermachines.general.extract_html");
+
 		var outFile = dir.clone();
 		outFile.append(Zotero.PaperMachines.getFilenameForItem(item));
 
-		if (outFile.exists()) {
-			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO collection_docs (collection,itemID) VALUES (?,?)", [dir.leafName, item.id]);			
-			queue.runningTotal += 1;
-			queue.next();
-			return;
-		}
+		var notesFile = dir.clone();
+		notesFile.append(outFile.leafName.replace(".txt", "_notes.html"));
+
+		var notes_str = "<html><head></head><body>";
+
+		var tagsFile = dir.clone();
+		tagsFile.append(outFile.leafName.replace(".txt", "_tags.txt"));
+
+		// if (outFile.exists()) {
+		// 	Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO collection_docs (collection,itemID) VALUES (?,?)", [dir.leafName, item.id]);
+		// 	if (gettingNotes) {
+		// 		Zotero.PaperMachines._extractNotes(item, notesFile, notes_str, outFile.path, dir.leafName);
+		// 	}
+
+		// 	if (gettingTags) {
+		// 		Zotero.PaperMachines._extractTags(item, tagsFile, tags_str, outFile.path, dir.leafName);
+		// 	}
+
+		// 	queue.runningTotal += 1;
+		// 	queue.next();
+		// 	return;
+		// }
 
 		var attachments = item.getAttachments(false);
 		var recognizedAttachments = false;
-		for (a in attachments) {
+		for (var a in attachments) {
 			var a_item = Zotero.Items.get(attachments[a]);
-			if (a_item.attachmentMIMEType == 'application/pdf'
-			   || a_item.attachmentMIMEType == 'text/html') {
+			if ((a_item.attachmentMIMEType == 'application/pdf' && gettingPDF)
+			   || (a_item.attachmentMIMEType == 'text/html' && gettingHTML)
+			   || a_item.attachmentMIMEType == 'text/plain') {
 			   	recognizedAttachments = true;
 				var orig_file = a_item.getFile().path;
 				if (orig_file) {
 					Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [orig_file, item.id, outFile.path, dir.leafName]);					
 				}
 			}
+
+			if (gettingNotes && "hasNote" in a_item && a_item.hasNote()) {
+				notes_str += a_item.getNote() + "\n---\n";
+			}
 		}
+
+		if (gettingNotes) {
+			Zotero.PaperMachines._extractNotes(item, notesFile, notes_str, outFile.path, dir.leafName);
+		}
+
+		if (gettingTags) {
+			Zotero.PaperMachines._extractTags(item, tagsFile, tags_str, outFile.path, dir.leafName);
+		}
+
 		queue.runningTotal += 1;
 		queue.next();
+	},
+	_extractNotes: function (item, notesFile, notes_str, outFile_path, dir_leafName) {
+		var notes = item.getNotes(false);
+		for (var b in notes) {
+			var note = Zotero.Items.get(notes[b]);
+			notes_str += note.getNote() + "\n---\n";					
+		}
+
+		notes_str += "</body></html>";
+
+		Zotero.File.putContents(notesFile, notes_str);
+		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [notesFile.path, item.id, outFile_path, dir_leafName]);
+	},
+	_extractTags: function () {
+		var tags = item.getTags(false);
+		var tags_str = tags.map(function (d) { return d.name}).join(", ");
+
+		Zotero.File.putContents(tagsFile, tags_str);
+		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [tagsFile.path, item.id, outFile_path, dir_leafName]);
 	},
 	_updateBundledFilesCallback: function (installLocation) {
 		this.install_dir = installLocation;
@@ -1309,9 +1363,7 @@ Zotero.PaperMachines = {
 				var ris_file = Zotero.PaperMachines._getOrCreateFile(import_dir.leafName + ".ris", import_dir);
 				Zotero.File.putContents(ris_file, ris_str);
 
-				// Zotero.UnresponsiveScriptIndicator.disable();
-				// Zotero_File_Interface.importFile(ris_file);
-				// Zotero.UnresponsiveScriptIndicator.enable();
+				Zotero_File_Interface.importFile(ris_file);
 			}
 		}
 	},

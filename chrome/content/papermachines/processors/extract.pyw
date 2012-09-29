@@ -19,8 +19,7 @@ def strip_tags(html):
 
 class Extract(textprocessor.TextProcessor):
 	"""
-	Generate phrase net
-	cf. http://www-958.ibm.com/software/data/cognos/manyeyes/page/Phrase_Net.html
+	Extract text from PDF or HTML files
 	"""
 
 	def _basic_params(self):
@@ -51,8 +50,10 @@ class Extract(textprocessor.TextProcessor):
 						import_args = [self.pdftotext, '-enc', 'UTF-8', '-nopgbrk', filename, '-']
 						import_proc = subprocess.Popen(import_args, stdout = subprocess.PIPE)
 						text += import_proc.communicate()[0].decode('utf-8')
-					if filename.lower().endswith(".html"):
+					elif filename.lower().endswith(".html"):
 						text += strip_tags(codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read())
+					elif filename.lower().endswith(".txt"):
+						text += codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read()
 				with codecs.open(out_file, 'w', encoding="utf-8") as f:
 					f.write(text)
 					saved.append({"itemID": itemID, "collection": self.metadata[filename]["collection"], "filename": out_file})
