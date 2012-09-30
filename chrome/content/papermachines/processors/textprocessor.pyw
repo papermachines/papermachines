@@ -47,6 +47,12 @@ class TextProcessor:
 		# logging.basicConfig(filename=os.path.join(self.out_dir, "logs", self.name + ".log"), level=logging.INFO)
 		logging.basicConfig(filename=self.out_filename.replace(".html", ".log"), filemode='w', level=logging.INFO)
 
+		fh = logging.FileHandler(os.path.join(self.out_dir, "logs", self.name + ".log"))
+		formatter = logging.Formatter('%(name)s: %(levelname)-8s %(message)s')
+		fh.setFormatter(formatter)
+
+		logging.getLogger('').addHandler(fh)
+
 		logging.info("command: " + ' '.join([x.replace(' ','''\ ''') for x in sys.argv]))
 
 		self.metadata = {}

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://zotero/skin/zotero.css" type="text/css"?>
+<?xml-stylesheet href="chrome://papermachines/skin/dialog.css" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://papermachines/locale/papermachines.dtd">
+
+<dialog xmlns:html="http://www.w3.org/1999/xhtml"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	title="&papermachines.dialog.title;" width="400" height="330"
+	persist="width height screenX screenY"
+	buttons="disclosure,accept,cancel"
+	ondialogdisclosure="return Zotero_PaperMachines_ProcessParams_Advanced.disclose();"
+	ondialogaccept="return Zotero_PaperMachines_ProcessParams_Advanced.acceptSelection();"
+	ondialogcancel="return true;"
+	buttonlabeldisclosure="&papermachines.dialog.disclosure;"
+	id="zotero-papermachines-advanced"
+	onload="Zotero_PaperMachines_ProcessParams_Advanced.init()">
+	
+	<script src="chrome://papermachines/content/process_params_advanced.js"/>
+	
+	<vbox id="zotero-papermachines-adv-params-container" flex="1">
+		<label id="zotero-papermachines-adv-params-intro"/>
+		<vbox id="zotero-papermachines-adv-params-vbox"/>
+		<vbox id="zotero-papermachines-adv-params-vbox-extra" hidden="true"/>
+	</vbox>
+</dialog>

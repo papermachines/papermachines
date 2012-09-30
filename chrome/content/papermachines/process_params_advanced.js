@@ -1,4 +1,4 @@
-Zotero_PaperMachines_ProcessParams = function () {};
+Zotero_PaperMachines_ProcessParams_Advanced = function () {};
 
 logger = function(msg) {
       var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
@@ -6,19 +6,26 @@ logger = function(msg) {
       consoleService.logStringMessage(msg);
 };
 
-Zotero_PaperMachines_ProcessParams.init = function () {
+Zotero_PaperMachines_ProcessParams_Advanced.init = function () {
 
-	var container = document.getElementById("zotero-papermachines-params-container");
+	var container = document.getElementById("zotero-papermachines-adv-params-container");
 	
 	this.io = window.arguments[0];
 
-    var intro = document.getElementById("zotero-papermachines-params-intro");
-    var vbox = document.getElementById("zotero-papermachines-params-vbox");
+    var intro = document.getElementById("zotero-papermachines-adv-params-intro");
+    var vbox1 = document.getElementById("zotero-papermachines-adv-params-vbox");
+    var vbox2 = document.getElementById("zotero-papermachines-adv-params-vbox-extra");
 
     intro.setAttribute('value', this.io.dataIn.intro);
 
     this.io.dataIn.items.forEach(function (item) {
-        var obj;
+        var obj, vbox;
+        if (!("advanced" in item)) {
+            vbox = vbox1;            
+        } else {
+            vbox = vbox2;  
+        }
+
         switch (item.type) {
             case "text":
                 var myVbox = document.createElement('vbox');
@@ -45,24 +52,33 @@ Zotero_PaperMachines_ProcessParams.init = function () {
     });
 };
 
-Zotero_PaperMachines_ProcessParams.acceptSelection = function() {
+Zotero_PaperMachines_ProcessParams_Advanced.disclose = function() {
+    var vbox2 = document.getElementById("zotero-papermachines-adv-params-vbox-extra");
+    vbox2.hidden = !vbox2.hidden;
+};
+
+Zotero_PaperMachines_ProcessParams_Advanced.acceptSelection = function() {
     this.io.dataOut = {};
 
-    var vbox = document.getElementById("zotero-papermachines-params-vbox");
-    while (vbox.hasChildNodes()) {
-        var obj = vbox.childNodes[0];
-        var name = obj.getUserData("name");
-        var type = obj.getUserData("type");
+    var vbox1 = document.getElementById("zotero-papermachines-adv-params-vbox");
+    var vbox2 = document.getElementById("zotero-papermachines-adv-params-vbox-extra");
+    [vbox1, vbox2].forEach(function (vbox) {
+        while (vbox.hasChildNodes()) {
+            var obj = vbox.childNodes[0];
+            var name = obj.getUserData("name");
+            var type = obj.getUserData("type");
 
-        if (name != null) {
-            if (type == "check") {
-                this.io.dataOut[name] = obj.checked;
-            } else {
-                this.io.dataOut[name] = obj.childNodes[1].value;
+            if (name != null) {
+                if (type == "check") {
+                    this.io.dataOut[name] = obj.checked;
+                } else {
+                    this.io.dataOut[name] = obj.childNodes[1].value;
+                }
             }
+            vbox.removeChild(obj);
         }
-        vbox.removeChild(obj);
-    }
+    });
+
     for (var i in this.io.dataOut) {
         logger(i + ": " + this.io.dataOut[i]);
     }

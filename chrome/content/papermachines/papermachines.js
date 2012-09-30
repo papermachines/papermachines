@@ -820,17 +820,17 @@ Zotero.PaperMachines = {
 		for (var i in items) {
 			var item = items[i], fulltext = "", filename = "";
 			if (item.isRegularItem()) {
-				if (!(Zotero.PaperMachines.findItemInDB(item))) {
+				// if (!(Zotero.PaperMachines.findItemInDB(item))) {
 					queue.add(Zotero.PaperMachines.processItem, itemGroup.getName(), item, dir, i, queue);					
-				} else {
-					Zotero.PaperMachines.DB.query("INSERT INTO collection_docs (collection,itemID) VALUES (?,?)", [thisGroup, item.id]);
-					if (Preferences.get("extensions.papermachines.general.extract_notes")) {
-						Zotero.PaperMachines._extractNotes(item, dir);
-					}
-					if (Preferences.get("extensions.papermachines.general.extract_tags")) {
-						Zotero.PaperMachines._extractTags(item, dir);
-					}					
-				}
+				// } else {
+				// 	Zotero.PaperMachines.DB.query("INSERT INTO collection_docs (collection,itemID) VALUES (?,?)", [thisGroup, item.id]);
+				// 	if (Preferences.get("extensions.papermachines.general.extract_notes")) {
+				// 		Zotero.PaperMachines._extractNotes(item, dir);
+				// 	}
+				// 	if (Preferences.get("extensions.papermachines.general.extract_tags")) {
+				// 		Zotero.PaperMachines._extractTags(item, dir);
+				// 	}					
+				// }
 			}
 		}
 
@@ -1201,19 +1201,21 @@ Zotero.PaperMachines = {
 	},
 	customPhrasenet: function () {
 		var custom_str = Zotero.PaperMachines.textPrompt("phrasenet_custom", "x (?:leads to|causes|triggers) y");
-		Zotero.PaperMachines.runProcess('phrasenet', custom_str);
+		if (custom_str) {
+			Zotero.PaperMachines.runProcess('phrasenet', custom_str);			
+		}
 	},
 	processParamLists: {
 		"mallet_lda": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
-			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations"},
+			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations", "advanced": true},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
 			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
-			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df"},
-			{"name": "alpha", "type": "text", "pref": "extensions.papermachines.lda.alpha"},
-			{"name": "beta", "type": "text", "pref": "extensions.papermachines.lda.beta"},
-			{"name": "burn_in", "type": "text", "pref": "extensions.papermachines.lda.burn_in"},
-			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval"},
-			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha"},
+			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true},
+			{"name": "alpha", "type": "text", "pref": "extensions.papermachines.lda.alpha", "advanced": true},
+			{"name": "beta", "type": "text", "pref": "extensions.papermachines.lda.beta", "advanced": true},
+			{"name": "burn_in", "type": "text", "pref": "extensions.papermachines.lda.burn_in", "advanced": true},
+			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval", "advanced": true},
+			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha", "advanced": true},
 		],
 		"bulk_import": [{"name": "title", "type": "text", "pref": "extensions.papermachines.import.title"},
 			{"name": "pubtitle", "type": "text", "pref": "extensions.papermachines.import.pubtitle"},
@@ -1233,14 +1235,18 @@ Zotero.PaperMachines = {
 			}
 		}
 		var intro = Zotero.PaperMachines.processNames[process];
-		return Zotero.PaperMachines._promptForProcessParams(intro, items);
+		return Zotero.PaperMachines._promptForProcessParams(intro, items, true);
 	},
-	_promptForProcessParams: function(intro, items) {
+	_promptForProcessParams: function(intro, items, advanced) {
 		var params = {"dataIn": {"intro": intro, "items": items}, "dataOut": null};
 		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
 			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
 
-		win.openDialog("chrome://papermachines/content/process_params.xul", "", "chrome, dialog, modal, width=400, height=500", params);
+		if (advanced) {
+			win.openDialog("chrome://papermachines/content/process_params_advanced.xul", "", "chrome, dialog, modal, width=400, height=500", params);			
+		} else {
+			win.openDialog("chrome://papermachines/content/process_params.xul", "", "chrome, dialog, modal, width=400, height=500", params);
+		}
 
 		if (params.dataOut != null) {
 			return params.dataOut;
@@ -1481,7 +1487,7 @@ Zotero.PaperMachines = {
 		}
 	},
 	openPreferences : function() {
-	  if (null == this._preferencesWindow || this._preferencesWindow.closed) {
+	  if (!this._preferencesWindow || this._preferencesWindow.closed) {
 	    var instantApply = Application.prefs.get("browser.preferences.instantApply");
 	    var features = "chrome,titlebar,toolbar,centerscreen" +
 	      (instantApply.value ? ",dialog=no" : ",modal");
@@ -1494,6 +1500,12 @@ Zotero.PaperMachines = {
 	},
 	evtListener: function (evt) {
 		var node = evt.target, doc = node.ownerDocument;
+
+		var refresh = node.getAttribute("refresh");
+		if (refresh) {
+			Zotero.PaperMachines.init();
+			return;
+		}
 
 		var query = node.getAttribute("query");
 		if (query) {
@@ -1551,19 +1563,28 @@ Zotero.PaperMachines._Sequence = function (onDone) {
 
 Zotero.PaperMachines._Sequence.prototype = {
 	startCloseTimer: function () {
-		this.closeTimer = setTimeout(this.onDone, 5000);
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+
+		this.closeTimer = win.setTimeout(this.onDone, 5000);
 	},
 	belayCloseTimer: function () {
-		clearTimeout(this.closeTimer);
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+		win.clearTimeout(this.closeTimer);
 	},
 	add: function() { 
 		var args = Array.prototype.slice.call(arguments);
 		this.list.push(args);
 	},
 	next: function(before) { 
+
 		var my = this;
 		if (typeof before == "function") before();
-		setTimeout(function () {
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+
+		win.setTimeout(function () {
 			if (my.list.length > 0) {
 				my.belayCloseTimer();
 				var current = my.list.shift();

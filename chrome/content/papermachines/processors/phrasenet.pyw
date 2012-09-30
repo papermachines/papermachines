@@ -86,7 +86,7 @@ class PhraseNet(textprocessor.TextProcessor):
 		for node in used_nodes:
 			jsondata['nodes'].append({'index': nodeindex[node], 'name': node, 'freq': self.nodes[node]})
 
-		params = {"DATA": json.dumps(jsondata), "PATTERN": pattern_str}
+		params = {"DATA": json.dumps(jsondata), "PATTERN": json.dumps(pattern_str)}
 		self.write_html(params)
 
 if __name__ == "__main__":

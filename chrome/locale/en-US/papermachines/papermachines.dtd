@@ -37,6 +37,7 @@
 <!ENTITY papermachines.itemmenu.text_in_map_view			"Locate Text in Map View">
 
 <!ENTITY papermachines.dialog.title							"Paper Machines">
+<!ENTITY papermachines.dialog.disclosure					"Advanced Options">
 <!ENTITY papermachines.dialog.cancel						"Cancel">
 <!ENTITY papermachines.dialog.accept						"OK">
 

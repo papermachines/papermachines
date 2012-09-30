@@ -15,7 +15,7 @@
 	<script src="chrome://papermachines/content/process_params.js"/>
 	
 	<vbox id="zotero-papermachines-params-container" flex="1">
-		<caption id="zotero-papermachines-params-intro"/>
+		<label id="zotero-papermachines-params-intro"/>
 		<vbox id="zotero-papermachines-params-vbox"/>
 		<spacer flex="1"/>
 		<hbox>
