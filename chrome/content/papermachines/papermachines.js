@@ -91,6 +91,13 @@ Zotero.PaperMachines = {
 				alreadyProcessed = Zotero.PaperMachines.DB.valueQuery(query, [thisGroup, procs[i]]) ? procs[i] + thisGroup : false;
 				if (alreadyProcessed) break;
 			}
+			var subcollections = Zotero.PaperMachines.DB.columnQuery("SELECT child FROM collections WHERE parent = ?;", [thisGroup]);
+			var classify = Zotero.PaperMachines.DB.valueQuery(query, [thisGroup, "mallet_classify-file"]);
+
+			if (!subcollections && !classify) {
+				alert(Zotero.PaperMachines.prompts["mallet_lda_MI_no_classify"]);
+				return false;
+			}
 
 			if (alreadyProcessed) {
 				var mallet_dir = Zotero.PaperMachines._getOrCreateDir(alreadyProcessed, Zotero.PaperMachines.out_dir);
