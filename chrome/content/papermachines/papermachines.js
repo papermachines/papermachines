@@ -797,13 +797,14 @@ Zotero.PaperMachines = {
 		}
 	},
 	getGroupByID: function (id) {
-		if (id.indexOf("C") != -1) {
+		if (typeof(id.indexOf) == "function" && id.indexOf("C") != -1) {
 			return Zotero.Collections.get(id.split("C")[1]);
 		} else if (id == "L") {
 			return ZoteroPane.collectionsView._dataItems[0][0];
 		} else {
 			try {
-				return Zotero.Groups.getByLibraryID(id);
+				return ZoteroPane.collectionsView._dataItems.filter(function (d) { return d[0].ref.libraryID == id;})[0][0];
+//				return Zotero.Groups.getByLibraryID(id);
 			} catch (e) {  return false; }
 		}
 	},
