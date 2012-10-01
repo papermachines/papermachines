@@ -853,6 +853,7 @@ Zotero.PaperMachines = {
 		var gettingTags = Preferences.get("extensions.papermachines.general.extract_tags");
 		var gettingPDF = Preferences.get("extensions.papermachines.general.extract_pdf");
 		var gettingHTML = Preferences.get("extensions.papermachines.general.extract_html");
+		var gettingTXT = Preferences.get("extensions.papermachines.general.extract_txt");
 
 		var outFile = dir.clone();
 		outFile.append(Zotero.PaperMachines.getFilenameForItem(item));
@@ -864,7 +865,7 @@ Zotero.PaperMachines = {
 			var a_item = Zotero.Items.get(attachments[a]);
 			if ((a_item.attachmentMIMEType == 'application/pdf' && gettingPDF)
 			   || (a_item.attachmentMIMEType == 'text/html' && gettingHTML)
-			   || a_item.attachmentMIMEType == 'text/plain') {
+			   || (a_item.attachmentMIMEType == 'text/plain' && gettingTXT)) {
 				var orig_file = a_item.getFile().path;
 				if (orig_file) {
 					Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [orig_file, item.id, outFile.path, dir.leafName]);					

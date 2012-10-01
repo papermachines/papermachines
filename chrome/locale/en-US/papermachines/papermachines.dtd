@@ -58,7 +58,8 @@
 
 <!ENTITY papermachines.prefs.general.lang				"Stoplist Language: ">
 <!ENTITY papermachines.prefs.general.extract			"Data to Extract">
-<!ENTITY papermachines.prefs.general.extract_html		"Web Snapshots">
+<!ENTITY papermachines.prefs.general.extract_txt		"Plain Text">
+<!ENTITY papermachines.prefs.general.extract_html		"Web Snapshots (HTML)">
 <!ENTITY papermachines.prefs.general.extract_pdf		"PDFs with OCR text">
 <!ENTITY papermachines.prefs.general.extract_notes		"Notes">
 <!ENTITY papermachines.prefs.general.extract_tags		"Tags">

@@ -1,5 +1,6 @@
 pref("extensions.papermachines.general.lang", "en");
 
+pref("extensions.papermachines.general.extract_txt", true);
 pref("extensions.papermachines.general.extract_pdf", true);
 pref("extensions.papermachines.general.extract_html", true);
 pref("extensions.papermachines.general.extract_notes", true);

@@ -54,15 +54,18 @@ Zotero_PaperMachines_ProcessParams_Advanced.init = function () {
 
 Zotero_PaperMachines_ProcessParams_Advanced.disclose = function() {
     var vbox2 = document.getElementById("zotero-papermachines-adv-params-vbox-extra");
-    vbox2.hidden = !vbox2.hidden;
+    vbox2.collapsed = !vbox2.collapsed;
 };
 
 Zotero_PaperMachines_ProcessParams_Advanced.acceptSelection = function() {
     this.io.dataOut = {};
 
+    var me = this;
+
     var vbox1 = document.getElementById("zotero-papermachines-adv-params-vbox");
     var vbox2 = document.getElementById("zotero-papermachines-adv-params-vbox-extra");
-    [vbox1, vbox2].forEach(function (vbox) {
+    var vboxes = [vbox1, vbox2];
+    vboxes.forEach(function (vbox) {
         while (vbox.hasChildNodes()) {
             var obj = vbox.childNodes[0];
             var name = obj.getUserData("name");
@@ -70,9 +73,9 @@ Zotero_PaperMachines_ProcessParams_Advanced.acceptSelection = function() {
 
             if (name != null) {
                 if (type == "check") {
-                    this.io.dataOut[name] = obj.checked;
+                    me.io.dataOut[name] = obj.checked;
                 } else {
-                    this.io.dataOut[name] = obj.childNodes[1].value;
+                    me.io.dataOut[name] = obj.childNodes[1].value;
                 }
             }
             vbox.removeChild(obj);

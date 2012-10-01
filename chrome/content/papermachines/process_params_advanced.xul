@@ -21,6 +21,6 @@
 	<vbox id="zotero-papermachines-adv-params-container" flex="1">
 		<label id="zotero-papermachines-adv-params-intro"/>
 		<vbox id="zotero-papermachines-adv-params-vbox"/>
-		<vbox id="zotero-papermachines-adv-params-vbox-extra" hidden="true"/>
+		<vbox id="zotero-papermachines-adv-params-vbox-extra" collapsed="true"/>
 	</vbox>
 </dialog>
