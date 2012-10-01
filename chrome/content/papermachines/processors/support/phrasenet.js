@@ -11,8 +11,21 @@ vals = edgedata.map(function (d) { return +d.weight});
 linkSize.domain([d3.min(vals), d3.max(vals)]);
 
 var diagonal = d3.svg.diagonal()
-  .source(function (d) { var textOffset = fontSize(+d.source.freq); return {'x': d.source.x, 'y': d.source.y + (d.source.y < d.target.y ? textOffset : -textOffset)};})
-  .target(function (d) { var textOffset = fontSize(+d.target.freq); return {'x': d.target.x, 'y': d.target.y - (d.source.y < d.target.y ? textOffset : -textOffset)};});
+  .source(function (d) {
+    var b_s = d3.select("#node" + d.source.index.toString())[0][0].getBBox(),
+        b_t = d3.select("#node" + d.target.index.toString())[0][0].getBBox();
+
+    return {'x': d.source.x, 'y': d.source.y + (d.source.y < d.target.y ? b_s.height * 0.5 : b_s.height * -0.5)};
+
+  })
+  .target(function (d) {
+    var b_s = d3.select("#node" + d.source.index.toString())[0][0].getBBox(),
+        b_t = d3.select("#node" + d.target.index.toString())[0][0].getBBox();
+
+    return {'x': d.target.x, 'y': d.target.y + (d.source.y < d.target.y ? b_t.height * -0.5 : b_t.height * 0.5)};
+
+    // return {'x': d.target.x, 'y': d.target.y - (d.source.y < d.target.y ? textOffset : -textOffset)};
+  });
 
 var width = 960, height = 500;
 
@@ -101,13 +114,13 @@ function collide(d) {
         y = ny1 - oy1;
 
       if (nx1 <= ox2 && ox1 <= nx2) { // overlap in x's
-        d.x -= x * 0.001;
-        quad.point.x += x * 0.001;
+        d.x += x * 0.005;
+        quad.point.x -= x * 0.005;
       }
 
       if (ny1 <= oy2 && oy1 <= ny2) { // overlap in y's
-        d.y -= y * 0.001;
-        quad.point.y += y * 0.001;
+        d.y += y * 0.005;
+        quad.point.y -= y * 0.005;
       }
     }
 
