@@ -12,8 +12,12 @@ linkSize.domain([d3.min(vals), d3.max(vals)]);
 
 var textOffset = 15;
 var diagonal = d3.svg.diagonal()
-  .source(function (d) { return {'x': d.source.x, 'y': d.source.y + (d.source.y < d.target.y ? textOffset : -textOffset)};})
-  .target(function (d) { return {'x': d.target.x, 'y': d.target.y - (d.source.y < d.target.y ? textOffset : -textOffset)};});
+  .source(function (d) {
+    return {'x': d.source.x, 'y': d.source.y + (d.source.y < d.target.y ? textOffset : -textOffset)};
+  })
+  .target(function (d) {
+    return {'x': d.target.x, 'y': d.target.y - (d.source.y < d.target.y ? textOffset : -textOffset)};
+  });
 
 var width = 960, height = 500;
 
@@ -58,7 +62,7 @@ var force = d3.layout.force().size([width, height])
     .links(edgedata)
     .start();
 
-var force2 = d3.layout.force().nodes(labelAnchors).links(labelAnchorLinks).gravity(0).linkDistance(0).linkStrength(8).charge(-80).size([width, height]);
+var force2 = d3.layout.force().nodes(labelAnchors).links(labelAnchorLinks).gravity(0).linkDistance(0).linkStrength(10).charge(-80).size([width, height]);
 force2.start();
 
 var node = svg.selectAll(".node")

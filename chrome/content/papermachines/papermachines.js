@@ -837,11 +837,13 @@ Zotero.PaperMachines = {
 		queue.next();
 	},
 	getFilenameForItem: function (item) {
-		var year = this.getYearOfItem(item);
-		year = (year != "" ? year+" - " : "");
-		filename = (item.firstCreator != "" ? item.firstCreator + " - " : "");
-		filename += year;
-		filename += item.getDisplayTitle();
+		if (item.isRegularItem()) {
+			var year = this.getYearOfItem(item);
+			year = (year != "" ? year+" - " : "");
+			var filename = (item.firstCreator != "" ? item.firstCreator + " - " : "");
+			filename += year;
+			filename += item.getDisplayTitle();
+		}
 		return Zotero.PaperMachines._sanitizeFilename(filename) + ".txt";
 	},
 	processItem: function(itemGroupName, item, dir, i, queue) {
