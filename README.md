@@ -44,7 +44,7 @@ This allows you to train the computer to infer the common features of the docume
 
 ### Preferences
 
-Currently, the language stoplist in use and the default parameters for topic modeling may be adjusted in the preference pane.
+Currently, the language stoplist in use, types of data to extract, default parameters for topic modeling, and an experimental periodical import feature (intended for PDFs with OCR and correct metadata) may be adjusted in the preference pane.
 
 ## Acknowledgements
 Thanks to Google Summer of Code for funding this work, and to [Matthew Battles](http://metalab.harvard.edu/people/) and [Jo Guldi](http://www.joguldi.com/) for overseeing it. My gratitude also to the creators of all the open-source projects and services upon which this work relies:
