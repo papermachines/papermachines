@@ -210,8 +210,7 @@ Zotero.PaperMachines = {
 				}
 
 			} catch (e){
-				Zotero.PaperMachines.LOG(e);
-			   throw (e);
+				Zotero.PaperMachines.ERROR(e);
 			}
 		}
 	},
@@ -239,8 +238,6 @@ Zotero.PaperMachines = {
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 
 		this.selectStoplist(stoplist_lang);
-		// var jornal = Zotero.PaperMachines._getLocalFile("/Users/chrisjr/Documents/digaai/PDF JORNAL DOS SPORTS/EDICAO_863/Journal 1.pdf");
-		// alert(Zotero.PaperMachines.getDateFromPDF(jornal));
 
 		this.getStringsFromBundle();
 
@@ -479,7 +476,7 @@ Zotero.PaperMachines = {
 		var thisID = Zotero.PaperMachines.getThisGroupID();
 		try {
 			Zotero.PaperMachines.activateMenuItems(thisID);
-		} catch (e) {Zotero.PaperMachines.LOG(e)}
+		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 		if (Zotero.PaperMachines.tagCloudReplace) {
 			if (!Zotero.PaperMachines.hasBeenExtracted(thisID)) {
@@ -504,7 +501,7 @@ Zotero.PaperMachines = {
 				try {
 					Zotero.PaperMachines.onCollectionSelected();
 				} catch (e) {
-					Zotero.PaperMachines.LOG(e.name + ": " + e.message);
+					Zotero.PaperMachines.ERROR(e);
 				}
 			};
 			win.setTimeout(Zotero.PaperMachines.onCollectionSelected, 500);
@@ -804,7 +801,6 @@ Zotero.PaperMachines = {
 		} else {
 			try {
 				return ZoteroPane.collectionsView._dataItems.filter(function (d) { return d[0].ref.libraryID == id;})[0][0];
-//				return Zotero.Groups.getByLibraryID(id);
 			} catch (e) {  return false; }
 		}
 	},
@@ -996,7 +992,7 @@ Zotero.PaperMachines = {
 			var prog_str = Zotero.File.getContents(progTextFile);
 			var iterString = prog_str.match(/(?:<)\d+/g);
 			iterations = parseInt(iterString.slice(-1)[0].substring(1));
-		} catch (e) { Zotero.PaperMachines.LOG(e.name +": " + e.message);}
+		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 
 		var collectionName = thisGroup.name || thisGroup.getName();
@@ -1025,8 +1021,7 @@ Zotero.PaperMachines = {
 		try {
 			var logTextFile = Zotero.PaperMachines._getLocalFile(processResult["outfile"].replace(".html",".log"));
 			var log_str = Zotero.File.getContents(logTextFile);
-		} catch (e) { Zotero.PaperMachines.LOG(e.name +": " + e.message);}
-
+		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 		var collectionName = thisGroup.name || thisGroup.getName();
 		var logpage_str = '<html><head><meta http-equiv="refresh" content="20;URL=' + 
@@ -1070,15 +1065,19 @@ Zotero.PaperMachines = {
 
 		var export_dir = this.filePrompt("export_dir", "getfolder");
 		if (export_dir) {
-			var query = "SELECT processor, outfile FROM processed_collections " +
+			var query = "SELECT processor, process_path, outfile FROM processed_collections " +
 				"WHERE status = 'done' AND processor != 'extract' AND collection = ?;";
 			var processes = this.DB.query(query, [thisID]);
 			var options = [];
 			for (var i in processes) {
 				var processResult = processes[i],
 					process = processResult["processor"],
-					outfile = processResult["outfile"];
-				options.push({"name": this.processNames[process], "label": " ", "value": outfile});
+					outfile = processResult["outfile"],
+					process_path = processResult["process_path"],
+					path_parts = process_path.split("/"),
+					label = ": " + path_parts.slice(2).map(function(d) { return decodeURIComponent(d); }).join(", "),
+					shortened_label = label.length > 50 ? label.substring(0,50) + "..." : label;
+				options.push({"name": this.processNames[process] + (path_parts.length > 2 ? shortened_label : ""), "label": " ", "value": outfile});
 			}
 			var export_processes = Zotero.PaperMachines.selectFromOptions("export_processes", options, "multiplecheck");
 			if (export_processes && export_processes.length > 0) {
@@ -1461,6 +1460,10 @@ Zotero.PaperMachines = {
 									 .getService(Components.interfaces.nsIConsoleService);
 	  consoleService.logStringMessage(msg);
 	  Zotero.debug(msg);
+	},
+	ERROR: function (e) {
+		Components.utils.reportError(e);
+		Zotero.debug(e);
 	},
 	getStringsFromBundle: function () {
 		var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
