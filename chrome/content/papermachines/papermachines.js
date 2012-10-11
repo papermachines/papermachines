@@ -18,6 +18,7 @@ Zotero.PaperMachines = {
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
+	python_exe: null,
 	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparse", "dbpedia", "export-output"],
 	processNames: null, // see locale files
 	prompts: null,
@@ -231,9 +232,11 @@ Zotero.PaperMachines = {
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
 		this.args_dir = this._getOrCreateDir("args");
 
+
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
 
+		this.python_exe = this.findPythonExecutable();
 
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 
@@ -252,7 +255,7 @@ Zotero.PaperMachines = {
 		Components.utils.import("resource://gre/modules/AddonManager.jsm");
 		AddonManager.getAddonByID("papermachines@chrisjr.org",
 			function(addon) {
-				Zotero.PaperMachines._updateBundledFilesCallback(addon.getResourceURI().QueryInterface(Components.interfaces.nsIFileURL).file);
+				Zotero.PaperMachines._updateBundledFilesCallback(addon.getResourceURI("").QueryInterface(Components.interfaces.nsIFileURL).file);
 			});
 
 		// Connect to (and create, if necessary) papermachines.sqlite in the Zotero directory
@@ -389,8 +392,8 @@ Zotero.PaperMachines = {
 			return;
 		}
 
-		var proc_file = Zotero.PaperMachines.processors_dir.clone();
-		proc_file.append(processor + ".pyw");
+		var processor_file = Zotero.PaperMachines.processors_dir.clone();
+		processor_file.append(processor + ".py");
 
 		var proc = Components.classes["@mozilla.org/process/util;1"]
 			.createInstance(Components.interfaces.nsIProcess);
@@ -413,7 +416,7 @@ Zotero.PaperMachines = {
 		var argFile = Zotero.PaperMachines._getOrCreateFile(argsHashFilename, Zotero.PaperMachines.args_dir);
 		Zotero.File.putContents(argFile, args_str);
 
-		var procArgs = [argFile.path];
+		var procArgs = [processor_file.path, argFile.path];
 
 		outFile.append(processor + thisID + "-" + args_hash + ".html");
 
@@ -431,9 +434,13 @@ Zotero.PaperMachines = {
 			}
 		};
 
-		var observer = new this.processObserver(processor, processPath, callback);
+		var observer = new Zotero.PaperMachines.processObserver(processor, processPath, callback);
 
-		proc.init(proc_file);
+		var python_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.python_exe);
+
+		Zotero.PaperMachines.LOG("running " + python_exe_file.leafName + " " + procArgs.join(" "));
+
+		proc.init(python_exe_file);
 		proc.runAsync(procArgs, procArgs.length, observer);
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
@@ -678,7 +685,7 @@ Zotero.PaperMachines = {
 	},
 	traverseItemGroup: function (itemGroup) {
 		var itemGroups = [];
-		if ("isLibrary" in itemGroup && itemGroup.isLibrary()) {
+		if (typeof itemGroup.isLibrary == "function" && itemGroup.isLibrary()) {
 			if (itemGroup.id == "L") {
 				itemGroups.push(ZoteroPane.collectionsView._dataItems[0][0]);
 				var collectionKeys = Zotero.DB.columnQuery("SELECT key from collections WHERE libraryID IS NULL;");
@@ -687,7 +694,7 @@ Zotero.PaperMachines = {
 				}
 			}
 		} else {
-			if ("isCollection" in itemGroup && itemGroup.isCollection()) {
+			if (typeof itemGroup.isCollection == "function" && itemGroup.isCollection()) {
 				itemGroups.push(itemGroup);
 				var currentCollection = ("ref" in itemGroup) ? itemGroup.ref : itemGroup;
 				if (currentCollection.hasChildCollections()) {
@@ -696,7 +703,7 @@ Zotero.PaperMachines = {
 						itemGroups.push(Zotero.PaperMachines.traverseItemGroup(children[i]));
 					}
 				}
-			} else if ("isGroup" in itemGroup && itemGroup.isGroup()) {
+			} else if (typeof itemGroup.isGroup == "function" && itemGroup.isGroup()) {
 				if (itemGroup.ref.hasCollections()) {
 					var children = itemGroup.ref.getCollections();
 					for (var i in children) {
@@ -922,7 +929,7 @@ Zotero.PaperMachines = {
 		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [tagsFile.path, item.id, tagsFile.path.replace("_tags.txt", ".txt"), dir.leafName]);
 	},
 	_updateBundledFilesCallback: function (installLocation) {
-		this.install_dir = installLocation;
+		Zotero.PaperMachines.install_dir = installLocation;
 		var xpiZipReader, isUnpacked = installLocation.isDirectory();
 		if(!isUnpacked) {
 			xpiZipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
@@ -941,12 +948,12 @@ Zotero.PaperMachines = {
 			procs_dir.append("papermachines");
 			procs_dir.append("processors");
 
-			this._copyAllFiles(procs_dir, this.processors_dir);
+			this._copyAllFiles(procs_dir, Zotero.PaperMachines.processors_dir);
 		}
-		this.aux_dir = this._getOrCreateDir("support", this.processors_dir);
+		Zotero.PaperMachines.aux_dir = Zotero.PaperMachines._getOrCreateDir("support", Zotero.PaperMachines.processors_dir);
 
-		var new_aux = this._getOrCreateDir("support", this.out_dir);
-		this._copyAllFiles(this.aux_dir, new_aux);
+		var new_aux = Zotero.PaperMachines._getOrCreateDir("support", Zotero.PaperMachines.out_dir);
+		Zotero.PaperMachines._copyAllFiles(Zotero.PaperMachines.aux_dir, new_aux);
 	},
 	_copyOrMoveAllFiles: function (copy_or_move, source, target, recursive) {
 		var files = source.directoryEntries;
@@ -960,10 +967,6 @@ Zotero.PaperMachines = {
 				}
 				if (copy_or_move) {
 					f.copyTo(target, f.leafName);
-					if (f.leafName.indexOf(".pyw") != -1) {
-						var regpy = f.leafName.replace(".pyw", ".py");
-						f.copyTo(target, regpy);
-					}
 				} else {
 					f.moveTo(target, f.leafName);
 				}
@@ -1500,7 +1503,7 @@ Zotero.PaperMachines = {
 			win.gBrowser.selectedTab = win.gBrowser.addTab(url);			
 		}
 	},
-	openPreferences : function() {
+	openPreferences: function() {
 	  if (!this._preferencesWindow || this._preferencesWindow.closed) {
 	    var instantApply = Application.prefs.get("browser.preferences.instantApply");
 	    var features = "chrome,titlebar,toolbar,centerscreen" +
@@ -1511,6 +1514,41 @@ Zotero.PaperMachines = {
 	  }
 	 
 	  this._preferencesWindow.focus();
+	},
+	findPythonExecutable: function () { 
+		var python_exe = Preferences.get("extensions.papermachines.general.python_exe");
+		if (!python_exe) {
+			var environment = Components.classes["@mozilla.org/process/environment;1"]
+	                            .getService(Components.interfaces.nsIEnvironment);
+			var path = environment.get("PATH"),
+				python_name = "pythonw",
+				directories = [];
+
+			if (Zotero.platform == "Win32") {
+				python_name += ".exe";
+				directories = ["C:\\Python27\\"];
+			} else {
+				python_name += "2.7";
+				directories = ["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"];
+			}
+
+			for (var i = 0, n = directories.length; i < n; i++) {
+				var executable = Zotero.PaperMachines._getLocalFile(directories[i]);
+				executable.append(python_name);
+				if (executable.exists()) {
+					python_exe = executable.path;
+					break;
+				}
+			}
+
+			if (python_exe) {
+				Preferences.set("extensions.papermachines.general.python_exe", python_exe);
+			} else {
+				Zotero.PaperMachines.ERROR("Python not found! Please enter the path to Python 2.7 in the Paper Machines preference window.")
+			}
+		}
+		return python_exe;
+
 	},
 	evtListener: function (evt) {
 		var node = evt.target, doc = node.ownerDocument;
@@ -1542,12 +1580,17 @@ Zotero.PaperMachines.processObserver.prototype = {
   observe: function(subject, topic, data) {
 	switch (topic) {
 		case "process-failed":
-			Zotero.PaperMachines.LOG("Process " + this.processName + " failed.")
+			Zotero.PaperMachines.LOG("Process " + this.processName + " failed.");
 			this.callback(false);
 			break;
 		case "process-finished":
-			Zotero.PaperMachines.LOG("Process " + this.processName + " finished.")
-			this.callback(true);
+			Zotero.PaperMachines.LOG("Process " + this.processName + " finished with exit value " + subject.exitValue);
+			if (subject.exitValue != 0) { // something went awry
+				Zotero.PaperMachines.ERROR("Process " + this.processName + " failed.");
+				this.callback(false);
+			} else {
+				this.callback(true);				
+			}
 			break;
 	}
 	this.unregister();

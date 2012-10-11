@@ -6,6 +6,8 @@ pref("extensions.papermachines.general.extract_html", true);
 pref("extensions.papermachines.general.extract_notes", true);
 pref("extensions.papermachines.general.extract_tags", true);
 
+pref("extensions.papermachines.general.python_exe", "");
+
 pref("extensions.papermachines.import.title", "Issue");
 pref("extensions.papermachines.import.pubtitle", "The Daily News");
 pref("extensions.papermachines.import.guessdate", false);

@@ -18,6 +18,7 @@
     <preference id="pref_extract_txt" name="extensions.papermachines.general.extract_txt" type="bool"/>
     <preference id="pref_extract_notes" name="extensions.papermachines.general.extract_notes" type="bool"/>
     <preference id="pref_extract_tags" name="extensions.papermachines.general.extract_tags" type="bool"/>
+    <preference id="pref_python_exe" name="extensions.papermachines.general.python_exe" type="unichar"/>
   </preferences>
  
    <vbox>
@@ -40,6 +41,10 @@
       <checkbox preference="pref_extract_notes" label="&papermachines.prefs.general.extract_notes;" id="extract_notes"/>
       <checkbox preference="pref_extract_tags" label="&papermachines.prefs.general.extract_tags;" id="extract_tags"/>
     </groupbox>
+    <hbox align="center">
+      <label control="python_exe" value="&papermachines.prefs.general.python_exe;"/>
+      <textbox preference="pref_python_exe" id="python_exe" maxlength="64"/>
+    </hbox>
     <separator class="groove-thin"/>
     <label value="&papermachines.prefs.after_close;"/>
   </vbox>
