@@ -232,7 +232,6 @@ Zotero.PaperMachines = {
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
 		this.args_dir = this._getOrCreateDir("args");
 
-
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
 
@@ -284,10 +283,10 @@ Zotero.PaperMachines = {
 		pdftotext.append(Zotero.Fulltext.pdfConverterFileName);
 
 		var path = "zotero://papermachines/extract/" + Zotero.PaperMachines.getItemGroupID(itemGroup) + "/" + encodeURIComponent(pdftotext.path);
-		this.DB.beginTransaction();
+		// this.DB.beginTransaction();
 		this.DB.query("UPDATE processed_collections SET status = 'failed' WHERE processor='extract' AND collection = ?;", [id]);
 		this.DB.query("DELETE FROM collection_docs WHERE collection = ? OR collection IN (SELECT child FROM collections WHERE parent = ?);", [id, id]);
-		this.DB.commitTransaction();
+		// this.DB.commitTransaction();
 
 		var queue = new Zotero.PaperMachines._Sequence(function() {
 			Zotero.UnresponsiveScriptIndicator.enable();
@@ -1584,13 +1583,16 @@ Zotero.PaperMachines.processObserver.prototype = {
 			this.callback(false);
 			break;
 		case "process-finished":
-			Zotero.PaperMachines.LOG("Process " + this.processName + " finished with exit value " + subject.exitValue);
-			if (subject.exitValue != 0) { // something went awry
-				Zotero.PaperMachines.ERROR("Process " + this.processName + " failed.");
-				this.callback(false);
-			} else {
-				this.callback(true);				
-			}
+			var exitValue = subject.QueryInterface(Components.interfaces.nsIProcess).exitValue; 
+			if (typeof exitValue == "number") {
+				if (exitValue == 0) { //success
+					Zotero.PaperMachines.LOG("Process " + this.processName + " finished successfully.");
+					this.callback(true);				
+				} else {
+					Zotero.PaperMachines.ERROR("Process " + this.processName + " failed with exit value " + exitValue);
+					this.callback(false);
+				}
+			} 
 			break;
 	}
 	this.unregister();

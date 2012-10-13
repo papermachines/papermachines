@@ -5,6 +5,7 @@ pref("extensions.papermachines.general.extract_pdf", true);
 pref("extensions.papermachines.general.extract_html", true);
 pref("extensions.papermachines.general.extract_notes", true);
 pref("extensions.papermachines.general.extract_tags", true);
+pref("extensions.papermachines.general.extract_livepages", false);
 
 pref("extensions.papermachines.general.python_exe", "");
 
