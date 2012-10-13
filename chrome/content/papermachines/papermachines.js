@@ -1504,9 +1504,9 @@ Zotero.PaperMachines = {
 	},
 	openPreferences: function() {
 	  if (!this._preferencesWindow || this._preferencesWindow.closed) {
-	    var instantApply = Application.prefs.get("browser.preferences.instantApply");
+	    var instantApply = Preferences.get("browser.preferences.instantApply");
 	    var features = "chrome,titlebar,toolbar,centerscreen" +
-	      (instantApply.value ? ",dialog=no" : ",modal");
+	      (instantApply ? ",dialog=no" : ",modal");
 	 
 	    this._preferencesWindow =
 	      window.openDialog("chrome://papermachines/content/options.xul", "papermachines-prefs-window", features);
