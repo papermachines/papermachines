@@ -652,12 +652,15 @@ Zotero.PaperMachines = {
 				var thisCollection = itemGroup.hasOwnProperty("ref") ? itemGroup.ref : itemGroup;
 				var childID = Zotero.PaperMachines.getItemGroupID(itemGroup);
 
-				while (thisCollection.parent != null) {
-					var parentID = (thisCollection.libraryID != null ? thisCollection.libraryID.toString() : "") + "C" + thisCollection.parent;
-					Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO collections (parent,child) VALUES (?,?)", [parentID, childID]);
-					thisCollection = Zotero.Collections.get(thisCollection.parent);
+				if (thisCollection.parent) {
+					while (thisCollection.parent != null) {
+						var parentID = (thisCollection.libraryID != null ? thisCollection.libraryID.toString() : "") + "C" + thisCollection.parent;
+						Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO collections (parent,child) VALUES (?,?)", [parentID, childID]);
+						thisCollection = Zotero.Collections.get(thisCollection.parent);
+					}
 				}
-				Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO collections (parent,child) VALUES (?,?)", [thisCollection.libraryID != null ? thisCollection.libraryID.toString() : "", childID]);
+
+				Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO collections (parent,child) VALUES (?,?)", [thisCollection.libraryID != null ? thisCollection.libraryID.toString() : "L", childID]);
 			}
 		});
 	},
