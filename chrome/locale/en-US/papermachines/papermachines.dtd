@@ -64,6 +64,7 @@
 <!ENTITY papermachines.prefs.general.extract_livepages	"Live Web Pages">
 <!ENTITY papermachines.prefs.general.extract_notes		"Notes">
 <!ENTITY papermachines.prefs.general.extract_tags		"Tags">
+<!ENTITY papermachines.prefs.general.extract_standalone	"Extract files without metadata (standalone)">
 <!ENTITY papermachines.prefs.general.python_exe 		"Path to Python executable: ">
 
 

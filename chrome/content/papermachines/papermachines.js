@@ -583,6 +583,11 @@ Zotero.PaperMachines = {
 					if (filename) {
 						docs.push({"itemID": item.id, "filename": filename, "label": groupName});
 					}
+				} else if (item.isTopLevelItem()) {
+					var filename = Zotero.PaperMachines.findItemInDB(item);
+					if (filename) {
+						docs.push({"itemID": item.id, "filename": filename, "label": groupName});
+					}					
 				}
 			}
 		});
@@ -833,29 +838,29 @@ Zotero.PaperMachines = {
 		for (var i in items) {
 			var item = items[i], fulltext = "", filename = "";
 			if (item.isRegularItem()) {
-				// if (!(Zotero.PaperMachines.findItemInDB(item))) {
-					queue.add(Zotero.PaperMachines.processItem, itemGroup.getName(), item, dir, i, queue);					
-				// } else {
-				// 	Zotero.PaperMachines.DB.query("INSERT INTO collection_docs (collection,itemID) VALUES (?,?)", [thisGroup, item.id]);
-				// 	if (Preferences.get("extensions.papermachines.general.extract_notes")) {
-				// 		Zotero.PaperMachines._extractNotes(item, dir);
-				// 	}
-				// 	if (Preferences.get("extensions.papermachines.general.extract_tags")) {
-				// 		Zotero.PaperMachines._extractTags(item, dir);
-				// 	}					
-				// }
+				queue.add(Zotero.PaperMachines.processItem, itemGroup.getName(), item, dir, i, queue);					
+			} else if (item.isTopLevelItem() && Preferences.get("extensions.papermachines.general.extract_standalone")) {
+				if (item.isAttachment()) {
+					queue.add(Zotero.PaperMachines._extractStandalone, item, dir, i, queue);
+				} else if (item.isNote() && Preferences.get("extensions.papermachines.general.extract_notes")) {
+					queue.add(Zotero.PaperMachines._extractStandaloneNote, item, dir, i, queue);
+				}
 			}
 		}
 
 		queue.next();
 	},
 	getFilenameForItem: function (item) {
+		var filename = "";
 		if (item.isRegularItem()) {
 			var year = this.getYearOfItem(item);
 			year = (year != "" ? year+" - " : "");
-			var filename = (item.firstCreator != "" ? item.firstCreator + " - " : "");
+			
+			filename = (item.firstCreator != "" ? item.firstCreator + " - " : "");
 			filename += year;
 			filename += item.getDisplayTitle();
+		} else if (item.isAttachment()) {
+			filename = item.getFilename().replace(/\..{3,3}$/,''); // strip extension
 		}
 		return Zotero.PaperMachines._sanitizeFilename(filename) + ".txt";
 	},
@@ -917,6 +922,35 @@ Zotero.PaperMachines = {
 
 		Zotero.File.putContents(notesFile, notes_str);
 		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [notesFile.path, item.id, notesFile.path.replace("_notes.html", ".txt"), dir.leafName]);
+	},
+	_extractStandalone: function (item, dir, i, queue) {
+		var percentDone = (parseInt(i)+queue.runningTotal)*100.0/queue.grandTotal;
+		Zotero.updateZoteroPaneProgressMeter(percentDone);
+
+		var outFile = dir.clone();
+		outFile.append(Zotero.PaperMachines.getFilenameForItem(item));
+
+		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [item.getFile().path, item.id, outFile.path, dir.leafName]);
+
+		queue.runningTotal += 1;
+		queue.next();
+	},
+	_extractStandaloneNote: function (item, dir, i, queue) {
+		var percentDone = (parseInt(i)+queue.runningTotal)*100.0/queue.grandTotal;
+		Zotero.updateZoteroPaneProgressMeter(percentDone);
+
+		var notesFile = dir.clone();
+		notesFile.append(Zotero.PaperMachines._sanitizeFilename(item.getNoteTitle()) + ".html");
+
+		var notes_str = "<html><head></head><body>";
+		notes_str += item.getNote();
+		notes_str += "</body></html>";
+
+		Zotero.File.putContents(notesFile, notes_str);
+		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [notesFile.path, item.id, notesFile.path.replace(".html", ".txt"), dir.leafName]);
+
+		queue.runningTotal += 1;
+		queue.next();
 	},
 	_extractTags: function (item, dir, tags_str) {
 		var tagsFile = dir.clone();
