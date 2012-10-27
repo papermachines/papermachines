@@ -105,6 +105,13 @@ class TextProcessor:
 		elif hasattr(obj, "iteritems"):
 			return max(obj.iteritems(), key=operator.itemgetter(1))[0]
 
+	def argsort(self, seq):
+		'''sorted indexes/keys from least to greatest'''
+		if hasattr(seq, "index"):
+			return sorted(range(len(seq)), key=seq.__getitem__)
+		elif hasattr(seq, "iteritems"):
+			return sorted(seq.keys(), key=seq.__getitem__)
+
 	def write_html(self, user_params):
 		logging.info("writing HTML")
 		params = {"COLLECTION_NAME": self.collection_name, "DOC_METADATA": json.dumps({v["itemID"]: v for k, v in self.metadata.iteritems()})}
