@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="UTF-8" />
+    <title>Topic Modeling: COLLECTION_NAME</title>
+    <script type="text/javascript" src="support/d3.v2.js"></script>
+    <script type="text/javascript" src="support/innersvg.js"></script>
+    <script type="text/javascript" src="support/d3.layout.cloud.js"></script>
+    <style type="text/css">
+      svg {
+        font: 10px 'Helvetica', sans-serif;
+        background: white;
+      }
+
+      .axis {
+        shape-rendering: crispEdges;
+        pointer-events: none;
+      }
+
+      .x.axis line, .y.axis line {
+        stroke: #fff;
+        stroke-width:2;
+      }
+
+      .x.axis path, .y.axis path {
+        display: none;
+      }
+      .x.axis .minor {
+        stroke-width: 1;
+      }
+
+      .axis text {
+        fill: #000;
+      }
+      button {
+        position: inline;
+      }
+
+      #controls {
+        position: fixed;
+      }
+      input {
+        display: block;
+      }
+
+      .popupHolder {
+        display: none;
+        position: fixed;
+        white-space: nowrap;
+        background: rgba(255,255,255,0.8);
+        width: 161px;
+        height: 100px;
+        border: 1px solid gray;
+        overflow: auto;
+        color: black;
+      }
+
+      #popupLayer {
+        position: fixed;
+        z-index: 999;
+        top: 0;
+        left: 0;
+        margin: 0;
+        width: 100%;
+        pointer-events: all;
+      }
+    </style>
+    <script type="text/javascript">
+    var data = TOPICS_DOCS;
+    var docMetadata = DOC_METADATA;
+    var labels = TOPIC_LABELS;
+    var topicCoherence = TOPIC_COHERENCE;
+    var topicFeatures = TOPIC_FEATURES;
+    var topicCorrelations = TOPIC_CORRELATIONS;
+    var topicStdevs = TOPIC_STDEVS;
+    var topicProportions = TOPIC_PROPORTIONS;
+    var categorical = CATEGORICAL;
+    var index = ###INDEX###;
+    </script>
+    <link type="text/css" rel="stylesheet" href="support/button.css"/>
+  </head>
+  <body>
+    <div id="popupLayer"></div>
+    <div id="chart">
+      <div id="controls">
+        <button class="first last" onclick="showMore()">
+          More
+        </button>
+        <button class="first last" onclick="transition(true)">
+          Stream
+        </button>
+        <button class="first last" onclick="legendToggle()">
+          Legend
+        </button><p>
+        <button class="first last" onclick="reset()">
+          Reset
+        </button>
+        <button class="first last" onclick="compare()">
+          Compare
+        </button>
+        <button class="first last" onclick="save()">
+          Save
+        </button><p>
+        <div id="searches">
+        </div>
+    </div>
+    <p>
+    </div>
+    <script type="text/javascript" src="support/stream.js"></script>
+  </body>
+</html>

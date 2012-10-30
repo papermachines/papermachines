@@ -769,7 +769,11 @@ function nMostTopicsByMetric(n, metric) {
 }
 
 function mostCoherentTopics(n) {
-  nMostTopicsByMetric(n, topicCoherenceSort);
+  if (Object.keys(topicCoherence).length > 0) {
+    nMostTopicsByMetric(n, topicCoherenceSort);    
+  } else {
+    nMostTopicsByMetric(n, prevalenceSort);    
+  }
 }
 
 function mostCommonTopics(n) {

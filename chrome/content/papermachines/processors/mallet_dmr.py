@@ -157,7 +157,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 				self.topic_words[topic][k] /= total
 
 		top_N = 20
-		top_topic_words = {x: {word: y[word] for word in self.argsort(y)[-1:-top_N:-1]} for x, y in self.topic_words.iteritems()}
+		top_topic_words = {x: {word: y[word] for word in self.argsort(y, reverse=True)[:top_N]} for x, y in self.topic_words.iteritems()}
 		wordProbs = [[{'text': word, 'prob': prob} for word, prob in y.iteritems()] for x, y in top_topic_words.iteritems()]
 
 		DEFAULT_DOC_PROPORTIONS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]
@@ -173,7 +173,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 
 		allocationRatios = {topic: proportions[0.5] / proportions[0.02] for topic, proportions in numDocumentsAtProportions.iteritems()}
 
-		labels = {topic: {"label": reversed(self.argsort(words))[0:3], "fulltopic": wordProbs[topic], "allocation_ratio": allocationRatios[topic]} for topic, words in top_topic_words.iteritems()}
+		labels = {topic: {"label": self.argsort(words, reverse=True)[:3], "fulltopic": wordProbs[topic], "allocation_ratio": allocationRatios[topic]} for topic, words in top_topic_words.iteritems()}
 
 		weights_by_topic = []
 		doc_metadata = {}
@@ -188,7 +188,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 			for k in self.doc_topics[doc].keys():
 				self.doc_topics[doc][k] /= total
 
-		for id, topics in self.docs_topics.iteritems():
+		for id, topics in self.doc_topics.iteritems():
 			try:
 				filename = self.docs[int(id)]
 
@@ -238,6 +238,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 				"TOPICS_DOCS": json.dumps(weights_by_topic, separators=(',',':')),
 				"DOC_METADATA": json.dumps(doc_metadata, separators=(',',':')),
 				"TOPIC_LABELS": json.dumps(labels, separators=(',',':')),
+				"TOPIC_FEATURES": json.dumps(self.topic_features, separators=(',',':')),
 				"TOPIC_COHERENCE": json.dumps({}, separators=(',',':')),
 				"TOPIC_PROPORTIONS": json.dumps(self.proportions, separators=(',',':')),
 				"TOPIC_STDEVS": json.dumps(self.stdevs, separators=(',',':')),
