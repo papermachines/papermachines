@@ -705,7 +705,7 @@ Zotero.PaperMachines = {
 				itemGroups.push(ZoteroPane.collectionsView._dataItems[0][0]);
 				var collectionKeys = Zotero.DB.columnQuery("SELECT key from collections WHERE libraryID IS NULL;");
 				if (collectionKeys) {
-					itemGroups = collectionKeys.map(function(d) { return Zotero.Collections.getByLibraryAndKey(null, d); });
+					itemGroups.push.apply(itemGroups, collectionKeys.map(function(d) { return Zotero.Collections.getByLibraryAndKey(null, d); }));
 				}
 			}
 		} else {

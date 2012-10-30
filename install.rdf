@@ -5,7 +5,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>papermachines@chrisjr.org</em:id>
 		<em:name>Paper Machines</em:name>
-		<em:version>0.2.11</em:version>
+		<em:version>0.2.12</em:version>
 		<em:description>A Zotero extension for analysis and visualization in the digital humanities.</em:description>
 		<em:creator>Chris Johnson-Roberson</em:creator>
 		<em:homepageURL>http://chrisjr.github.com/papermachines/</em:homepageURL>
