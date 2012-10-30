@@ -179,7 +179,7 @@ class Mallet(textprocessor.TextProcessor):
 			os.makedirs(self.mallet_out_dir)
 
 		self.progress_filename = os.path.join(self.out_dir, self.name + self.collection + "progress.txt")
-		self.progress_file = file(self.progress_filename, 'w')
+		self.progress_file = file(self.progress_filename, 'w+')
 
 	def _import_texts(self):
 

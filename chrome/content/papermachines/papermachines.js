@@ -108,6 +108,14 @@ Zotero.PaperMachines = {
 				return false;
 			}
 		},
+		"mallet_dmr": function () {
+			var params = Zotero.PaperMachines.promptForProcessParams("mallet_dmr");
+			if (params) {
+				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
 		"wordcloud_multiple": function () {
 			return Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
 		},
@@ -794,7 +802,7 @@ Zotero.PaperMachines = {
 		return this.DB.query(sql, [itemGroupID, processor]);
 	},
 	getItemGroupID: function (itemGroup) {
-		if (!itemGroup) return null;
+		if (itemGroup == null) return null;
 		if ("isCollection" in itemGroup && itemGroup.isCollection()) {
 			if (itemGroup.hasOwnProperty("ref")) {
 				return (itemGroup.ref.libraryID != null ? itemGroup.ref.libraryID.toString() : "") + "C" + itemGroup.ref.id.toString();				
@@ -838,6 +846,9 @@ Zotero.PaperMachines = {
 		for (var i in items) {
 			var item = items[i], fulltext = "", filename = "";
 			if (item.isRegularItem()) {
+				if (Preferences.get("extensions.papermachines.general.download_snapshots")) {
+					Zotero.PaperMachines._downloadSnapshots(item);
+				}
 				queue.add(Zotero.PaperMachines.processItem, itemGroup.getName(), item, dir, i, queue);					
 			} else if (item.isTopLevelItem() && Preferences.get("extensions.papermachines.general.extract_standalone")) {
 				if (item.isAttachment()) {
@@ -859,7 +870,7 @@ Zotero.PaperMachines = {
 			filename = (item.firstCreator != "" ? item.firstCreator + " - " : "");
 			filename += year;
 			filename += item.getDisplayTitle();
-		} else if (item.isAttachment()) {
+		} else if (item.isAttachment() && item.attachmentLinkMode != Zotero.Attachments.LINK_MODE_LINKED_URL) {
 			filename = item.getFilename().replace(/\..{3,3}$/,''); // strip extension
 		}
 		return Zotero.PaperMachines._sanitizeFilename(filename) + ".txt";
@@ -963,6 +974,21 @@ Zotero.PaperMachines = {
 
 		Zotero.File.putContents(tagsFile, tags_str);
 		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [tagsFile.path, item.id, tagsFile.path.replace("_tags.txt", ".txt"), dir.leafName]);
+	},
+	_downloadSnapshots: function (item) {
+		var current_attachments = Zotero.Items.get(item.getAttachments(false));
+		var modes = current_attachments.map(function (a) { return a.attachmentLinkMode;});
+		if (modes.indexOf(Zotero.Attachments.LINK_MODE_LINKED_URL) != -1) {
+			if (modes.indexOf(0) == -1 && modes.indexOf(1) == -1 && modes.indexOf(2) == -1) {
+				for (var i in current_attachments) {
+					if (current_attachments[i].attachmentLinkMode == Zotero.Attachments.LINK_MODE_LINKED_URL) {
+						var url = current_attachments[i].getField("url");
+						Zotero.Attachments.importFromURL(url, item.id);
+					}
+				}
+			}
+		}
+		item.save();
 	},
 	_updateBundledFilesCallback: function (installLocation) {
 		Zotero.PaperMachines.install_dir = installLocation;
@@ -1265,6 +1291,11 @@ Zotero.PaperMachines = {
 			{"name": "burn_in", "type": "text", "pref": "extensions.papermachines.lda.burn_in", "advanced": true},
 			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval", "advanced": true},
 			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha", "advanced": true},
+		],
+		"mallet_dmr": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
+			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
+			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
+			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true}
 		],
 		"bulk_import": [{"name": "title", "type": "text", "pref": "extensions.papermachines.import.title"},
 			{"name": "pubtitle", "type": "text", "pref": "extensions.papermachines.import.pubtitle"},

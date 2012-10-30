@@ -99,7 +99,35 @@ class MalletDMR(mallet_lda.MalletLDA):
 
 		logging.info("DMR complete in " + str(time.time() - start_time) + " seconds")
 
+		self.topic_features = {}
+		with codecs.open(os.path.join(self.mallet_out_dir, 'dmr.parameters'), 'r', encoding='utf-8') as f:
+			topic = 0
+			for line in f:
+				new_topic = re.match("FEATURES FOR CLASS topic([0-9]+)", line)
+				if new_topic is not None:
+					topic = int(new_topic.group(1))
+				else:
+					if not topic in self.topic_features:
+						self.topic_features[topic] = {}
+					this_line = line.split(' ')
+					feature = this_line[1]
+					self.topic_features[topic][feature] = float(this_line[2])		
+
+		self.progress_file.seek(0, os.SEEK_SET)
+		self.alphas = {}
+		for line in self.progress_file:
+			if re.match('[0-9]+\t[0-9.]+', line) is not None:
+				this_line = line.split('\t')
+				topic = int(this_line[0])
+				alpha = float(this_line[1])
+				tokens = int(this_line[2])
+
+				self.alphas[topic] = alpha
+
+		self.alpha_sum = sum(self.alphas.values()) # wrong, somehow
+
 		self.topic_words = {}
+		self.doc_topics = {}
 
 		with gzip.open(os.path.join(self.mallet_out_dir, 'dmr.state.gz'), 'rb') as state_file:
 			state_file.next()
@@ -107,13 +135,22 @@ class MalletDMR(mallet_lda.MalletLDA):
 				this_line = line.split(' ')
 				topic = int(this_line[5])
 				word = this_line[4]
+				doc = int(this_line[0])
+				position = int(this_line[2])
+
+				if not doc in self.doc_topics:
+					self.doc_topics[doc] = {}
+				if not topic in self.doc_topics[doc]:
+					self.doc_topics[doc][topic] = 0
+				self.doc_topics[doc][topic] += 1
+
 				if not topic in self.topic_words:
 					self.topic_words[topic] = {}
 				if not word in self.topic_words[topic]:
 					self.topic_words[topic][word] = 0
 				self.topic_words[topic][word] += 1
 
-		total_tokens = float(sum([sum(y.values()) for x, y in self.topic_words.iteritems()]))
+		# total_tokens = float(sum([sum(y.values()) for x, y in self.topic_words.iteritems()]))
 		for topic in self.topic_words.keys():
 			total = float(sum(self.topic_words[topic].values()))
 			for k in self.topic_words[topic].keys():
@@ -123,97 +160,94 @@ class MalletDMR(mallet_lda.MalletLDA):
 		top_topic_words = {x: {word: y[word] for word in self.argsort(y)[-1:-top_N:-1]} for x, y in self.topic_words.iteritems()}
 		wordProbs = [[{'text': word, 'prob': prob} for word, prob in y.iteritems()] for x, y in top_topic_words.iteritems()]
 
-		allocationRatios = {}
+		DEFAULT_DOC_PROPORTIONS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]
+		numDocumentsAtProportions = {topic: {k: 0.0 for k in DEFAULT_DOC_PROPORTIONS} for topic in self.topic_words.keys()}
+		for doc, topics in self.doc_topics.iteritems():
+			doc_length = sum(topics.values())
+			for topic, count in topics.iteritems():
+				proportion = (self.alphas[topic] + count) / (self.alpha_sum + doc_length)
+				for min_proportion in DEFAULT_DOC_PROPORTIONS:
+					if proportion < min_proportion:
+						break
+					numDocumentsAtProportions[topic][min_proportion] += 1
 
-		# coherence = {}
-		# wordProbs = {}
-		# allocationRatios = {}
-		# with file(self.mallet_files['diagnostics-file']) as diagnostics:
-		# 	tree = et.parse(diagnostics)
-		# 	for elem in tree.iter("topic"):
-		# 		topic = elem.get("id")
-		# 		coherence[topic] = float(elem.get("coherence"))
-		# 		allocationRatios[topic] = float(elem.get("allocation_ratio"))
-		# 		wordProbs[topic] = []
-		# 		for word in elem.iter("word"):
-		# 			wordProbs[topic].append({'text': word.text, 'prob': word.get("prob")})
+		allocationRatios = {topic: proportions[0.5] / proportions[0.02] for topic, proportions in numDocumentsAtProportions.iteritems()}
 
-		# labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in file(self.mallet_files['topic-keys']).readlines()]}
+		labels = {topic: {"label": reversed(self.argsort(words))[0:3], "fulltopic": wordProbs[topic], "allocation_ratio": allocationRatios[topic]} for topic, words in top_topic_words.iteritems()}
 
-		# weights_by_topic = []
-		# doc_metadata = {}
+		weights_by_topic = []
+		doc_metadata = {}
 
-		# self._sort_into_intervals()
+		self._sort_into_intervals()
 
-		# for i in range(self.topics):
-		# 	weights_by_topic.append([{'x': str(j), 'y': [], 'topic': i} for j in self.intervals])		
+		for i in range(self.topics):
+			weights_by_topic.append([{'x': str(j), 'y': [], 'topic': i} for j in self.intervals])		
 
-		# for line in file(self.mallet_files['doc-topics']):
-		# 	try:
-		# 		values = line.split('\t')
-				
-		# 		id = values.pop(0)
-		# 		if id.startswith("#doc"):
-		# 			continue
-		# 		filename = self.docs[int(id)]
-		# 		del values[0]
+		for doc in self.doc_topics.keys():
+			total = float(sum(self.doc_topics[doc].values()))
+			for k in self.doc_topics[doc].keys():
+				self.doc_topics[doc][k] /= total
 
-		# 		itemid = self.metadata[filename]["itemID"]
+		for id, topics in self.docs_topics.iteritems():
+			try:
+				filename = self.docs[int(id)]
 
-		# 		doc_metadata[itemid] = {"label": self.metadata[filename]["label"], "title": self.metadata[filename]["title"]}
+				itemid = self.metadata[filename]["itemID"]
 
-		# 		freqs = {int(y[0]): float(y[1]) for y in self.xpartition(values)}
-		# 		main_topic = None
-		# 		topic_max = 0.0
-		# 		for i in freqs.keys():
-		# 			weights_by_topic[i][self.fname_to_index[filename]]['y'].append({"itemID": itemid, "ratio": freqs[i]})
-		# 			if freqs[i] > topic_max:
-		# 				main_topic = i
-		# 				topic_max = freqs[i]
-		# 		doc_metadata[itemid]["main_topic"] = main_topic
-		# 	except KeyboardInterrupt:
-		# 		sys.exit(1)
-		# 	except:
-		# 		logging.error(traceback.format_exc())
+				doc_metadata[itemid] = {"label": self.metadata[filename]["label"], "title": self.metadata[filename]["title"]}
 
-		# topics_by_year = []
-		# for topic in weights_by_topic:
-		# 	topic_sums = []	
-		# 	for year in topic:
-		# 		sum = 0.0
-		# 		if len(year['y']) != 0:
-		# 			for doc in year['y']:
-		# 				sum += doc['ratio']
-		# 			topic_sums.append(sum / float(len(year['y'])))
-		# 		else:
-		# 			topic_sums.append(0)
-		# 	topics_by_year.append(topic_sums)
+				freqs = topics
+				main_topic = None
+				topic_max = 0.0
+				for i in freqs.keys():
+					weights_by_topic[i][self.fname_to_index[filename]]['y'].append({"itemID": itemid, "ratio": freqs[i]})
+					if freqs[i] > topic_max:
+						main_topic = i
+						topic_max = freqs[i]
+				doc_metadata[itemid]["main_topic"] = main_topic
+			except KeyboardInterrupt:
+				sys.exit(1)
+			except:
+				logging.error(traceback.format_exc())
 
-		# self.topics_by_year = topics_by_year
-		# self._find_proportions(topics_by_year)
-		# try:		
-		# 	self._find_stdevs(topics_by_year)
-		# 	self._find_correlations(topics_by_year)
-		# except:
-		# 	self.stdevs = {}
-		# 	self.correlations = {}
+		topics_by_year = []
+		for topic in weights_by_topic:
+			topic_sums = []	
+			for year in topic:
+				year_sum = 0.0
+				if len(year['y']) != 0:
+					for doc in year['y']:
+						year_sum += doc['ratio']
+					topic_sums.append(year_sum / float(len(year['y'])))
+				else:
+					topic_sums.append(0)
+			topics_by_year.append(topic_sums)
 
-		# self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
+		self.topics_by_year = topics_by_year
+		self._find_proportions(topics_by_year)
+		try:		
+			self._find_stdevs(topics_by_year)
+			self._find_correlations(topics_by_year)
+		except:
+			self.stdevs = {}
+			self.correlations = {}
 
-		# params = {"CATEGORICAL": "true" if self.categorical else "false",
-		# 		"TOPICS_DOCS": json.dumps(weights_by_topic, separators=(',',':')),
-		# 		"DOC_METADATA": json.dumps(doc_metadata, separators=(',',':')),
-		# 		"TOPIC_LABELS": json.dumps(labels, separators=(',',':')),
-		# 		"TOPIC_COHERENCE": json.dumps(coherence, separators=(',',':')),
-		# 		"TOPIC_PROPORTIONS": json.dumps(self.proportions, separators=(',',':')),
-		# 		"TOPIC_STDEVS": json.dumps(self.stdevs, separators=(',',':')),
-		# 		"TOPIC_CORRELATIONS": json.dumps(self.correlations, separators=(',',':'))
-		# }
+		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
 
-		# index = getattr(self, "index", "{}")
-		# params["###INDEX###"] = json.dumps(index, separators=(',',':'))
+		params = {"CATEGORICAL": "true" if self.categorical else "false",
+				"TOPICS_DOCS": json.dumps(weights_by_topic, separators=(',',':')),
+				"DOC_METADATA": json.dumps(doc_metadata, separators=(',',':')),
+				"TOPIC_LABELS": json.dumps(labels, separators=(',',':')),
+				"TOPIC_COHERENCE": json.dumps({}, separators=(',',':')),
+				"TOPIC_PROPORTIONS": json.dumps(self.proportions, separators=(',',':')),
+				"TOPIC_STDEVS": json.dumps(self.stdevs, separators=(',',':')),
+				"TOPIC_CORRELATIONS": json.dumps(self.correlations, separators=(',',':'))
+		}
 
-		# self.write_html(params)
+		index = getattr(self, "index", "{}")
+		params["###INDEX###"] = json.dumps(index, separators=(',',':'))
+
+		self.write_html(params)
 
 if __name__ == "__main__":
 	try:

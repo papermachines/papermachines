@@ -64,10 +64,10 @@
 <!ENTITY papermachines.prefs.general.extract_txt		"Plain Text">
 <!ENTITY papermachines.prefs.general.extract_html		"Web Snapshots (HTML)">
 <!ENTITY papermachines.prefs.general.extract_pdf		"PDFs with OCR text">
-<!ENTITY papermachines.prefs.general.extract_livepages	"Live Web Pages">
 <!ENTITY papermachines.prefs.general.extract_notes		"Notes">
 <!ENTITY papermachines.prefs.general.extract_tags		"Tags">
 <!ENTITY papermachines.prefs.general.extract_standalone	"Extract files without metadata (standalone)">
+<!ENTITY papermachines.prefs.general.download_snapshots	"Download live pages and remote links (can be slow!)">
 <!ENTITY papermachines.prefs.general.python_exe 		"Path to Python executable: ">
 
 

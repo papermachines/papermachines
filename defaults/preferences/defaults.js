@@ -8,6 +8,7 @@ pref("extensions.papermachines.general.extract_tags", true);
 pref("extensions.papermachines.general.extract_livepages", false);
 
 pref("extensions.papermachines.general.extract_standalone", true);
+pref("extensions.papermachines.general.download_snapshots", false);
 
 pref("extensions.papermachines.general.python_exe", "");
 

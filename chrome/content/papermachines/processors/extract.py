@@ -32,7 +32,6 @@ class Extract(textprocessor.TextProcessor):
         self.name = "extract"
         self.pdftotext = self.extra_args[0]
 
-
     def process(self):
         logging.info("starting to process")
 
