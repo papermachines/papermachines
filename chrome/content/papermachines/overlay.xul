@@ -32,7 +32,7 @@
 		</menu>
 		<menu id="phrasenet" label="&papermachines.collectionmenu.phrasenet;" disabled="true">
 			<menupopup id="phrasenet-menu">
-				<menuitem label="x and y"
+				<menuitem id="phrasenet-x_and_y" label="x and y"
 					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x and y')"/>
 				<menuitem label="x or y"
 					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x or y')"/>
@@ -48,7 +48,7 @@
 					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x is y')"/>
 				<menuitem label="x [space] y"
 					oncommand="Zotero.PaperMachines.runProcess('phrasenet', 'x y')"/>
-				<menuitem label="Custom..."
+				<menuitem id="phrasenet-custom" label="Custom..."
 					oncommand="Zotero.PaperMachines.customPhrasenet()"/>
 
 			</menupopup>

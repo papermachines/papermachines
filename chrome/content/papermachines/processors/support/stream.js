@@ -394,8 +394,10 @@ function sumUpData(graphIndex, origData) {
         var s = graph[graphIndex].contributingDocsOrdinal[category].length || 1;
         for (var i in activeTopics) {
           var datum = categories[category][activeTopics[i]];
-          datum.y /= s;
-          graph[graphIndex].categoricalData[i].push(datum);
+          if (datum) {
+            datum.y /= s;
+            graph[graphIndex].categoricalData[i].push(datum);
+          }
         }
       });      
     // }
@@ -1126,7 +1128,9 @@ function updateGradient() {
   });
 
   var gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
-  // gradientDomain[0] = 5;
+  if (gradientDomain[0] == 0) {
+    gradientDomain[0] = 1; // log scale, cannot be 0
+  }
   gradientOpacity.domain(gradientDomain);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")

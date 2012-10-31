@@ -366,7 +366,14 @@ Zotero.PaperMachines = {
 		var func_args = Array.prototype.slice.call(arguments);
 		var processPathParts = [func_args[0]];
 
-		processPathParts.push(Zotero.PaperMachines.getThisGroupID());
+		var thisGroupID = Zotero.PaperMachines.getThisGroupID();
+
+		var count = Zotero.PaperMachines.countExtractedItems(thisGroupID);
+		if (!count) {
+			alert(Zotero.PaperMachines.prompts["empty"]);
+			return false;
+		}
+		processPathParts.push(thisGroupID);
 
 		var additional_args = func_args.slice(1);
 
@@ -791,6 +798,11 @@ Zotero.PaperMachines = {
 		});
 
 		return count;
+	},
+	countExtractedItems: function (itemGroupID) {
+		var sql = "SELECT COUNT(itemID) FROM collection_docs WHERE collection = ? OR collection IN " +
+			"(SELECT child FROM collections WHERE parent = ?);";
+		return this.DB.valueQuery(sql, [itemGroupID, itemGroupID]);
 	},
 	hasBeenExtracted: function (itemGroupID) {
 		var sql = "SELECT itemID FROM collection_docs WHERE collection = ? OR collection IN " +
