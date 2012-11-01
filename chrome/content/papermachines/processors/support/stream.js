@@ -142,7 +142,7 @@ yAxis = d3.svg.axis()
 xOrdinalAxis = d3.svg.axis()
   .scale(xOrdinal);
 
-mostCoherentTopics(5);
+mostVariantTopics(5);
 
 transition();
 setStartParameters();

@@ -1393,7 +1393,7 @@ Zotero.PaperMachines = {
 				if (params["guessdate"]) {
 					for (var dir_name in found_obj) {
 						found_obj[dir_name].forEach(function (f) {
-							var date = Zotero.PaperMachines.getDateFromPDF(f);
+							var date = Zotero.PaperMachines.getDateFromPDFMetadata(f);
 							if (date) {
 								var ris_date = date.toISOString().replace(/-/g,"/").substring(0,10) + "/"; // 2012/09/12/
 								if (!(ris_date in dated_items)) {
@@ -1501,7 +1501,11 @@ Zotero.PaperMachines = {
 			return contents.match(regex);			
 		}
 	},
-	getDateFromPDF: function (file) {
+	getDateFromPDFText: function (file) {
+		var pdf_years = Zotero.PaperMachines.applyRegexToPDF(file, "[0-9]{4,4}");
+		return pdf_years[0];
+	},
+	getDateFromPDFMetadata: function (file) {
 		var pdfinfo = Zotero.getZoteroDirectory();
 		pdfinfo.append(Zotero.Fulltext.pdfInfoFileName);
 
@@ -1624,7 +1628,8 @@ Zotero.PaperMachines = {
 			if (python_exe) {
 				Preferences.set("extensions.papermachines.general.python_exe", python_exe);
 			} else {
-				Zotero.PaperMachines.ERROR("Python not found! Please enter the path to Python 2.7 in the Paper Machines preference window.")
+				alert("Python not found! Please enter the path to Python 2.7 in the Paper Machines preference window.");
+				Zotero.PaperMachines.ERROR("Python not found! Please enter the path to Python 2.7 in the Paper Machines preference window.");
 			}
 		}
 		return python_exe;
