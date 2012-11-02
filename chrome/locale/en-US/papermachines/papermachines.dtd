@@ -1,5 +1,7 @@
 <!ENTITY papermachines.name									"Paper Machines">
 
+<!ENTITY papermachines.itemmenu.change_field			"Change Field for Items">
+
 <!ENTITY papermachines.collectionmenu.extract_text			"Extract Text for Paper Machines">
 
 <!ENTITY papermachines.collectionmenu.wordcloud				"Word Cloud">
@@ -69,6 +71,8 @@
 <!ENTITY papermachines.prefs.general.extract_standalone	"Extract files without metadata (standalone)">
 <!ENTITY papermachines.prefs.general.download_snapshots	"Download live pages and remote links (can be slow!)">
 <!ENTITY papermachines.prefs.general.python_exe 		"Path to Python executable: ">
+
+<!ENTITY papermachines.prefs.general.experimental		"Experimental Features">
 
 
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">

@@ -98,6 +98,8 @@
 	</menupopup>
 	<menupopup id="zotero-itemmenu">
 		<menuseparator hidden="false"/>
+		<menuitem id="change-field" label="&papermachines.itemmenu.change_field;"
+			oncommand="Zotero.PaperMachines.changeField()"/>
 		<menuitem id="mallet-highlight" label="&papermachines.itemmenu.text_in_topic_view;"
 			disabled="true"
 			oncommand="Zotero.PaperMachines.showTextInTopicView()"/>

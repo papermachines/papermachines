@@ -874,6 +874,24 @@ Zotero.PaperMachines = {
 
 		queue.next();
 	},
+	bulkChangeField: function (items, field, new_value, force) {
+		for (var i in items) {
+			var item = items[i];
+			if (force || item.getField(field) == '') {
+				item.setField(field, new_value);
+				item.save();
+			}
+		}
+	},
+	changeField: function () {
+		var items = ZoteroPane.getSelectedItems();
+		var params = Zotero.PaperMachines.promptForProcessParams("change_field");
+		if (params) {
+			Zotero.PaperMachines.bulkChangeField(items, params["field"], params["value"], params["force"]);
+		} else {
+			return false;
+		}
+	},
 	getFilenameForItem: function (item) {
 		var filename = "";
 		if (item.isRegularItem()) {
@@ -1317,18 +1335,26 @@ Zotero.PaperMachines = {
 			{"name": "guessissue", "type": "check", "pref": "extensions.papermachines.import.guessissue"},
 			{"name": "issueregex", "type": "text", "pref": "extensions.papermachines.import.issueregex"},
 			{"name": "startingoffset", "type": "text", "pref": "extensions.papermachines.import.startingoffset"},
+		],
+		"change_field":  [{"name": "field", "type": "text", "value": ""},
+			{"name": "value", "type": "text", "value": ""},
+			{"name": "force", "type": "check", "value": false}
 		]
 	},
 	promptForProcessParams: function(process) {
 		var items = Zotero.PaperMachines.processParamLists[process];
+		var advanced = false;
 		for (var i in items) {
 			items[i].label = Zotero.PaperMachines.paramLabels[process][items[i].name];
 			if ("pref" in items[i]) {
 				items[i].value = Preferences.get(items[i].pref);				
 			}
+			if ("advanced" in items[i]) {
+				advanced = true;
+			}
 		}
 		var intro = Zotero.PaperMachines.processNames[process];
-		return Zotero.PaperMachines._promptForProcessParams(intro, items, true);
+		return Zotero.PaperMachines._promptForProcessParams(intro, items, advanced);
 	},
 	_promptForProcessParams: function(intro, items, advanced) {
 		var params = {"dataIn": {"intro": intro, "items": items}, "dataOut": null};
