@@ -304,10 +304,13 @@ function sumUpData(graphIndex, origData) {
           datum.search = graphIndex;
           datum.y = 0.0;
 
-          graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
-
+          if (firstRun) {
+            graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
+          }
           e.y.forEach(function (f) {
-            graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);
+            if (firstRun) {
+              graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);              
+            }
             if (graph[graphIndex].searchFilter(f)) {
               datum.y += f.ratio;
               var label = docMetadata[f.itemID]["label"];
