@@ -101,6 +101,13 @@ sumUpData(0, origTopicTimeData);
 y.domain([-maxStdDev, maxStdDev]);
 
 startDate = graph[0].data[0][0].x;
+if (startDate.getFullYear() < 1000) { // probably incorrect
+  var i = 0;
+  while (startDate.getFullYear() < 1000 && i < graph[0].data[0].length - 2) {
+    i++;
+    startDate = graph[0].data[0][i].x;
+  }
+}
 endDate = graph[0].data[0][graph[0].data[0].length - 1].x;
 
 x.domain([startDate, endDate]);

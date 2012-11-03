@@ -56,6 +56,8 @@ class MalletLDA(mallet.Mallet):
 			x = self.metadata[filename]
 			if x['year'].isdigit() and x['year'] != '0000':
 				year = int(x['year'])
+				if year < 1000:
+					year = 2012
 			else:
 				year = 2012
 			years.add(year)

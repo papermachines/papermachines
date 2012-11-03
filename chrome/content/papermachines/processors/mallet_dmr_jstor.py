@@ -31,6 +31,10 @@ class MalletDMRJSTOR(mallet_dmr.MalletDMR):
 		else:
 			self.dfr_dir = dfr_dirs[0]
 
+		if "features" in self.named_args:
+			self.features = self.named_args["features"]
+		else:
+			self.features = "decade"
 
 if __name__ == "__main__":
 	try:
