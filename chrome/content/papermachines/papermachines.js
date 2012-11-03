@@ -24,6 +24,7 @@ Zotero.PaperMachines = {
 	prompts: null,
 	paramLabels: null,
 	lang: null,
+	experimentalFeatures: ["mallet_dmr", "mallet_dmr_jstor", "mallet_classify"],
 	wordcloudFilters: [{"name": "none (raw frequency)", "label": " ", "value": "plain", "default": true},
 				{"name": "tf*idf", "label": " ", "value": "tfidf"},
 				{"name": "Dunning's log-likelihood", "label": " ", "value": "dunning"},
@@ -112,6 +113,20 @@ Zotero.PaperMachines = {
 			var params = Zotero.PaperMachines.promptForProcessParams("mallet_dmr");
 			if (params) {
 				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
+		"mallet_dmr_jstor": function () {
+			var argArray = Zotero.PaperMachines.filePrompt("mallet_lda_jstor", "multi", [".zip"]);
+			if (argArray) {
+				var params = Zotero.PaperMachines.promptForProcessParams("mallet_dmr");
+				if (params) {
+					argArray = argArray.concat(["json", JSON.stringify(params)]);
+					return argArray;
+				} else {
+					return false;
+				}
 			} else {
 				return false;
 			}
@@ -1146,6 +1161,15 @@ Zotero.PaperMachines = {
 			ZoteroPane.document.getElementById(d).disabled = !active;
 		});
 
+		var experimentalOn = Preferences.get("extensions.papermachines.general.experimental");
+
+		for (var i in Zotero.PaperMachines.experimentalFeatures) {
+			var feature = Zotero.PaperMachines.experimentalFeatures[i];
+			var elem = ZoteroPane.document.getElementById(feature);
+			if (elem) {
+				elem.disabled = !experimentalOn;
+			}
+		}
 		// var highlightFunctions = ["mallet", "geodict"];
 		// highlightFunctions.forEach(function (d) {
 		// 	var elem = ZoteroPane.document.getElementById(d+"-highlight");
@@ -1326,7 +1350,8 @@ Zotero.PaperMachines = {
 		"mallet_dmr": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
 			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
-			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true}
+			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true},
+			{"name": "features", "type": "text", "value": "decade", "advanced": true}
 		],
 		"bulk_import": [{"name": "title", "type": "text", "pref": "extensions.papermachines.import.title"},
 			{"name": "pubtitle", "type": "text", "pref": "extensions.papermachines.import.pubtitle"},

@@ -18,6 +18,7 @@
     <preference id="pref_extract_tags" name="extensions.papermachines.general.extract_tags" type="bool"/>
     <preference id="pref_extract_standalone" name="extensions.papermachines.general.extract_standalone" type="bool"/>
     <preference id="pref_download_snapshots" name="extensions.papermachines.general.download_snapshots" type="bool"/>
+    <preference id="pref_experimental" name="extensions.papermachines.general.experimental" type="bool"/>
     <preference id="pref_python_exe" name="extensions.papermachines.general.python_exe" type="unichar"/>
   </preferences>
  
@@ -46,6 +47,9 @@
     </hbox>
     <hbox align="center">
       <checkbox preference="pref_download_snapshots" label="&papermachines.prefs.general.download_snapshots;" id="download_snapshots"/>
+    </hbox>
+    <hbox align="center">
+      <checkbox preference="pref_experimental" label="&papermachines.prefs.general.experimental;" id="experimental"/>
     </hbox>
 
     <hbox align="center">

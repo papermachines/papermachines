@@ -72,7 +72,9 @@
 					<menuitem id="mallet_lda_MI" label="&papermachines.collectionmenu.mallet_lda_MI;"
 						oncommand="Zotero.PaperMachines.runProcess('mallet_lda_MI')"/>
 					<menuitem id="mallet_dmr" label="&papermachines.collectionmenu.mallet_dmr;"
-						oncommand="Zotero.PaperMachines.runProcess('mallet_dmr')" disabled="true"/>
+						oncommand="Zotero.PaperMachines.runProcess('mallet_dmr')"/>
+					<menuitem id="mallet_dmr_jstor" label="&papermachines.collectionmenu.mallet_dmr_jstor;"
+						oncommand="Zotero.PaperMachines.runProcess('mallet_dmr_jstor')"/>
 					</menupopup>
 				</menu>
 			</menupopup>

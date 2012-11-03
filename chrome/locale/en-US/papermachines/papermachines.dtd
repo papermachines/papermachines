@@ -21,7 +21,8 @@
 <!ENTITY papermachines.collectionmenu.mallet_lda_categorical	"By Subcollection...">
 <!ENTITY papermachines.collectionmenu.topicmodeling_adv		"Advanced">
 <!ENTITY papermachines.collectionmenu.mallet_lda_MI		"Mutual Information">
-<!ENTITY papermachines.collectionmenu.mallet_dmr		"Dirichlet Multinomial Regression">
+<!ENTITY papermachines.collectionmenu.mallet_dmr		"Dirichlet-Multinomial Regression">
+<!ENTITY papermachines.collectionmenu.mallet_dmr_jstor	"Dirichlet-Multinomial Regression (With JSTOR DFR)...">
 
 
 <!ENTITY papermachines.collectionmenu.mallet_classify			"Classification">
@@ -72,7 +73,7 @@
 <!ENTITY papermachines.prefs.general.download_snapshots	"Download live pages and remote links (can be slow!)">
 <!ENTITY papermachines.prefs.general.python_exe 		"Path to Python executable: ">
 
-<!ENTITY papermachines.prefs.general.experimental		"Experimental Features">
+<!ENTITY papermachines.prefs.general.experimental		"Enable Experimental Features">
 
 
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">

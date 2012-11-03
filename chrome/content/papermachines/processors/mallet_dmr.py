@@ -20,14 +20,28 @@ class MalletDMR(mallet_lda.MalletLDA):
 		self.dfr = len(self.extra_args) > 0
 		if self.dfr:
 			self.dfr_dir = self.extra_args[0]
+		if "features" in self.named_args:
+			self.features = self.named_args["features"]
+		else:
+			self.features = "decade"
 
 	def metadata_to_feature_string(self, doc):
-		feature_string = u''
+		my_features = []
 		metadata = self.metadata[doc]
-		year = self.intervals[self.fname_to_index[doc]]
-		decade = int(round(year, -1))
-		feature_string += u'decade{:}'.format(decade)
-		return feature_string
+		if "decade" in self.features:
+			year = self.intervals[self.fname_to_index[doc]]
+			decade = int(round(year, -1))
+			my_features.append(u'decade{:}'.format(decade))
+		if "place" in self.features:
+			place = metadata["place"]
+			my_features.append(self._sanitize_feature(place))
+		if "label" in self.features:
+			label = metadata["label"]
+			my_features.append(self._sanitize_feature(label))
+		return u' '.join(my_features)
+
+	def _sanitize_feature(self, text):
+		return re.sub('[\W_]+', '', text, re.UNICODE)
 
 	def _setup_mallet_instances(self, tfidf = False, stemming = True):
 		self.stemming = stemming
