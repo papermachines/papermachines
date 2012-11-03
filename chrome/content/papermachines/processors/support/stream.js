@@ -243,16 +243,15 @@ function shuffle(array) {
 function resetColors() {
   var currentColors = activeTopicLabels.map(function (d) { return graphColors(d); });
   currentColors.sort();
-  // for now, always shuffle
-  // var anyRepeats = false;
-  // for (var i = 0, n = currentColors.length; i < n; i++) {
-  //   if (currentColors[i] == currentColors[(i + 1) % n]) {
-  //     anyRepeats = true;
-  //   }
-  // }
-  // if (!anyRepeats) {
-  //   return;
-  // }
+  var anyRepeats = false;
+  for (var i = 0, n = currentColors.length; i < n; i++) {
+    if (currentColors[i] == currentColors[(i + 1) % n]) {
+      anyRepeats = true;
+    }
+  }
+  if (!anyRepeats) {
+    return;
+  }
 
   // var newLabelColors = shuffle(activeTopicLabels.slice());
   var newLabelColors = activeTopicLabels.slice();

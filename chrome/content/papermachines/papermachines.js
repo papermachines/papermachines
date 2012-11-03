@@ -24,7 +24,7 @@ Zotero.PaperMachines = {
 	prompts: null,
 	paramLabels: null,
 	lang: null,
-	experimentalFeatures: ["mallet_dmr", "mallet_dmr_jstor", "mallet_classify"],
+	experimentalFeatures: ["mallet_dmr", "mallet_dmr_jstor", "mallet_classify", "mallet_lda_MI"],
 	wordcloudFilters: [{"name": "none (raw frequency)", "label": " ", "value": "plain", "default": true},
 				{"name": "tf*idf", "label": " ", "value": "tfidf"},
 				{"name": "Dunning's log-likelihood", "label": " ", "value": "dunning"},
