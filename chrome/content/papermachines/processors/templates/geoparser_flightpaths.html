@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="UTF-8" />
+    <title>Geoparser: COLLECTION_NAME</title>
+    <script type="text/javascript" src="support/d3.v2.js"></script>
+    <script type="text/javascript" src="support/html5slider.js"></script>
+    <script type="text/javascript" src="support/colorbrewer.js"></script>
+    <link type="text/css" rel="text/stylesheet" href="support/button.css"/>
+    <link type="text/css" rel="text/stylesheet" href="support/flightpaths.css"/>
+  </head>
+  <body>
+    <div id="body">
+      <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><span id="timeDisplay"></div></div>
+    </div>
+    <script type="text/javascript">
+    var linksByYear = LINKS_BY_YEAR;
+    var placeIDsToCoords = PLACEIDSTOCOORDS;
+    var placeIDsToNames = PLACEIDSTONAMES;
+    var placesMentioned = PLACESMENTIONED;
+    var textsFromPlace = TEXTSFROMPLACE;
+    var countries = COUNTRIES;
+    var max_country_weight = MAX_COUNTRY_WEIGHT;
+    var startDate = STARTDATE;
+    var endDate = ENDDATE;
+    </script>
+    <script type="text/javascript" src="support/flightpaths.js"></script>
+    <script type="text/javascript">
+      window.onload = function () { generateSearch(); };
+    </script>
+  </body>
+</html>
+

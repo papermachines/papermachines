@@ -53,9 +53,16 @@
 
 			</menupopup>
 		</menu>
-		<menuitem id="geoparse" label="&papermachines.collectionmenu.geoparse;"
-			disabled="true"
-			oncommand="Zotero.PaperMachines.runProcess('geoparse')"/>
+		<menu id="geoparser" label="&papermachines.collectionmenu.geoparser;" disabled="true">
+			<menupopup id="geoparser-menu">
+				<menuitem id="geoparser_flightpaths" label="&papermachines.collectionmenu.geoparser_flightpaths;"
+					oncommand="Zotero.PaperMachines.runProcess('geoparser_flightpaths')"/>
+				<menuitem id="geoparser_heatmap" label="&papermachines.collectionmenu.geoparser_heatmap;"
+						oncommand="Zotero.PaperMachines.runProcess('geoparser_heatmap')"/>
+				<menuitem id="geoparser_export" label="&papermachines.collectionmenu.geoparser_export;"
+						oncommand="Zotero.PaperMachines.runProcess('geoparser_export')"/>
+			</menupopup>
+		</menu>
 		<menuitem id="dbpedia" label="&papermachines.collectionmenu.dbpedia;"
 			disabled="true"
 			oncommand="Zotero.PaperMachines.runProcess('dbpedia')"/>

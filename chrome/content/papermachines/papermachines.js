@@ -19,7 +19,7 @@ Zotero.PaperMachines = {
 	tagCloudReplace: true,
 	processors_dir: null,
 	python_exe: null,
-	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparse", "dbpedia", "export-output"],
+	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparser", "dbpedia", "export-output"],
 	processNames: null, // see locale files
 	prompts: null,
 	paramLabels: null,

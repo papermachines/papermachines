@@ -12,7 +12,11 @@
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection...">
 
 <!ENTITY papermachines.collectionmenu.phrasenet				"Phrase Net">
-<!ENTITY papermachines.collectionmenu.geoparse				"Geoparser">
+
+<!ENTITY papermachines.collectionmenu.geoparser				"Mapping">
+<!ENTITY papermachines.collectionmenu.geoparser_flightpaths	"Flight Paths">
+<!ENTITY papermachines.collectionmenu.geoparser_heatmap		"Heat Map">
+<!ENTITY papermachines.collectionmenu.geoparser_export		"Export Geodata to CSV">
 <!ENTITY papermachines.collectionmenu.dbpedia				"DBPedia Annotation">
 
 <!ENTITY papermachines.collectionmenu.topicmodeling			"Topic Modeling">

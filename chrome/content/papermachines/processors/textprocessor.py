@@ -70,7 +70,7 @@ class TextProcessor:
 		self.name = "textprocessor"
 
 	def parse_csv(self, filename, dialect=csv.excel, **kwargs):
-		with file(filename, 'rb') as f:
+		with file(filename, 'rU') as f:
 			csv_rows = self.unicode_csv_reader(f, dialect=dialect, **kwargs)
 			header = csv_rows.next()
 			for row in csv_rows:
