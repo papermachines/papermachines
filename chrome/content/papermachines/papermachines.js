@@ -1023,6 +1023,12 @@ Zotero.PaperMachines = {
 	},
 	_downloadSnapshots: function (item) {
 		var current_attachments = Zotero.Items.get(item.getAttachments(false));
+		if (current_attachments.length == 0) {
+			var url = item.getField("url");
+			if (url) {
+				Zotero.Attachments.importFromURL(url, item.id);				
+			}
+		}
 		var modes = current_attachments.map(function (a) { return a.attachmentLinkMode;});
 		if (modes.indexOf(Zotero.Attachments.LINK_MODE_LINKED_URL) != -1) {
 			if (modes.indexOf(0) == -1 && modes.indexOf(1) == -1 && modes.indexOf(2) == -1) {
