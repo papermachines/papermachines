@@ -37,6 +37,11 @@ function svgExpectedTester(processMenuItemID, modalCallback) {
 	tabBrowser.closeTab();
 };
 
+var testExtractText = function () {
+	var menuitem = new elementslib.ID(controller.window.document, "extract_text");
+	controller.click(menuitem)
+};
+
 var testWordCloudLarge = function(){
 	svgExpectedTester("wordcloud_large");
 };
@@ -59,8 +64,8 @@ var testPhrasenetCustom = function(){
 	});
 };
 
-// var testGeoparse = function() {
-// 	svgExpectedTester("geoparse");
+// var testGeoparserFlightPaths = function() {
+// 	svgExpectedTester("geoparser_flightpaths");
 // };
 
 var testMalletLDA = function() {

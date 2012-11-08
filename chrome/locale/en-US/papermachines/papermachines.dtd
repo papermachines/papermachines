@@ -30,8 +30,8 @@
 
 
 <!ENTITY papermachines.collectionmenu.mallet_classify			"Classification">
-<!ENTITY papermachines.collectionmenu.mallet_train-classifier	"Train Classifier">
-<!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test Classification...">
+<!ENTITY papermachines.collectionmenu.mallet_train-classifier	"Train MaxEnt Classifier">
+<!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test MaxEnt Classification...">
 
 <!ENTITY papermachines.collectionmenu.bulk_import			"Periodical PDF Import...">
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">

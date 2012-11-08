@@ -12,7 +12,7 @@
 	
 	<menupopup id="zotero-collectionmenu">
 		<menuseparator hidden="false"/>
-		<menuitem label="&papermachines.collectionmenu.extract_text;"
+		<menuitem id="extract_text" label="&papermachines.collectionmenu.extract_text;"
 			oncommand="Zotero.PaperMachines.extractText()"/>
 		<menu id="wordcloud" label="&papermachines.collectionmenu.wordcloud;" disabled="true">
 			<menupopup id="wordcloud-menu">

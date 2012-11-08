@@ -6,27 +6,34 @@ Paper Machines is an open-source extension for the [Zotero](http://www.zotero.or
 
 ## Prerequisites
 
-In order to run Paper Machines, you will need the following (Python and Java are installed automatically on Mac OS X 10.7 and above):
+In order to run Paper Machines, you will need the following (Python and Java should be installed automatically on Mac OS X 10.6 and above):
 
 * [Zotero](http://www.zotero.org/) with PDF indexing tools installed (see the Search pane of Zotero's Preferences)
-* a corpus of documents with high-quality metadata (recommended: at least 1,000 for topic modeling purposes)
-* Python 2.7 ([download page](http://www.python.org/download/releases/2.7.3)) \[N.B. Mac OS 10.6 users must download this version of Python\]
+* a corpus of documents with full text PDF/HTML and high-quality metadata (recommended: at least 1,000 for topic modeling purposes)
+* Python ([download page](http://www.python.org/download/releases/2.7.3))
 * Java ([download page](http://java.com/en/download/index.jsp))
 
 ## Installation
-Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.2.15.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
+Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.2.16.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
 
 ## Usage
 To begin, right-click (control-click for Mac) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization. Once these processes have been run, selecting "Export Output of Paper Machines..." will allow you to choose which visualizations to export.
 
 ### Word Cloud
-Displays words scaled according to the frequency of their occurrence. An [oft-maligned](http://www.niemanlab.org/2011/10/word-clouds-considered-harmful/), but still arguably useful way to get a quick impression of the most common words in your collection. Either a basic word cloud, a word cloud with [tf*idf](http://en.wikipedia.org/wiki/Tf*idf) filtering to remove unimportant words, or multiple word clouds (divided up by subcollection or time interval, specified in days) can be generated. The multiple word clouds can be filtered using tf*idf, [Dunning's log-likelihood](http://wordhoard.northwestern.edu/userman/analysis-comparewords.html#loglike), or [Mann-Whitney U](http://tedunderwood.wordpress.com/2011/11/09/identifying-the-terms-that-characterize-an-author-or-genre-why-dunnings-may-not-be-the-best-method/) tests, each of which will provide different results depending on the data. By default, a basic word cloud will appear in the Tags pane of Zotero once text has been extracted.
+Displays words scaled according to the frequency of their occurrence. An [oft-maligned](http://www.niemanlab.org/2011/10/word-clouds-considered-harmful/), but still arguably useful way to get a quick impression of the most common words in your collection. Either a basic word cloud, a word cloud with <a href="http://en.wikipedia.org/wiki/Tf*idf">tf*idf</a> filtering to remove unimportant words, or multiple word clouds (divided up by subcollection or time interval, specified in days) can be generated. The multiple word clouds can be filtered using tf*idf, [Dunning's log-likelihood](http://wordhoard.northwestern.edu/userman/analysis-comparewords.html#loglike), or [Mann-Whitney U](http://tedunderwood.wordpress.com/2011/11/09/identifying-the-terms-that-characterize-an-author-or-genre-why-dunnings-may-not-be-the-best-method/) tests, each of which will provide different results depending on the data. By default, a basic word cloud will appear in the Tags pane of Zotero once text has been extracted.
 
 ### Phrase Net
 Finds phrases that follow a certain pattern, such as "x and y," and displays the most common pairings. This method is derived from a [Many Eyes visualization](http://www-958.ibm.com/software/data/cognos/manyeyes/page/Phrase_Net.html)).
 
-### Geoparser
-Generates a map linking texts to the places they mention, filtered by time. This uses Yahoo!'s Placemaker service, and is limited to the first 50k of each file (approximately 10,000 words per text).
+### Mapping
+#### Flight Paths
+Generates a map linking texts from their places of publication to the places they mention, filtered by time. This uses Yahoo!'s Placemaker service, and is limited to the first 50k of each file (approximately 10,000 words per text).
+
+#### Heatmap
+Generates a map showing regions of relative intensity for mentions in the text; uses Placemaker data to generate a gradient, rather than distinct cities as in the flight path visualization.
+
+#### Export Geodata to CSV
+Creates a CSV file with place name, latitude/longitude, the Zotero item ID number, and some context around the mention.
 
 ### DBpedia Annotation
 Annotates files using the DBpedia Spotlight service, providing a look at what named entities (people, places, organizations, etc.) are mentioned in the texts. Entities are scaled according to the frequency of their occurrence.
