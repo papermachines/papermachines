@@ -67,10 +67,10 @@
 			<div id="heatmapArea">
 			
 			</div>
-<!-- 			<div id="configArea">
-				<h2>Sidenotes</h2>
-				This is a demonstration of a canvas heatmap gmaps overlay<br /><br />
-			</div> -->
+
+			<div id="configArea">
+				<div id="togLegend" class="btn">Toggle Legend</div>
+			</div>
 			
 </div>
 <script type="text/javascript" src="support/heatmap.js"></script>
@@ -84,7 +84,8 @@ window.onload = function(){
 
 	var myLatlng = new google.maps.LatLng(-15.6778, -47.4384);
 	var myOptions = {
-	  zoom: 3,
+	  zoom: 2,
+	  minZoom: 2,
 	  center: myLatlng,
 	  mapTypeId: google.maps.MapTypeId.ROADMAP,
 	  disableDefaultUI: false,
@@ -97,8 +98,17 @@ window.onload = function(){
 	};
 	map = new google.maps.Map(document.getElementById("heatmapArea"), myOptions);
 	
-	heatmap = new HeatmapOverlay(map, {"radius":15, "visible":true, "opacity":60});
+	heatmap = new HeatmapOverlay(map, {"radius":15, "visible":true, "opacity":60, "legend": {
+                            "title": "Mentions in Corpus",
+                            "position": "br",
+                            "offset": 30
+                        }});
 	
+	document.getElementById("togLegend").onclick = function(){
+		var legend = heatmap.heatmap.get("legend").get("element");
+		legend.hidden = !legend.hidden;
+	};
+
     var myData = INTENSITY;
 	
 	// this is important, because if you set the data set too early, the latlng/pixel projection doesn't work

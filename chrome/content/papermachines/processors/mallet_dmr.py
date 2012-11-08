@@ -171,11 +171,11 @@ class MalletDMR(mallet_lda.MalletLDA):
 				self.topic_words[topic][k] /= total
 
 		top_N = 20
-		top_topic_words = {x: {word: y[word] for word in self.argsort(y, reverse=True)[:top_N]} for x, y in self.topic_words.iteritems()}
+		top_topic_words = dict((x, dict((word, y[word]) for word in self.argsort(y, reverse=True)[:top_N])) for x, y in self.topic_words.iteritems())
 		wordProbs = [[{'text': word, 'prob': prob} for word, prob in y.iteritems()] for x, y in top_topic_words.iteritems()]
 
 		DEFAULT_DOC_PROPORTIONS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]
-		numDocumentsAtProportions = {topic: {k: 0.0 for k in DEFAULT_DOC_PROPORTIONS} for topic in self.topic_words.keys()}
+		numDocumentsAtProportions = dict((topic, dict((k, 0.0) for k in DEFAULT_DOC_PROPORTIONS) for topic in self.topic_words.keys())
 		for doc, topics in self.doc_topics.iteritems():
 			doc_length = sum(topics.values())
 			for topic, count in topics.iteritems():
@@ -185,9 +185,9 @@ class MalletDMR(mallet_lda.MalletLDA):
 						break
 					numDocumentsAtProportions[topic][min_proportion] += 1
 
-		allocationRatios = {topic: proportions[0.5] / proportions[0.02] for topic, proportions in numDocumentsAtProportions.iteritems()}
+		allocationRatios = dict((topic, proportions[0.5] / proportions[0.02]) for topic, proportions in numDocumentsAtProportions.iteritems())
 
-		labels = {topic: {"label": self.argsort(words, reverse=True)[:3], "fulltopic": wordProbs[topic], "allocation_ratio": allocationRatios[topic]} for topic, words in top_topic_words.iteritems()}
+		labels = dict((topic, {"label": self.argsort(words, reverse=True)[:3], "fulltopic": wordProbs[topic], "allocation_ratio": allocationRatios[topic]}) for topic, words in top_topic_words.iteritems())
 
 		weights_by_topic = []
 		doc_metadata = {}

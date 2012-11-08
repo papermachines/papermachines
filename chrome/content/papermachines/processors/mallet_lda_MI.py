@@ -85,7 +85,7 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
 		self.labels_years_topics = {}
 
 		for label in self.labels:
-			self.labels_years_topics[label] = {i: {} for i in self.intervals}
+			self.labels_years_topics[label] = dict((i, {}) for i in self.intervals)
 
 		for line in file(self.doc_topics):
 			try:
@@ -101,7 +101,7 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
 
 				label = self.metadata[filename]["label"]
 
-				freqs = {int(y[0]): float(y[1]) for y in self.xpartition(values)}
+				freqs = dict((int(y[0]), float(y[1])) for y in self.xpartition(values))
 				main_topic = None
 				topic_max = 0.0
 				for i in freqs.keys():

@@ -127,7 +127,7 @@ class Mallet(textprocessor.TextProcessor):
 			min_score = sorted(tfidf_values, reverse=True)[min(top_terms, len(tfidf_values) - 1)]
 
 		os.rename(self.texts_file, self.texts_file + '-pre_tf-idf')
-		inverse_vocab = {v : k for k, v in vocab.iteritems()}
+		inverse_vocab = dict((v, k) for k, v in vocab.iteritems())
 		new_vocab = {}
 
 		with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:

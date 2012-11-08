@@ -114,7 +114,7 @@ class TextProcessor:
 
 	def write_html(self, user_params):
 		logging.info("writing HTML")
-		params = {"COLLECTION_NAME": self.collection_name, "DOC_METADATA": json.dumps({v["itemID"]: v for k, v in self.metadata.iteritems()})}
+		params = {"COLLECTION_NAME": self.collection_name, "DOC_METADATA": json.dumps(dict((v["itemID"], v) for k, v in self.metadata.iteritems()))}
 		params.update(user_params)
 		try:
 			template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))

@@ -50,7 +50,7 @@ class MultipleWordClouds(wordcloud.WordCloud):
 				else:
 					new_vec[i] = i + 1
 			last_obs = svec[i]
-		ranks = {svec[i]: rank for i, rank in enumerate(new_vec)}
+		ranks = dict((svec[i], rank) for i, rank in enumerate(new_vec))
 		return ranks
 
 	def _mannWhitney(self, A, B):
@@ -176,8 +176,8 @@ class MultipleWordClouds(wordcloud.WordCloud):
 						else:
 							if weight > tf_maxes[term]:
 								tf_maxes[term] = weight
-				tfidf_for_labelset = {term: weight * self.idf[term] for term, weight in tf_maxes.iteritems()}
-				filtered_freqs_for_labelset = {term: freq for term, freq in self.filtered_freqs.iteritems() if term in tfidf_for_labelset}
+				tfidf_for_labelset = dict((term, weight * self.idf[term]) for term, weight in tf_maxes.iteritems())
+				filtered_freqs_for_labelset = dict((term, freq) for term, freq in self.filtered_freqs.iteritems() if term in tfidf_for_labelset)
 				clouds[label] = self._topN(filtered_freqs_for_labelset)
 			else:
 				clouds[label] = self._findWordFreqs(filenames)

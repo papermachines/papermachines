@@ -42,7 +42,7 @@ class MalletClassifierTest(mallet.Mallet):
 			try:
 				line_parts = line.split('\t')
 				filename = line_parts.pop(0)
-				probs = {y[0]: float(y[1]) for y in self.xpartition(line_parts)}
+				probs = dict((y[0], float(y[1])) for y in self.xpartition(line_parts))
 				classifications[filename] = self.argmax(probs)
 			except:
 				logging.error(traceback.format_exc())

@@ -1667,9 +1667,9 @@ Zotero.PaperMachines = {
 
 			if (Zotero.platform == "Win32") {
 				python_name += ".exe";
-				directories = ["C:\\Python27\\"];
+				directories = ["C:\\Python27\\", "C:\\Python26\\"];
 			} else {
-				python_name += "2.7";
+				// python_name += "2.7";
 				directories = ["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"];
 			}
 
@@ -1685,8 +1685,8 @@ Zotero.PaperMachines = {
 			if (python_exe) {
 				Preferences.set("extensions.papermachines.general.python_exe", python_exe);
 			} else {
-				alert("Python not found! Please enter the path to Python 2.7 in the Paper Machines preference window.");
-				Zotero.PaperMachines.ERROR("Python not found! Please enter the path to Python 2.7 in the Paper Machines preference window.");
+				alert(Zotero.PaperMachines.prompts["no_python"]);
+				Zotero.PaperMachines.ERROR(Zotero.PaperMachines.prompts["no_python"]);
 			}
 		}
 		return python_exe;

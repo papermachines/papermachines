@@ -12,7 +12,7 @@ class GeoparserExport(geoparser.Geoparser):
 
 	def _basic_params(self):
 		self.name = "geoparser_export"
-		self.dry_run = True
+		self.dry_run = False
 		self.require_stopwords = False
 
 	def _sanitize_context(self, context):

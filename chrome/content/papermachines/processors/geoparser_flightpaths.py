@@ -30,8 +30,8 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 				if country_sum > max_country_weight:
 					max_country_weight = country_sum
 
-		placeIDsToNames = {k: v["name"] for k, v in self.places_by_woeid.iteritems()}
-		placeIDsToCoords = {k: v["coordinates"] for k, v in self.places_by_woeid.iteritems()}
+		placeIDsToNames = dict((k, v["name"]) for k, v in self.places_by_woeid.iteritems())
+		placeIDsToCoords = dict((k, v["coordinates"]) for k, v in self.places_by_woeid.iteritems())
 
 		linksByYear = {}
 		sources = {}
@@ -74,9 +74,9 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 
 		params = {"PLACEIDSTOCOORDS": json.dumps(placeIDsToCoords),
 			"PLACEIDSTONAMES": json.dumps(placeIDsToNames),
-			"PLACESMENTIONED": json.dumps({k : v["weight"] for k, v in self.places.iteritems() if v["type"] != "Country"}),
+			"PLACESMENTIONED": json.dumps(dict((k, v["weight"]) for k, v in self.places.iteritems() if v["type"] != "Country")),
 			"TEXTSFROMPLACE": json.dumps(sources),
-			"COUNTRIES": json.dumps({v["name"] : v["weight"] for k, v in self.places.iteritems() if v["type"] == "Country"}),
+			"COUNTRIES": json.dumps(dict((v["name"], v["weight"]) for k, v in self.places.iteritems() if v["type"] == "Country")),
 			"MAX_COUNTRY_WEIGHT": str(max_country_weight),
 			"STARTDATE": str(min([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit() and x["year"] != "0000"])),
 			"ENDDATE": str(max([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit()])),

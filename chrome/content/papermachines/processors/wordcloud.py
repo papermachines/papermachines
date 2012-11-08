@@ -49,12 +49,12 @@ class WordCloud(textprocessor.TextProcessor):
 						self.max_tf[stem] = this_tf
 				self.update_progress()
 		n = float(len(self.files))
-		self.idf = {term: math.log10(n/df) for term, df in self.df.iteritems()}
-		self.tfidf = {term: self.max_tf[term] * self.idf[term] for term in self.max_tf.keys()}
+		self.idf = dict((term, math.log10(n/df)) for term, df in self.df.iteritems())
+		self.tfidf = dict((term, self.max_tf[term] * self.idf[term]) for term in self.max_tf.keys())
 		tfidf_values = self.tfidf.values()
 		top_terms = min(int(len(self.freqs.keys()) * 0.7), 5000)
 		min_score = sorted(tfidf_values, reverse=True)[min(top_terms, len(tfidf_values) - 1)]
-		self.filtered_freqs = {term: freq for term, freq in self.freqs.iteritems() if self.tfidf[term] > min_score and self.df[term] > 3}
+		self.filtered_freqs = dict((term, freq) for term, freq in self.freqs.iteritems() if self.tfidf[term] > min_score and self.df[term] > 3)
 
 	def _topN(self, freqs, n = None):
 		if n is None:

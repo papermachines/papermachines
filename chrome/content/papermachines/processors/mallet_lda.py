@@ -66,7 +66,7 @@ class MalletLDA(mallet.Mallet):
 		years = sorted(years)
 		self.intervals = years
 		self.fname_to_interval = fname_to_year
-		self.fname_to_index = {fname: years.index(year) for fname, year in fname_to_year.iteritems()}
+		self.fname_to_index = dict((fname, years.index(year)) for fname, year in fname_to_year.iteritems())
 
 	def process(self):
 		"""
@@ -164,7 +164,7 @@ class MalletLDA(mallet.Mallet):
 
 				doc_metadata[itemid] = {"label": self.metadata[filename]["label"], "title": self.metadata[filename]["title"]}
 
-				freqs = {int(y[0]): float(y[1]) for y in self.xpartition(values)}
+				freqs = dict((int(y[0]), float(y[1])) for y in self.xpartition(values))
 				main_topic = None
 				topic_max = 0.0
 				for i in freqs.keys():

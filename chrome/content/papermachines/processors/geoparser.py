@@ -42,6 +42,8 @@ class Geoparser(textprocessor.TextProcessor):
 					places = []
 					
 					p.find_places(str_to_parse.encode('utf8', 'ignore'))
+					with codecs.open(filename.replace('.txt', '_geoparse.xml'), 'w', encoding='utf8') as xml_file:
+						xml_file.write(p.response.read())
 					for woeid, referenced_place in p.referencedPlaces.iteritems():
 						place = referenced_place["place"]
 						geoparse_obj['places_by_woeid'][woeid] = {'name': place.name, 'type': place.placetype, 'coordinates': [place.centroid.longitude, place.centroid.latitude]}
