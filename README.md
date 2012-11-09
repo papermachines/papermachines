@@ -4,6 +4,8 @@
 
 Paper Machines is an open-source extension for the [Zotero](http://www.zotero.org/) bibliographic management software. Its purpose is to allow individual researchers to generate analyses and visualizations of user-provided corpora, without requiring extensive computational resources or technical knowledge.
 
+This project is a collaboration between historian [Jo Guldi](http://www.joguldi.com) and digital ethnomusicologist [Chris Johnson-Roberson](http://www.chrisjr.org), graciously supported by Google Summer of Code, the William F. Milton Fund, and [metaLAB @ Harvard](http://metalab.harvard.edu/).
+
 ## Prerequisites
 
 In order to run Paper Machines, you will need the following (Python and Java should be installed automatically on Mac OS X 10.6 and above):
@@ -14,7 +16,7 @@ In order to run Paper Machines, you will need the following (Python and Java sho
 * Java ([download page](http://java.com/en/download/index.jsp))
 
 ## Installation
-Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.2.16.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
+Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.2.17.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
 
 ## Usage
 To begin, right-click (control-click for Mac) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization. Once these processes have been run, selecting "Export Output of Paper Machines..." will allow you to choose which visualizations to export.
@@ -54,7 +56,7 @@ This allows you to train the computer to infer the common features of the docume
 Currently, the language stoplist in use, types of data to extract, default parameters for topic modeling, and an experimental periodical import feature (intended for PDFs with OCR and correct metadata) may be adjusted in the preference pane.
 
 ## Acknowledgements
-Thanks to Google Summer of Code for funding this work, and to [Matthew Battles](http://metalab.harvard.edu/people/) and [Jo Guldi](http://www.joguldi.com/) for overseeing it. My gratitude also to the creators of all the open-source projects and services upon which this work relies:
+Special thanks to [Matthew Battles](http://metalab.harvard.edu/people/) for providing space, guidance, and support for me at metaLAB. My gratitude also to the creators of all the open-source projects and services upon which this project relies:
 
 * [ColorBrewer](http://colorbrewer2.org/)
 * [d3.js](http://d3js.org/)

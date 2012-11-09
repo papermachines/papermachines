@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-import sys, os, json, csv, re, shutil, logging, traceback, base64, time, codecs
+import sys, os, json, csv, re, shutil, logging, traceback, base64, time, codecs, urllib
 import cPickle as pickle
 from lib.placemaker import placemaker
 from lib.placemaker.placemaker_api import placemaker_api_key
@@ -81,7 +81,9 @@ class GeoparserExport(geoparser.Geoparser):
 				except:
 					logging.info(traceback.format_exc())
 
-		shutil.copyfile(csv_output_filename, self.out_filename)
+		params = {"CSVPATH": csv_output_filename}
+#			"CSVFILEURL": "file://" + urllib.pathname2url(os.path.dirname(csv_output_filename))}
+		self.write_html(params)
 
 		logging.info("finished")
 
