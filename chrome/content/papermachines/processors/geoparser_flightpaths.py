@@ -1,13 +1,11 @@
 #!/usr/bin/env python2.7
 import sys, os, json, logging, traceback, base64, time, codecs
 import cPickle as pickle
-from lib.placemaker import placemaker
-from lib.placemaker.placemaker_api import placemaker_api_key
 import geoparser
 
 class GeoparserFlightPaths(geoparser.Geoparser):
 	"""
-	Geoparsing using Yahoo! Placemaker
+	Visualize geoparser output as "flight paths"
 	"""
 
 	def _basic_params(self):

@@ -1,8 +1,6 @@
 #!/usr/bin/env python2.7
 import sys, os, json, csv, re, shutil, logging, traceback, base64, time, codecs, urllib
 import cPickle as pickle
-from lib.placemaker import placemaker
-from lib.placemaker.placemaker_api import placemaker_api_key
 import geoparser
 
 class GeoparserExport(geoparser.Geoparser):
@@ -25,7 +23,7 @@ class GeoparserExport(geoparser.Geoparser):
 
 		self.run_geoparser()
 
-		header = ["country", "state", "city", "suburb", "lat", "lng", "itemID", "context"]
+		header = ["name", "lat", "lng", "itemID", "context"]
 
 		csv_output_filename = os.path.join(self.out_dir, self.name + self.collection + '.csv')
 		with open(csv_output_filename, 'wb') as f:
@@ -49,28 +47,12 @@ class GeoparserExport(geoparser.Geoparser):
 
 					for woeid, ranges in geoparse_obj["references"].iteritems():
 						place = geoparse_obj["places_by_woeid"][woeid]
-						name, type = place["name"], place["type"]
+						name = place["name"]
 						row_dict = {}
+						row_dict["name"] = name
 						row_dict["itemID"] = itemID
 						row_dict["lat"] = place["coordinates"][1]
 						row_dict["lng"] = place["coordinates"][0]
-						
-						parts = name.split(", ")
-
-						if type == "Town":
-							row_dict["country"] = parts[2]
-							row_dict["state"] = parts[1]
-							row_dict["city"] = parts[0]
-						elif type == "Suburb":
-							row_dict["country"] = parts[3]
-							row_dict["state"] = parts[2]
-							row_dict["city"] = parts[1]
-							row_dict["suburb"] = parts[0]
-						elif type == "State":
-							row_dict["country"] = parts[1]
-							row_dict["state"] = parts[0]
-						else:
-							row_dict["country"] = parts[0]
 
 						offset = 15
 						for context_range in ranges:

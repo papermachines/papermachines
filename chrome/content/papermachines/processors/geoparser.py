@@ -1,14 +1,12 @@
 #!/usr/bin/env python2.7
 import sys, os, json, logging, traceback, base64, time, codecs
 import cPickle as pickle
-from lib.placemaker import placemaker
-from lib.placemaker.placemaker_api import placemaker_api_key
 import textprocessor
 
 
 class Geoparser(textprocessor.TextProcessor):
 	"""
-	Geoparsing using Yahoo! Placemaker -- base class only, do not use!
+	Geoparsing using Europeana service (experimental)
 	"""
 
 	def _basic_params(self):
@@ -16,6 +14,8 @@ class Geoparser(textprocessor.TextProcessor):
 		self.dry_run = False
 		self.require_stopwords = False
 
+	def query_europeana(self, text):
+		
 	def run_geoparser(self):
 		p = placemaker(base64.b64decode(placemaker_api_key))
 		
