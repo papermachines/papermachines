@@ -45,8 +45,8 @@ class GeoparserExport(geoparser.Geoparser):
 					text = codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read()
 					maximum_length = len(text)
 
-					for woeid, ranges in geoparse_obj["references"].iteritems():
-						place = geoparse_obj["places_by_woeid"][woeid]
+					for entityURI, ranges in geoparse_obj["references"].iteritems():
+						place = geoparse_obj["places_by_entityURI"][entityURI]
 						name = place["name"]
 						row_dict = {}
 						row_dict["name"] = name

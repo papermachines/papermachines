@@ -28,8 +28,8 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 				if country_sum > max_country_weight:
 					max_country_weight = country_sum
 
-		placeIDsToNames = dict((k, v["name"]) for k, v in self.places_by_woeid.iteritems())
-		placeIDsToCoords = dict((k, v["coordinates"]) for k, v in self.places_by_woeid.iteritems())
+		placeIDsToNames = dict((k, v["name"]) for k, v in self.places_by_entityURI.iteritems())
+		placeIDsToCoords = dict((k, v["coordinates"]) for k, v in self.places_by_entityURI.iteritems())
 
 		linksByYear = {}
 		sources = {}
