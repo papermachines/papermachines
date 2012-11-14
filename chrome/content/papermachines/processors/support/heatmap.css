@@ -1,0 +1,53 @@
+body, html {
+				margin:0;
+				padding:0;
+				font-family:Arial;
+			}
+			h1 {
+				margin-bottom:10px;
+			}
+			#main {
+				position:relative;
+				width:1020px;
+				padding:20px;
+				margin:auto;
+			}
+			#heatmapArea {
+				position:relative;
+				float:left;
+				width:960px;
+				height:600px;
+				border:1px dashed black;
+			}
+			#configArea {
+				position:relative;
+				float:left;
+				width:200px;
+				padding:15px;
+				padding-top:0;
+				padding-right:0;
+			}
+			.btn {
+				margin-top:25px;
+				padding:10px 20px 10px 20px;
+				-moz-border-radius:15px;
+				-o-border-radius:15px;
+				-webkit-border-radius:15px;
+				border-radius:15px;
+				border:2px solid black;
+				cursor:pointer;
+				color:white;
+				background-color:black;
+			}
+			#gen:hover{
+				background-color:grey;
+				color:black;
+			}
+			textarea{
+				width:260px;
+				padding:10px;
+				height:200px;
+			}
+			h2{
+				margin-top:0;
+			}
