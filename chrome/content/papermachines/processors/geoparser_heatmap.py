@@ -10,7 +10,7 @@ class GeoparserHeatmap(geoparser.Geoparser):
 
 	def _basic_params(self):
 		self.name = "geoparser_heatmap"
-		self.dry_run = True
+		self.dry_run = False
 		self.require_stopwords = False
 
 	def process(self):
