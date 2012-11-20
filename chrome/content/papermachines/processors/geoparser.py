@@ -76,7 +76,7 @@ class Geoparser(textprocessor.TextProcessor):
 					if not os.path.exists(xml_filename):
 						annotation = self.annotate(str_to_parse)
 						with codecs.open(xml_filename, 'w', encoding='utf8') as xml_file:
-							xml_file.write(annotation)
+							xml_file.write(annotation.decode('utf-8'))
 					else:
 						with codecs.open(xml_filename, 'r', encoding='utf8') as xml_file:
 							annotation = xml_file.read()

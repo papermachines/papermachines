@@ -27,7 +27,8 @@ var timeRanges;
 var searchN = 0;
 var graphColors = d3.scale.category10().domain(d3.range(10));
 
-var gradientOpacity = d3.scale.log().clamp(true).range([1,0]);
+var gradientExponentScale = 0.3;
+var gradientOpacity = d3.scale.pow().exponent(gradientExponentScale).clamp(true).range([1,0]);
 
 var legend, showLegend = true;
 var startDate, endDate;
@@ -1205,6 +1206,11 @@ function findTopicProportionAndStdev(i, contributingDocs, data) {
   topicStdevs[i] = Math.sqrt((1.0 / (vals.length - 1.0)) * d3.sum(variances));
 }
 
+function changeGradientScale(val) {
+  gradientExponentScale = val;
+  gradientOpacity.exponent(gradientExponentScale);
+  updateGradient();
+}
 function saveSVG() {
   var xml = "<svg xmlns='http://www.w3.org/2000/svg'><style>";
     for (i in document.styleSheets)

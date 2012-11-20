@@ -12,72 +12,92 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 		self.name = "geoparser_flightpaths"
 		self.dry_run = False
 		self.require_stopwords = False
+		self.template_filename = os.path.join(self.cwd, "templates", "geoparser_flightpaths_gmaps.html")
 
 	def process(self):
 		"""
 		create a JSON file with geographical data extracted from texts
 		"""
 
-		self.run_geoparser()
-
-		max_country_weight = 0
-
-		for place in sorted(self.places.keys()):
-			if self.places[place]["type"] == "Country":
-				country_sum = sum(self.places[place]["weight"].values())
-				if country_sum > max_country_weight:
-					max_country_weight = country_sum
-
-		placeIDsToNames = dict((k, v["name"]) for k, v in self.places_by_entityURI.iteritems())
-		placeIDsToCoords = dict((k, v["coordinates"]) for k, v in self.places_by_entityURI.iteritems())
+		csv_input = os.path.join(self.out_dir, 'geoparser_export' + self.collection + '.csv')
+		if not os.path.exists(csv_input):
+			import geoparser_export
+			subprocessor = geoparser_export.GeoparserExport()
+			subprocessor.process()
 
 		linksByYear = {}
-		sources = {}
+		itemIDToYear = {}
+		places = {}
 
 		for filename in self.files:
-			if self.metadata[filename].get('city') is None or len(self.geo_parsed[filename]) < 2:
+			file_geoparsed = filename.replace(".txt", "_geoparse.json")
+			if os.path.exists(file_geoparsed):
+				try:
+					geoparse_obj = json.load(file(file_geoparsed))
+				except:
+					logging.error("File " + file_geoparsed + " could not be read.")
+					continue
+
+			if geoparse_obj.get('city') is None:
 				continue
 			try:
 				title = os.path.basename(filename)
 				itemID = self.metadata[filename]['itemID']
-				year = self.metadata[filename]['year']
+				if not self.metadata[filename]['year'].isdigit():
+					continue
+				year = int(self.metadata[filename]['year'])
+				if year < 100:
+					year += 1900
+				elif year < 200:
+					year += 1800
+
+				itemIDToYear[itemID] = year
+
 				if year not in linksByYear:
 					linksByYear[year] = {}
-				source = self.metadata[filename]['city']
-				if source != None:
-					if source not in sources:
-						sources[source] = {}
-					if year not in sources[source]:
-						sources[source][year] = 0
-					sources[source][year] += 1
-				targets = self.geo_parsed[filename]
-				for target in targets:
-					edge = str(source) + ',' + str(target)
+				source = geoparse_obj.get('city')
+				places[source] = geoparse_obj["places_by_entityURI"][source]
+				for target in geoparse_obj.get('places'):
+					places[target] = geoparse_obj["places_by_entityURI"][target]
+					edge = ','.join([source, target])
 					if edge not in linksByYear[year]:
-						linksByYear[year][edge] = 0
-					linksByYear[year][edge] += 1
+						linksByYear[year][edge] = {}
+					if itemID not in linksByYear[year][edge]:
+						linksByYear[year][edge][itemID] = 0
+					linksByYear[year][edge][itemID] += 1
 			except:
 				logging.info(traceback.format_exc())
 
 		years = sorted(linksByYear.keys())
-		groupedLinksByYear = []
-
+		groupedLinksByYear = {}
 		for year in years:
-			groupedLinksByYear.append([])
-			for edge in linksByYear[year]:
-				weight = linksByYear[year][edge]
-				source, target = [int(x) for x in edge.split(',')]
-				groupedLinksByYear[-1].append({'source': source, 'target': target, 'year': year, 'weight': weight})
+			groupedLinksByYear[year] = []
+			for edge, text_weights in linksByYear[year].iteritems():
+				weight = sum(text_weights.values())
+				texts = text_weights.keys()
+				source, target = edge.split(',')
+				groupedLinksByYear[year].append({'edge': [source, target], 'texts': texts, 'year': year, 'weight': weight})
 
+		# max_count = 0
+		counts = {}
+		for rowdict in self.parse_csv(csv_input):
+			# coords = ','.join([rowdict["lat"], rowdict["lng"]])
+			itemID = rowdict["itemID"]
+			if itemID not in itemIDToYear:
+				continue
 
-		params = {"PLACEIDSTOCOORDS": json.dumps(placeIDsToCoords),
-			"PLACEIDSTONAMES": json.dumps(placeIDsToNames),
-			"PLACESMENTIONED": json.dumps(dict((k, v["weight"]) for k, v in self.places.iteritems() if v["type"] != "Country")),
-			"TEXTSFROMPLACE": json.dumps(sources),
-			"COUNTRIES": json.dumps(dict((v["name"], v["weight"]) for k, v in self.places.iteritems() if v["type"] == "Country")),
-			"MAX_COUNTRY_WEIGHT": str(max_country_weight),
-			"STARTDATE": str(min([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit() and x["year"] != "0000"])),
-			"ENDDATE": str(max([int(x["year"]) for x in self.metadata.values() if x["year"].isdigit()])),
+			year = itemIDToYear[itemID]
+			entityURI = rowdict["entityURI"]
+			if "counts" not in places[entityURI]:
+				places[entityURI]["counts"] = {}
+			if year not in places[entityURI]["counts"]:
+				places[entityURI]["counts"][year] = 0			
+			places[entityURI]["counts"][year] += 1
+
+		params = {"STARTDATE": str(min(linksByYear.keys())),
+			"ENDDATE": str(max(linksByYear.keys())),
+			"ENTITYURIS": json.dumps(places),
+			"YEARS": json.dumps(years),
 			"LINKS_BY_YEAR": json.dumps(groupedLinksByYear)
 		}
 		self.write_html(params)

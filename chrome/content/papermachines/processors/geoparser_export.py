@@ -23,7 +23,7 @@ class GeoparserExport(geoparser.Geoparser):
 
 		self.run_geoparser()
 
-		header = ["name", "lat", "lng", "itemID", "context"]
+		header = ["name", "lat", "lng", "entityURI", "itemID", "context"]
 
 		csv_output_filename = os.path.join(self.out_dir, self.name + self.collection + '.csv')
 		with open(csv_output_filename, 'wb') as f:
@@ -51,6 +51,7 @@ class GeoparserExport(geoparser.Geoparser):
 						row_dict = {}
 						row_dict["name"] = name
 						row_dict["itemID"] = itemID
+						row_dict["entityURI"] = entityURI
 						row_dict["lat"] = place["coordinates"][1]
 						row_dict["lng"] = place["coordinates"][0]
 
