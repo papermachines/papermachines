@@ -48,6 +48,12 @@ class Geoparser(textprocessor.TextProcessor):
 		geo_parsed = {}
 		places_by_entityURI = {}
 
+		self.cache_filename = os.path.join(self.out_dir, "geoparser.cache")
+		if os.path.exists(self.cache_filename):
+			self.cache = json.load(file(self.cache_filename))
+		else:
+			self.cache = {}
+
 		for filename in self.files:
 			logging.info("processing " + filename)
 			self.update_progress()
@@ -57,13 +63,18 @@ class Geoparser(textprocessor.TextProcessor):
 			if os.path.exists(file_geoparsed):
 				try:
 					geoparse_obj = json.load(file(file_geoparsed))
+					if "places_by_entityURI" in geoparse_obj:
+						continue
+					else:
+						os.remove(file_geoparsed)
 				except:
 					logging.error("File " + file_geoparsed + " could not be read.")
-#					logging.error(traceback.format_exc())
-			elif not self.dry_run:
+					logging.error(traceback.format_exc())
+
+			if not self.dry_run:
 				geoparse_obj = {'places_by_entityURI': {}, 'references': {}}
 				try:
-					# id = self.metadata[filename]['itemID']
+					id = self.metadata[filename]['itemID']
 					str_to_parse = self.metadata[filename]['place']
 					last_index = len(str_to_parse)
 					str_to_parse += codecs.open(filename, 'r', encoding='utf8').read()[0:(48000 - last_index)] #50k characters, shortened by initial place string
@@ -92,6 +103,35 @@ class Geoparser(textprocessor.TextProcessor):
 							if not entityURI in geoparse_obj['references']:
 								geoparse_obj['references'][entityURI] = []
 							geoparse_obj['references'][entityURI].append((reference[0] - last_index, reference[1] - last_index))
+
+					if city is None and self.metadata[filename]['place'] != "":
+						try:
+							query_str = self.metadata[filename]['place']
+							if query_str in self.cache:
+								result = self.cache.get(query_str)
+								if result is not None:
+									geoparse_obj['places_by_entityURI'][result["entityURI"]] = {'name': result["name"], 'type': result["fcodeName"], 'coordinates': [result["lng"], result["lat"]]}
+									places.add(result["entityURI"])
+									city = result["entityURI"]
+							else:
+								search_for = {"q": query_str}
+								query_url = "http://ws.geonames.org/searchJSON?%s" % urllib.urlencode(search_for)
+								result_obj = json.load(urllib2.urlopen(query_url))
+								result_places = result_obj.get("geonames", [])
+								if len(result_places) > 0:
+									result_place = result_places[0]
+									self.cache[query_str] = result_place
+									self.cache[query_str].update({"entityURI": "http://sws.geonames.org/" + str(result_place.get("geonameId")) })
+									result = self.cache[query_str]
+									geoparse_obj['places_by_entityURI'][result["entityURI"]] = {'name': result["name"], 'type': result["fcodeName"], 'coordinates': [result["lng"], result["lat"]]}
+									places.add(result["entityURI"])
+									city = result["entityURI"]
+								else:
+									self.cache[query_str] = None
+								json.dump(self.cache, file(self.cache_filename, 'w'))
+						except:
+							logging.error("No city found for %s" % id)
+							logging.error(traceback.format_exc())
 
 					geoparse_obj['places'] = list(places)
 					geoparse_obj['city'] = city

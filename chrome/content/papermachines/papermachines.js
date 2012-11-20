@@ -1226,7 +1226,7 @@ Zotero.PaperMachines = {
 				var mallet = f.leafName.indexOf("mallet_lda"); 
 				if (mallet != -1 && f.leafName.indexOf(thisID) > mallet) {
 					f.remove(true);
-				} else if (f.leafName.indexOf(thisID + "-") != -1 || f.leafName.indexOf(thisID + "progress.") != -1) {
+				} else if (f.leafName.indexOf(thisID + "-") != -1 || f.leafName.indexOf(thisID + "progress.") != -1 || f.leafName.indexOf(thisID + ".csv") != -1) {
 					f.remove(false);
 				}
 

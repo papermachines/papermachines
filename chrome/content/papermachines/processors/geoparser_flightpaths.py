@@ -25,19 +25,26 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 			subprocessor = geoparser_export.GeoparserExport()
 			subprocessor.process()
 
+		validEntityURIs = {}
 		linksByYear = {}
 		itemIDToYear = {}
 		places = {}
+
+		for rowdict in self.parse_csv(csv_input):
+			validEntityURIs.add(rowdict["entityURI"])
 
 		for filename in self.files:
 			file_geoparsed = filename.replace(".txt", "_geoparse.json")
 			if os.path.exists(file_geoparsed):
 				try:
 					geoparse_obj = json.load(file(file_geoparsed))
+					if not "places_by_entityURI" in geoparse_obj:
+						os.remove(file_geoparsed)
 				except:
 					logging.error("File " + file_geoparsed + " could not be read.")
 					continue
-
+			else:
+				continue
 			if geoparse_obj.get('city') is None:
 				continue
 			try:
@@ -58,13 +65,14 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 				source = geoparse_obj.get('city')
 				places[source] = geoparse_obj["places_by_entityURI"][source]
 				for target in geoparse_obj.get('places'):
-					places[target] = geoparse_obj["places_by_entityURI"][target]
-					edge = ','.join([source, target])
-					if edge not in linksByYear[year]:
-						linksByYear[year][edge] = {}
-					if itemID not in linksByYear[year][edge]:
-						linksByYear[year][edge][itemID] = 0
-					linksByYear[year][edge][itemID] += 1
+					if target in validEntityURIs:
+						places[target] = geoparse_obj["places_by_entityURI"][target]
+						edge = ','.join([source, target])
+						if edge not in linksByYear[year]:
+							linksByYear[year][edge] = {}
+						if itemID not in linksByYear[year][edge]:
+							linksByYear[year][edge][itemID] = 0
+						linksByYear[year][edge][itemID] += 1
 			except:
 				logging.info(traceback.format_exc())
 
