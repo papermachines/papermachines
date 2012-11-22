@@ -3,7 +3,7 @@ import sys, os, logging, tempfile, time, subprocess, math, re, urllib, json, cod
 import xml.etree.ElementTree as et
 from itertools import izip
 import gzip
-from lib.porter2 import stem
+from lib.stemutil import stem
 import mallet_lda
 
 class MalletDMR(mallet_lda.MalletLDA):
@@ -93,11 +93,13 @@ class MalletDMR(mallet_lda.MalletLDA):
 			self.min_df = int(self.named_args["min_df"])
 			self.stemming = self.named_args["stemming"]
 			self.topics = int(self.named_args["topics"])
+			self.lang = int(self.named_args["lang"])
 		else:
 			self.tfidf = True
 			self.min_df = 5
 			self.topics = 50
 			self.stemming = True
+			self.lang = "en"
 
 		self._setup_mallet_instances(tfidf=self.tfidf, stemming=self.stemming)
 

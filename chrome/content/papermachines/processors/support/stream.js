@@ -129,10 +129,10 @@ var layout = d3.layout.stack().offset("silhouette");
 
 topicLabels = {};
 for (i in labels) {
-  if (labels[i].allocation_ratio > 0.0) {
+  // if (labels[i].allocation_ratio > 0.0) {
     topicLabels[i] = labels[i];
     topicLabels[i]["active"] = true;
-  }
+  // }
 }
 
 xAxis = d3.svg.axis()
@@ -1139,9 +1139,6 @@ function updateGradient() {
   });
 
   var gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
-  if (gradientDomain[0] == 0) {
-    gradientDomain[0] = 1; // log scale, cannot be 0
-  }
   gradientOpacity.domain(gradientDomain);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")

@@ -1352,12 +1352,14 @@ Zotero.PaperMachines = {
 			{"name": "burn_in", "type": "text", "pref": "extensions.papermachines.lda.burn_in", "advanced": true},
 			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval", "advanced": true},
 			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha", "advanced": true},
+			{"name": "lang", "type": "text", "pref": "extensions.papermachines.general.lang", "advanced": true}
 		],
 		"mallet_dmr": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
 			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
 			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true},
-			{"name": "features", "type": "text", "value": "decade", "advanced": true}
+			{"name": "features", "type": "text", "value": "decade", "advanced": true},
+			{"name": "lang", "type": "text", "pref": "extensions.papermachines.general.lang", "advanced": true}
 		],
 		"bulk_import": [{"name": "title", "type": "text", "pref": "extensions.papermachines.import.title"},
 			{"name": "pubtitle", "type": "text", "pref": "extensions.papermachines.import.pubtitle"},

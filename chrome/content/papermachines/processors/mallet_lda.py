@@ -84,6 +84,7 @@ class MalletLDA(mallet.Mallet):
 			self.symmetric_alpha = str(self.named_args["symmetric_alpha"]).lower()
 			self.optimize_interval = self.named_args["optimize_interval"]
 			self.burn_in = int(self.named_args["burn_in"])
+			self.lang = self.named_args["lang"]
 		else:
 			self.tfidf = True
 			self.min_df = 5
@@ -93,8 +94,9 @@ class MalletLDA(mallet.Mallet):
 			self.alpha = "50.0"
 			self.beta = "0.01"
 			self.burn_in = 200
-			self.symmetric_alpha = "true"
+			self.symmetric_alpha = "false"
 			self.optimize_interval = 0
+			self.lang = "en"
 
 
 		self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, stemming=self.stemming)
@@ -212,7 +214,7 @@ class MalletLDA(mallet.Mallet):
 				"TOPIC_CORRELATIONS": json.dumps(self.correlations, separators=(',',':'))
 		}
 
-		index = getattr(self, "index", "{}")
+		index = getattr(self, "index", {})
 		params["###INDEX###"] = json.dumps(index, separators=(',',':'))
 
 		self.write_html(params)

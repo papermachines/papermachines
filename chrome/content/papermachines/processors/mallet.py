@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 import sys, os, shutil, logging, tempfile, time, subprocess, math, re, urllib, json, codecs, csv, traceback, platform
 import xml.etree.ElementTree as et
-from lib.porter2 import stem
+from lib.stemutil import stem
 import copy
 import textprocessor
 
@@ -36,7 +36,7 @@ class Mallet(textprocessor.TextProcessor):
 					if self.stemming:
 						prestem = word
 						if word not in self.stemmed:
-							self.stemmed[prestem] = stem(prestem)
+							self.stemmed[prestem] = stem(self, prestem)
 						word = self.stemmed[prestem]
 					count = int(rowdict["WEIGHT"])
 
@@ -61,7 +61,7 @@ class Mallet(textprocessor.TextProcessor):
 						newtext = u''
 						for word in text.split():
 							if word not in self.stemmed:
-								self.stemmed[word] = stem(word)
+								self.stemmed[word] = stem(self, word)
 							newtext += self.stemmed[word] + u' '
 						text = newtext
 					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')

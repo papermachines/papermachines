@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<savoyrules>
+  <step name="pluralreduction" size="2">
+    <rule replacement="r" size="3" suffix="res"/>
+	<rule replacement="s" size="3" suffix="ses"/>
+	<rule replacement="z" size="3" suffix="zes"/>
+	<rule replacement="l" size="3" suffix="les"/>
+	<rule replacement="m" size="2" suffix="ns"/>
+	<rule replacement="el" size="3" suffix="eis"/>
+	<rule replacement="el" size="3" suffix="éis"/>
+	<rule replacement="al" size="3" suffix="ais"/>
+	<rule replacement="ol" size="3" suffix="óis"/>
+	<rule replacement="il" size="3" suffix="is"/>
+	<rule replacement="ão" size="2" suffix="ões"/>	
+	<rule replacement="ao" size="2" suffix="ães"/>
+	<rule replacement="" size="5" suffix="mente"/>
+	<rule replacement="" size="2" suffix="s"/>
+  </step>
+  <step name="femininereduction" size="3">
+	<rule replacement="inho" size="6" suffix="inha"/>
+	<rule replacement="iaco" size="6" suffix="iaca"/>
+	<rule replacement="eiro" size="6" suffix="eira"/>
+	<rule replacement="ão" size="5" suffix="ona"/>
+	<rule replacement="or" size="5" suffix="ora"/>
+	<rule replacement="oso" size="5" suffix="osa"/>
+	<rule replacement="ês" size="5" suffix="esa"/>
+	<rule replacement="ico" size="5" suffix="ica"/>
+	<rule replacement="ido" size="5" suffix="ida"/>
+	<rule replacement="ado" size="5" suffix="ada"/>
+	<rule replacement="ivo" size="5" suffix="iva"/>
+	<rule replacement="imo" size="5" suffix="ama"/>
+	<rule replacement="no" size="5" suffix="na"/>
+  </step>
+  <step name="finalvowel" size="3">
+  <rule replacement="" size="3" suffix="e"/>
+  <rule replacement="" size="3" suffix="a"/>
+  <rule replacement="" size="3" suffix="o"/>
+  </step>
+</savoyrules>

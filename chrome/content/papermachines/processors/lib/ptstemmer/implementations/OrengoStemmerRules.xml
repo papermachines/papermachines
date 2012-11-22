@@ -1,0 +1,693 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<orengorules>
+  <step name="pluralreduction" size="3" exceptions="1">
+    <rule replacement="ão" size="3" suffix="ões"/>
+    <rule replacement="ão" size="1" suffix="ães">
+      <exception>mãe</exception>
+    </rule>
+    <rule replacement="al" size="1" suffix="ais">
+      <exception>cais</exception>
+      <exception>mais</exception>
+    </rule>
+    <rule replacement="el" size="2" suffix="éis"/>
+    <rule replacement="el" size="2" suffix="eis"/>
+    <rule replacement="ol" size="2" suffix="óis"/>
+    <rule replacement="l" size="3" suffix="les"/>
+    <rule replacement="r" size="3" suffix="res"/>
+    <rule replacement="il" size="2" suffix="is">
+      <exception>lápis</exception>
+      <exception>cais</exception>
+      <exception>mais</exception>
+      <exception>crúcis</exception>
+      <exception>biquínis</exception>
+      <exception>pois</exception>
+      <exception>depois</exception>
+      <exception>dois</exception>
+      <exception>leis</exception>
+    </rule>
+    <rule replacement="m" size="1" suffix="ns"/>
+    <rule replacement="" size="2" suffix="s">
+      <exception>aliás</exception>
+      <exception>pires</exception>
+      <exception>lápis</exception>
+      <exception>cais</exception>
+      <exception>mais</exception>
+      <exception>mas</exception>
+      <exception>menos</exception>
+      <exception>férias</exception>
+      <exception>fezes</exception>
+      <exception>pêsames</exception>
+      <exception>crúcis</exception>
+      <exception>gás</exception>
+      <exception>atrás</exception>
+      <exception>moisés</exception>
+      <exception>através</exception>
+      <exception>convés</exception>
+      <exception>ês</exception>
+      <exception>país</exception>
+      <exception>após</exception>
+      <exception>ambas</exception>
+      <exception>ambos</exception>
+      <exception>messias</exception>
+    </rule>
+  </step>
+  <step name="femininereduction" size="3" exceptions="1">
+    <rule replacement="eiro" size="3" suffix="eira">
+      <exception>beira</exception>
+      <exception>cadeira</exception>
+      <exception>frigideira</exception>
+      <exception>bandeira</exception>
+      <exception>feira</exception>
+      <exception>capoeira</exception>
+      <exception>barreira</exception>
+      <exception>fronteira</exception>
+      <exception>besteira</exception>
+      <exception>poeira</exception>
+    </rule>
+    <rule replacement="íaco" size="3" suffix="íaca"/>
+    <rule replacement="inho" size="3" suffix="inha">
+      <exception>rainha</exception>
+      <exception>linha</exception>
+      <exception>minha</exception>
+    </rule>
+    <rule replacement="oso" size="3" suffix="osa">
+      <exception>mucosa</exception>
+      <exception>prosa</exception>
+    </rule>
+    <rule replacement="ico" size="3" suffix="ica">
+      <exception>dica</exception>
+    </rule>
+    <rule replacement="ado" size="2" suffix="ada">
+      <exception>pitada</exception>
+    </rule>
+    <rule replacement="ido" size="3" suffix="ida">
+      <exception>vida</exception>
+    </rule>
+    <rule replacement="ido" size="3" suffix="ída">
+      <exception>recaída</exception>
+      <exception>saída</exception>
+      <exception>dúvida</exception>
+    </rule>
+    <rule replacement="imo" size="3" suffix="ima">
+      <exception>vítima</exception>
+    </rule>
+    <rule replacement="ivo" size="3" suffix="iva">
+      <exception>saliva</exception>
+      <exception>oliva</exception>
+    </rule>
+    <rule replacement="ão" size="3" suffix="ona">
+      <exception>abandona</exception>
+      <exception>lona</exception>
+      <exception>iona</exception>
+      <exception>cortisona</exception>
+      <exception>monótona</exception>
+      <exception>maratona</exception>
+      <exception>acetona</exception>
+      <exception>detona</exception>
+      <exception>carona</exception>
+    </rule>
+    <rule replacement="or" size="3" suffix="ora"/>
+    <rule replacement="ês" size="3" suffix="esa">
+      <exception>mesa</exception>
+      <exception>obesa</exception>
+      <exception>princesa</exception>
+      <exception>turquesa</exception>
+      <exception>ilesa</exception>
+      <exception>pesa</exception>
+      <exception>presa</exception>
+    </rule>
+    <rule replacement="no" size="4" suffix="na">
+      <exception>carona</exception>
+      <exception>abandona</exception>
+      <exception>lona</exception>
+      <exception>iona</exception>
+      <exception>cortisona</exception>
+      <exception>monótona</exception>
+      <exception>maratona</exception>
+      <exception>acetona</exception>
+      <exception>detona</exception>
+      <exception>guiana</exception>
+      <exception>campana</exception>
+      <exception>grana</exception>
+      <exception>caravana</exception>
+      <exception>banana</exception>
+      <exception>paisana</exception>
+    </rule>
+    <rule replacement="ão" size="2" suffix="ã">
+      <exception>amanhã</exception>
+      <exception>arapuã</exception>
+      <exception>fã</exception>
+      <exception>divã</exception>
+    </rule>
+  </step>
+  <step name="adverbreduction" size="0" exceptions="0">
+    <rule replacement="" size="4" suffix="mente">
+      <exception>experimente</exception>
+    </rule>
+  </step>
+  <step name="augmentativediminutivereduction" size="0" exceptions="1">
+    <rule replacement="" size="5" suffix="abílíssimo"/>
+    <rule replacement="" size="5" suffix="díssimo"/>
+    <rule replacement="c" size="4" suffix="quinho"/>
+    <rule replacement="" size="3" suffix="íssimo"/>
+    <rule replacement="" size="4" suffix="érrimo"/>
+    <rule replacement="" size="3" suffix="adinho"/>
+    <rule replacement="" size="3" suffix="zarrão"/>
+    <rule replacement="" size="2" suffix="zinho"/>
+    <rule replacement="" size="3" suffix="ésimo"/>
+    <rule replacement="" size="4" suffix="uinho"/>
+    <rule replacement="" size="4" suffix="alhão"/>
+    <rule replacement="" size="4" suffix="arraz"/>
+    <rule replacement="" size="4" suffix="arrão"/>
+    <rule replacement="" size="3" suffix="inho">
+      <exception>caminho</exception>
+      <exception>cominho</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="idão"/>
+    <rule replacement="" size="4" suffix="adão"/>
+    <rule replacement="" size="3" suffix="ázio">
+      <exception>topázio</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="arra"/>
+    <rule replacement="" size="4" suffix="uça"/>
+    <rule replacement="" size="4" suffix="aço">
+      <exception>antebraço</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="aça"/>
+    <rule replacement="" size="2" suffix="zão">
+      <exception>coalizão</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ão">
+      <exception>camarão</exception>
+      <exception>chimarrão</exception>
+      <exception>canção</exception>
+      <exception>coração</exception>
+      <exception>embrião</exception>
+      <exception>grotão</exception>
+      <exception>glutão</exception>
+      <exception>ficção</exception>
+      <exception>fogão</exception>
+      <exception>feição</exception>
+      <exception>furacão</exception>
+      <exception>gamão</exception>
+      <exception>lampião</exception>
+      <exception>leão</exception>
+      <exception>macacão</exception>
+      <exception>nação</exception>
+      <exception>órfão</exception>
+      <exception>orgão</exception>
+      <exception>patrão</exception>
+      <exception>portão</exception>
+      <exception>quinhão</exception>
+      <exception>rincão</exception>
+      <exception>tração</exception>
+      <exception>falcão</exception>
+      <exception>espião</exception>
+      <exception>mamão</exception>
+      <exception>folião</exception>
+      <exception>cordão</exception>
+      <exception>aptidão</exception>
+      <exception>campeão</exception>
+      <exception>colchão</exception>
+      <exception>limão</exception>
+      <exception>leilão</exception>
+      <exception>melão</exception>
+      <exception>barão</exception>
+      <exception>milhão</exception>
+      <exception>bilhão</exception>
+      <exception>fusão</exception>
+      <exception>cristão</exception>
+      <exception>ilusão</exception>
+      <exception>capitão</exception>
+      <exception>estação</exception>
+      <exception>senão</exception>
+    </rule>
+  </step>
+  <step name="nounreduction" size="0" exceptions="0">
+    <rule replacement="" size="4" suffix="encialista"/>
+    <rule replacement="" size="5" suffix="abilidade"/>
+    <rule replacement="" size="4" suffix="icionista"/>
+    <rule replacement="" size="5" suffix="cionista"/>
+    <rule replacement="" size="3" suffix="alístico"/>
+    <rule replacement="" size="5" suffix="ionista"/>
+    <rule replacement="" size="5" suffix="ividade"/>
+    <rule replacement="" size="4" suffix="iamento"/>
+    <rule replacement="" size="4" suffix="alizado"/>
+    <rule replacement="" size="4" suffix="atizado"/>
+    <rule replacement="" size="4" suffix="ivismo"/>
+    <rule replacement="" size="4" suffix="alismo"/>
+    <rule replacement="" size="4" suffix="ástico">
+      <exception>eclesiástico</exception>
+    </rule>
+    <rule replacement="" size="5" suffix="encial"/>
+    <rule replacement="" size="5" suffix="atória"/>
+    <rule replacement="" size="5" suffix="atoria"/>
+    <rule replacement="" size="5" suffix="alista"/>
+    <rule replacement="" size="3" suffix="amento">
+      <exception>firmamento</exception>
+      <exception>fundamento</exception>
+      <exception>departamento</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="imento"/>
+    <rule replacement="" size="4" suffix="áutico"/>
+    <rule replacement="" size="4" suffix="êutico"/>
+    <rule replacement="" size="3" suffix="edouro"/>
+    <rule replacement="" size="3" suffix="queiro"/>
+    <rule replacement="" size="5" suffix="alizaç"/>
+    <rule replacement="" size="5" suffix="atizaç"/>
+    <rule replacement="" size="4" suffix="tizado">
+      <exception>alfabetizado</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="adeiro">
+      <exception>desfiladeiro</exception>
+    </rule>
+    <rule replacement="c" size="4" suffix="quice"/>
+    <rule replacement="" size="3" suffix="ático"/>
+    <rule replacement="" size="5" suffix="ionar"/>
+    <rule replacement="" size="5" suffix="tizaç"/>
+    <rule replacement="" size="5" suffix="idade">
+      <exception>autoridade</exception>
+      <exception>comunidade</exception>
+    </rule>
+    <rule replacement="" size="6" suffix="mento">
+      <exception>firmamento</exception>
+      <exception>elemento</exception>
+      <exception>complemento</exception>
+      <exception>instrumento</exception>
+      <exception>departamento</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="izado">
+      <exception>organizado</exception>
+      <exception>pulverizado</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ativo">
+      <exception>pejorativo</exception>
+      <exception>relativo</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ional"/>
+    <rule replacement="" size="3" suffix="ência"/>
+    <rule replacement="" size="4" suffix="ância">
+      <exception>ambulância</exception>
+    </rule>
+    <rule replacement="" size="5" suffix="izaç">
+      <exception>organizaç</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ário">
+      <exception>voluntário</exception>
+      <exception>salário</exception>
+      <exception>aniversário</exception>
+      <exception>diário</exception>
+      <exception>lionário</exception>
+      <exception>armário</exception>
+    </rule>
+    <rule replacement="" size="6" suffix="ério"/>
+    <rule replacement="" size="5" suffix="auta"/>
+    <rule replacement="" size="6" suffix="énse"/>
+    <rule replacement="" size="4" suffix="esco"/>
+    <rule replacement="" size="2" suffix="ante">
+      <exception>gigante</exception>
+      <exception>elefante</exception>
+      <exception>adiante</exception>
+      <exception>possante</exception>
+      <exception>instante</exception>
+      <exception>restaurante</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="oria">
+      <exception>categoria</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ista"/>
+    <rule replacement="" size="3" suffix="íaco"/>
+    <rule replacement="" size="2" suffix="ável">
+      <exception>afável</exception>
+      <exception>razoável</exception>
+      <exception>potável</exception>
+      <exception>vulnerável</exception>
+    </rule>
+    <rule replacement="" size="5" suffix="ível">
+      <exception>possível</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ente">
+      <exception>freqüente</exception>
+      <exception>alimente</exception>
+      <exception>acrescente</exception>
+      <exception>permanente</exception>
+      <exception>oriente</exception>
+      <exception>aparente</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="inal"/>
+    <rule replacement="" size="4" suffix="tivo">
+      <exception>relativo</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="tico">
+      <exception>político</exception>
+      <exception>eclesiástico</exception>
+      <exception>diagnostico</exception>
+      <exception>prático</exception>
+      <exception>doméstico</exception>
+      <exception>diagnóstico</exception>
+      <exception>idêntico</exception>
+      <exception>alopático</exception>
+      <exception>artístico</exception>
+      <exception>autêntico</exception>
+      <exception>eclético</exception>
+      <exception>crítico</exception>
+      <exception>critico</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="agem">
+      <exception>coragem</exception>
+      <exception>chantagem</exception>
+      <exception>vantagem</exception>
+      <exception>carruagem</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ador"/>
+    <rule replacement="" size="3" suffix="edor"/>
+    <rule replacement="" size="4" suffix="ural"/>
+    <rule replacement="" size="4" suffix="idor">
+      <exception>ouvidor</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="eiro">
+      <exception>desfiladeiro</exception>
+      <exception>pioneiro</exception>
+      <exception>mosteiro</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ismo">
+      <exception>cinismo</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="eza"/>
+    <rule replacement="" size="4" suffix="ico">
+      <exception>tico</exception>
+      <exception>público</exception>
+      <exception>explico</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="dor">
+      <exception>ouvidor</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="sor">
+      <exception>assessor</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="tor">
+      <exception>benfeitor</exception>
+      <exception>leitor</exception>
+      <exception>editor</exception>
+      <exception>pastor</exception>
+      <exception>produtor</exception>
+      <exception>promotor</exception>
+      <exception>consultor</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ice">
+      <exception>cúmplice</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ano"/>
+    <rule replacement="" size="4" suffix="ura">
+      <exception>imatura</exception>
+      <exception>acupuntura</exception>
+      <exception>costura</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ual">
+      <exception>bissexual</exception>
+      <exception>virtual</exception>
+      <exception>visual</exception>
+      <exception>pontual</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ial"/>
+    <rule replacement="vel" size="6" suffix="bil"/>
+    <rule replacement="" size="5" suffix="rio">
+      <exception>voluntário</exception>
+      <exception>salário</exception>
+      <exception>aniversário</exception>
+      <exception>diário</exception>
+      <exception>compulsório</exception>
+      <exception>lionário</exception>
+      <exception>próprio</exception>
+      <exception>stério</exception>
+      <exception>armário</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ivo">
+      <exception>passivo</exception>
+      <exception>possessivo</exception>
+      <exception>pejorativo</exception>
+      <exception>positivo</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="ado">
+      <exception>grado</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ido">
+      <exception>cândido</exception>
+      <exception>consolido</exception>
+      <exception>rápido</exception>
+      <exception>decido</exception>
+      <exception>tímido</exception>
+      <exception>duvido</exception>
+      <exception>marido</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="oso">
+      <exception>precioso</exception>
+    </rule>
+    <rule replacement="" size="5" suffix="vel">
+      <exception>possível</exception>
+      <exception>vulnerável</exception>
+      <exception>solúvel</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="aç">
+      <exception>equaç</exception>
+      <exception>relaç</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="iç">
+      <exception>eleição</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="ês"/>
+    <rule replacement="" size="4" suffix="ez"/>
+    <rule replacement="" size="4" suffix="al">
+      <exception>afinal</exception>
+      <exception>animal</exception>
+      <exception>estatal</exception>
+      <exception>bissexual</exception>
+      <exception>desleal</exception>
+      <exception>fiscal</exception>
+      <exception>formal</exception>
+      <exception>pessoal</exception>
+      <exception>liberal</exception>
+      <exception>postal</exception>
+      <exception>virtual</exception>
+      <exception>visual</exception>
+      <exception>pontual</exception>
+      <exception>sideral</exception>
+      <exception>sucursal</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="or">
+      <exception>motor</exception>
+      <exception>melhor</exception>
+      <exception>redor</exception>
+      <exception>rigor</exception>
+      <exception>sensor</exception>
+      <exception>tambor</exception>
+      <exception>tumor</exception>
+      <exception>assessor</exception>
+      <exception>benfeitor</exception>
+      <exception>pastor</exception>
+      <exception>terior</exception>
+      <exception>favor</exception>
+      <exception>autor</exception>
+    </rule>
+  </step>
+  <step name="verbreduction" size="0" exceptions="0">
+    <rule replacement="" size="2" suffix="aríamo"/>
+    <rule replacement="" size="2" suffix="ássemo"/>
+    <rule replacement="" size="2" suffix="eríamo"/>
+    <rule replacement="" size="3" suffix="iríamo"/>
+    <rule replacement="" size="3" suffix="íssemo"/>
+    <rule replacement="" size="3" suffix="êssemo"/>
+    <rule replacement="" size="2" suffix="áramo"/>
+    <rule replacement="" size="2" suffix="aremo"/>
+    <rule replacement="" size="2" suffix="ariam"/>
+    <rule replacement="" size="3" suffix="aríei"/>
+    <rule replacement="" size="3" suffix="ássei"/>
+    <rule replacement="" size="3" suffix="assem"/>
+    <rule replacement="" size="2" suffix="ávamo"/>
+    <rule replacement="" size="3" suffix="êramo"/>
+    <rule replacement="" size="3" suffix="eremo"/>
+    <rule replacement="" size="3" suffix="eriam"/>
+    <rule replacement="" size="3" suffix="eríei"/>
+    <rule replacement="" size="3" suffix="êssei"/>
+    <rule replacement="" size="3" suffix="essem"/>
+    <rule replacement="" size="3" suffix="íramo"/>
+    <rule replacement="" size="3" suffix="iremo"/>
+    <rule replacement="" size="3" suffix="iriam"/>
+    <rule replacement="" size="3" suffix="iríei"/>
+    <rule replacement="" size="3" suffix="íssei"/>
+    <rule replacement="" size="3" suffix="issem"/>
+    <rule replacement="" size="4" suffix="tizar">
+      <exception>alfabetizar</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="ando"/>
+    <rule replacement="" size="3" suffix="endo"/>
+    <rule replacement="" size="3" suffix="indo"/>
+    <rule replacement="" size="3" suffix="ondo"/>
+    <rule replacement="" size="2" suffix="aram"/>
+    <rule replacement="" size="2" suffix="arde"/>
+    <rule replacement="" size="2" suffix="árei"/>
+    <rule replacement="" size="2" suffix="arei"/>
+    <rule replacement="" size="2" suffix="arão"/>
+    <rule replacement="" size="2" suffix="erão"/>
+    <rule replacement="" size="2" suffix="irão"/>
+    <rule replacement="" size="3" suffix="iona"/>
+    <rule replacement="" size="2" suffix="arem"/>
+    <rule replacement="" size="2" suffix="aria"/>
+    <rule replacement="" size="2" suffix="armo"/>
+    <rule replacement="" size="2" suffix="asse"/>
+    <rule replacement="" size="2" suffix="aste"/>
+    <rule replacement="" size="2" suffix="avam">
+      <exception>agravam</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="ávei"/>
+    <rule replacement="" size="3" suffix="eram"/>
+    <rule replacement="" size="3" suffix="erde"/>
+    <rule replacement="" size="3" suffix="erei"/>
+    <rule replacement="" size="3" suffix="êrei"/>
+    <rule replacement="" size="3" suffix="erem"/>
+    <rule replacement="" size="3" suffix="eria"/>
+    <rule replacement="" size="3" suffix="ermo"/>
+    <rule replacement="" size="3" suffix="esse"/>
+    <rule replacement="" size="3" suffix="este">
+      <exception>faroeste</exception>
+      <exception>agreste</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="íamo"/>
+    <rule replacement="" size="3" suffix="iram"/>
+    <rule replacement="" size="3" suffix="íram"/>
+    <rule replacement="" size="2" suffix="irde"/>
+    <rule replacement="" size="3" suffix="irei">
+      <exception>admirei</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="irem">
+      <exception>adquirem</exception>
+    </rule>
+    <rule replacement="" size="4" suffix="iava">
+      <exception>ampliava</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="iria"/>
+    <rule replacement="" size="3" suffix="irmo"/>
+    <rule replacement="" size="3" suffix="isse"/>
+    <rule replacement="" size="4" suffix="iste"/>
+    <rule replacement="" size="5" suffix="izar">
+      <exception>organizar</exception>
+    </rule>
+    <rule replacement="" size="5" suffix="itar">
+      <exception>acreditar</exception>
+      <exception>explicitar</exception>
+      <exception>estreitar</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="amo"/>
+    <rule replacement="" size="2" suffix="ara">
+      <exception>arara</exception>
+      <exception>prepara</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="ará">
+      <exception>alvará</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="are">
+      <exception>prepare</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="ava">
+      <exception>agrava</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="emo"/>
+    <rule replacement="" size="5" suffix="eou"/>
+    <rule replacement="" size="3" suffix="era">
+      <exception>acelera</exception>
+      <exception>espera</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="erá"/>
+    <rule replacement="" size="3" suffix="ere">
+      <exception>espere</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="iam">
+      <exception>enfiam</exception>
+      <exception>ampliam</exception>
+      <exception>elogiam</exception>
+      <exception>ensaiam</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="íei"/>
+    <rule replacement="" size="3" suffix="imo">
+      <exception>reprimo</exception>
+      <exception>intimo</exception>
+      <exception>íntimo</exception>
+      <exception>nimo</exception>
+      <exception>queimo</exception>
+      <exception>ximo</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ira">
+      <exception>fronteira</exception>
+      <exception>sátira</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="irá"/>
+    <rule replacement="" size="3" suffix="ire">
+      <exception>adquire</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ído"/>
+    <rule replacement="" size="3" suffix="omo"/>
+    <rule replacement="" size="4" suffix="ear">
+      <exception>alardear</exception>
+      <exception>nuclear</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="uei"/>
+    <rule replacement="u" size="5" suffix="uía"/>
+    <rule replacement="" size="2" suffix="ai"/>
+    <rule replacement="" size="2" suffix="am"/>
+    <rule replacement="" size="2" suffix="ar">
+      <exception>azar</exception>
+      <exception>bazaar</exception>
+      <exception>patamar</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ei"/>
+    <rule replacement="" size="2" suffix="em">
+      <exception>alem</exception>
+      <exception>virgem</exception>
+    </rule>
+    <rule replacement="" size="2" suffix="er">
+      <exception>éter</exception>
+      <exception>pier</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="eu">
+      <exception>chapeu</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ia">
+      <exception>estória</exception>
+      <exception>fatia</exception>
+      <exception>acia</exception>
+      <exception>praia</exception>
+      <exception>elogia</exception>
+      <exception>mania</exception>
+      <exception>lábia</exception>
+      <exception>aprecia</exception>
+      <exception>polícia</exception>
+      <exception>arredia</exception>
+      <exception>cheia</exception>
+      <exception>ásia</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="ir">
+      <exception>freir</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="iu"/>
+    <rule replacement="" size="3" suffix="ou"/>
+    <rule replacement="" size="3" suffix="i"/>
+  </step>
+  <step name="vowelremoval" size="0" exceptions="0">
+    <rule replacement="" size="3" suffix="a">
+      <exception>ásia</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="á"/>
+    <rule replacement="" size="3" suffix="e"/>
+    <rule replacement="" size="3" suffix="ê">
+      <exception>bebê</exception>
+    </rule>
+    <rule replacement="" size="3" suffix="o">
+      <exception>ão</exception>
+    </rule>
+    <rule replacement="vel" size="2" suffix="bil"/>
+    <rule replacement="g" size="3" suffix="gue">
+      <exception>gangue</exception>
+      <exception>jegue</exception>
+    </rule>
+  </step>
+</orengorules>
