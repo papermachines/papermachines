@@ -16,7 +16,7 @@ In order to run Paper Machines, you will need the following (Python and Java sho
 * Java ([download page](http://java.com/en/download/index.jsp))
 
 ## Installation
-Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.2.17.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
+Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="https://github.com/downloads/chrisjr/papermachines/papermachines-0.3.0.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
 
 ## Usage
 To begin, right-click (control-click for Mac) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization. Once these processes have been run, selecting "Export Output of Paper Machines..." will allow you to choose which visualizations to export.
@@ -29,10 +29,10 @@ Finds phrases that follow a certain pattern, such as "x and y," and displays the
 
 ### Mapping
 #### Flight Paths
-Generates a map linking texts from their places of publication to the places they mention, filtered by time. This uses Yahoo!'s Placemaker service, and is limited to the first 50k of each file (approximately 10,000 words per text).
+Generates a map linking texts from their places of publication to the places they mention, filtered by time.
 
 #### Heatmap
-Generates a map showing regions of relative intensity for mentions in the text; uses Placemaker data to generate a gradient, rather than distinct cities as in the flight path visualization.
+Generates a map showing regions of relative intensity for mentions in the text. Same as the flight path visualization without the link data; may be more usable on large datasets).
 
 #### Export Geodata to CSV
 Creates a CSV file with place name, latitude/longitude, the Zotero item ID number, and some context around the mention.
@@ -62,9 +62,9 @@ Special thanks to [Matthew Battles](http://metalab.harvard.edu/people/) for prov
 * [d3.js](http://d3js.org/)
 * [d3.layout.cloud.js](https://github.com/jasondavies/d3-cloud)
 * [DBpedia Spotlight](https://github.com/dbpedia-spotlight/dbpedia-spotlight)
+* [Europeana Geoparser](http://europeana-geo.isti.cnr.it/geoparser/geoparsing)
 * [Firefox](http://www.firefox.com/)
 * [html5slider](https://github.com/fryn/html5slider)
 * [MALLET](http://mallet.cs.umass.edu)
-* [python-placemaker](https://github.com/bycoffe/python-placemaker/)
-* [Yahoo! Placemaker](http://developer.yahoo.com/geo/placemaker/)
+* [PTStemmer](http://code.google.com/p/ptstemmer/)
 * [Zotero](http://www.zotero.org/)
