@@ -29,8 +29,9 @@ var graphColors = d3.scale.category10().domain(d3.range(10));
 
 var gradientExponentScale = 0.3;
 var gradientOpacity = d3.scale.pow().exponent(gradientExponentScale).clamp(true).range([1,0]);
+var gradientBox, gradientDomain;
 
-var legend, showLegend = true;
+var legend, showLegend = 2;
 var startDate, endDate;
 var activeTopicLabels = [], inactiveTopicLabels = [];
 var graph = {};
@@ -177,11 +178,11 @@ function transition(toggle) {
   }
   doToggle(toggleState);
 
-  // if (streaming) {
-  //   createGradientScale();
-  // } else {
-  //   d3.select("#gradientScale").remove();
-  // }
+  if (streaming) {
+    createGradientScale();
+  } else {
+    d3.select("#gradientScale").remove();
+  }
 
   updateActiveLabels();
 
@@ -632,7 +633,7 @@ function updateLegend() {
       .attr("id", "legend")
       // .attr("transform", "translate(" + (width/2 - 230 ) + ", 10)")
       .attr("transform", "translate(230,10)")
-      .style("display", showLegend ? "inline" : "none");
+      .style("visibility", showLegend > 1 ? "visible" : "hidden");
   }
 
   var topics = [];
@@ -694,10 +695,13 @@ function legendLabelPositions (d) {
 }
 
 function legendToggle() {
-  showLegend = !showLegend;
+  showLegend = (~~showLegend + 1) % 3; // 0 = all hidden, 1 = show legend, 2 = show legend and supporting docs scale
   updateLegend();
   var legend = d3.select("#legend");
-  legend.style("display", showLegend ? "inline" : "none");
+  legend.style("visibility", showLegend > 0 ? "visible" : "hidden");
+  var gradientScale = d3.select("#gradientScale");
+  gradientScale.style("visibility", showLegend > 1 ? "visible" : "hidden");
+
 }
 
 function setStartParameters() {
@@ -723,8 +727,7 @@ function setStartParameters() {
         }
       }
       else if (i == "legend") { 
-        showLegend = query_obj[i] == "none" ? false : true;
-        // d3.select("#legend").style("display", query_obj[i]);
+        showLegend = parseInt(query_obj[i]);
       } else if (i == "compare") {
         for (var j = 1; j <= query_obj[i]; j++) { compare();}
       } else if (i == "popup") {
@@ -755,7 +758,7 @@ function save() {
     }
   }
   url += "&topics=" + Object.keys(topicLabels).filter(function (d) { return topicLabels[d].active;}).join(",");
-  url += "&legend=" + d3.select("#legend").style("display");
+  url += "&legend=" + showLegend;
   var popups = d3.selectAll(".popupHolder[display=block]");
   if (!popups.empty()) {
     url += "&popup=" + popups.attr("data-year");  
@@ -1068,13 +1071,17 @@ function searchAction() {
 }
 
 function createGradientScale() {
-  var my_range = d3.range(0, 2.2, 0.2);
+  if (!gradientDomain) return;
+  var my_range = d3.range(0, gradientDomain[1] + 0.2, 0.2);
 
   var gradientAxis = d3.svg.axis()
-    .scale(d3.scale.linear().domain([0, 2]).range([0,200]))
-    .ticks(2)
+    .scale(d3.scale.linear().domain([0, gradientDomain[1]]).range([0,200]))
+    .ticks(4)
     .tickFormat(d3.format("d"))
     .tickSize(0);
+
+  d3.select("#gradientScale").remove();
+  defs.select("#gradientScaleGradient").remove();
 
   defs.selectAll("#gradientScaleGradient").data([my_range]).enter().append("svg:linearGradient")
     .attr("id", "gradientScaleGradient")
@@ -1084,21 +1091,23 @@ function createGradientScale() {
     .attr("y2", "0%")
     .selectAll("stop").data(function (d) { return d; })
       .enter().append("svg:stop")
-      .attr("offset", function (d) { return (d * 100.0 / 2) + "%"; })
-      .attr("stop-color", "#000")
-      .attr("stop-opacity", function (d) { return gradientOpacity(d); });
+      .attr("offset", function (d) { return (d * 100.0 / gradientDomain[1]) + "%"; })
+      .attr("stop-color", graphColors.range()[0])
+      .attr("stop-opacity", function (d) { return 1 - gradientOpacity(d); });
 
-  var gradientBox = d3.select("svg").append("svg:g")
+  gradientBox = d3.select("#legendGroup").append("svg:g")
     .attr("id", "gradientScale")
     .attr("width", "200")
     .attr("height", "30")
-   .attr("transform", "translate(" + ((width/2) - 100) + "," + (height - 100) + ")");
+    .attr("transform", "translate(10, 450)");
+
+//  .attr("transform", "translate(" + ((width/2) - 100) + "," + (height - 100) + ")");
   gradientBox.append("svg:text")
     .attr("x", "100")
-    .attr("y", "-16")
+    .attr("y", "-10")
     .style("fill", "#000")
     .attr("text-anchor", "middle")
-    .text("documents");
+    .text("Supporting Documents");
 
   gradientBox.append("svg:rect")
       .attr("width", "200")
@@ -1111,7 +1120,6 @@ function createGradientScale() {
     .style("stroke", "none")
     .attr("transform", "translate(0,20)")
     .call(gradientAxis);
-
 }
 
 function updateGradient() {
@@ -1138,7 +1146,7 @@ function updateGradient() {
     }
   });
 
-  var gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
+  gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
   gradientOpacity.domain(gradientDomain);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")
@@ -1207,6 +1215,7 @@ function changeGradientScale(val) {
   gradientExponentScale = val;
   gradientOpacity.exponent(gradientExponentScale);
   updateGradient();
+  createGradientScale();
 }
 function saveSVG() {
   var xml = "<svg xmlns='http://www.w3.org/2000/svg'><style>";

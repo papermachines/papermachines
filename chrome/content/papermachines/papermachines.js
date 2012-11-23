@@ -76,7 +76,8 @@ Zotero.PaperMachines = {
 				return false;
 			}
 		},
-		"mallet_lda_categorical": function () {
+		"mallet_lda_categorical": function (thisGroupID) {
+			var tags = Zotero.PaperMachines.promptForTags(thisGroupID);
 			var params = Zotero.PaperMachines.promptForProcessParams("mallet_lda");
 			if (params) {
 				return ["json", JSON.stringify(params)];
@@ -84,8 +85,20 @@ Zotero.PaperMachines = {
 				return false;
 			}
 		},
-		"mallet_lda_MI": function () {
-			var thisGroup = Zotero.PaperMachines.getThisGroupID();
+		"mallet_lda_tags": function (thisGroupID) {
+			var tags = Zotero.PaperMachines.promptForTags(thisGroupID);
+			if (!tags) {
+				return false;
+			}
+			var params = Zotero.PaperMachines.promptForProcessParams("mallet_lda");
+			if (params) {
+				params["tags"] = tags;
+				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
+		"mallet_lda_MI": function (thisGroupID) {
 			var query = "SELECT collection from processed_collections WHERE collection = ? AND status = 'done' AND processor = ?;";
 			var procs = ["mallet_lda_jstor", "mallet_lda_categorical", "mallet_lda"];
 			var alreadyProcessed;
@@ -393,7 +406,7 @@ Zotero.PaperMachines = {
 		var additional_args = func_args.slice(1);
 
 		if (processPathParts[0] in Zotero.PaperMachines.processesThatPrompt) {
-			var prompt_result = Zotero.PaperMachines.processesThatPrompt[processPathParts[0]]();
+			var prompt_result = Zotero.PaperMachines.processesThatPrompt[processPathParts[0]](thisGroupID);
 			if (prompt_result) additional_args.push.apply(additional_args, prompt_result);
 			else return;
 		}
@@ -818,6 +831,11 @@ Zotero.PaperMachines = {
 		var sql = "SELECT COUNT(itemID) FROM collection_docs WHERE collection = ? OR collection IN " +
 			"(SELECT child FROM collections WHERE parent = ?);";
 		return this.DB.valueQuery(sql, [itemGroupID, itemGroupID]);
+	},
+	getExtractedItemIDs: function (itemGroupID) {
+		var sql = "SELECT itemID FROM collection_docs WHERE collection = ? OR collection IN " +
+			"(SELECT child FROM collections WHERE parent = ?);";
+		return this.DB.columnQuery(sql, [itemGroupID, itemGroupID]);
 	},
 	hasBeenExtracted: function (itemGroupID) {
 		var sql = "SELECT itemID FROM collection_docs WHERE collection = ? OR collection IN " +
@@ -1402,6 +1420,46 @@ Zotero.PaperMachines = {
 
 		if (params.dataOut != null) {
 			return params.dataOut;
+		} else {
+			return false;
+		}
+	},
+	promptForTags: function (thisGroupID) {
+		var items = [];
+		var itemIDs = Zotero.PaperMachines.getExtractedItemIDs(thisGroupID);
+		var sql = "SELECT tags.name, tags.tagID, COUNT(itemTags.itemID) as 'itemsCounted' FROM tags INNER JOIN itemTags WHERE tags.tagID = itemTags.tagID AND ";
+		var sql_items = "itemID in (";
+		for (var i = 0, n = itemIDs.length - 1; i < n; i++) {
+			sql_items += "?,";
+		}
+		sql_items += "?)";
+
+		sql += sql_items + " GROUP BY itemTags.tagID;";
+
+		var tags = Zotero.DB.query(sql, itemIDs);
+
+		for (var i in tags) {
+			var tag = tags[i];
+			if (tag.itemsCounted > 1) {				
+				items.push({"name": tag.name, "tagID": tag.tagID, "weight": tag.itemsCounted});
+			}
+		}
+
+		items.sort(function(a,b) { return b.weight - a.weight; });
+
+		var params = {"dataIn": {"intro": Zotero.PaperMachines.processNames["select_tags"], "items": items}, "dataOut": null};
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+
+		win.openDialog("chrome://papermachines/content/tags.xul", "", "chrome, dialog, modal, width=400, height=500", params);
+
+		if (params.dataOut != null) {
+			var tags = {};
+			for (var tag in params.dataOut) {
+				var sql = "SELECT itemID FROM itemTags WHERE tagID = ? AND ";
+				tags[params.dataOut[tag]] = Zotero.DB.columnQuery(sql + sql_items + ";", [tag].concat(itemIDs));
+			}
+			return tags;
 		} else {
 			return false;
 		}

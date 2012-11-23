@@ -65,6 +65,10 @@ class TextProcessor:
 		if track_progress:
 			self.track_progress = True
 			self.progress_initialized = False
+		self.post_setup()
+
+	def post_setup(self):
+		pass
 
 	def _basic_params(self):
 		self.name = "textprocessor"

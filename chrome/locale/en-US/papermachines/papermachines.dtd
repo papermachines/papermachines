@@ -23,6 +23,8 @@
 <!ENTITY papermachines.collectionmenu.mallet_lda				"By Time...">
 <!ENTITY papermachines.collectionmenu.mallet_lda_jstor			"By Time (With JSTOR DFR)...">
 <!ENTITY papermachines.collectionmenu.mallet_lda_categorical	"By Subcollection...">
+<!ENTITY papermachines.collectionmenu.mallet_lda_tags		"By Tags...">
+
 <!ENTITY papermachines.collectionmenu.topicmodeling_adv		"Advanced">
 <!ENTITY papermachines.collectionmenu.mallet_lda_MI		"Mutual Information">
 <!ENTITY papermachines.collectionmenu.mallet_dmr		"Dirichlet-Multinomial Regression">

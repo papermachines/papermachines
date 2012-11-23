@@ -74,6 +74,8 @@
 					oncommand="Zotero.PaperMachines.runProcess('mallet_lda_jstor')"/>
 				<menuitem id="mallet_lda_categorical" label="&papermachines.collectionmenu.mallet_lda_categorical;"
 					oncommand="Zotero.PaperMachines.runProcess('mallet_lda_categorical')"/>
+				<menuitem id="mallet_lda_categorical" label="&papermachines.collectionmenu.mallet_lda_tags;"
+					oncommand="Zotero.PaperMachines.runProcess('mallet_lda_tags')"/>
 				<menu id="mallet-adv" label="&papermachines.collectionmenu.topicmodeling_adv;">
 					<menupopup id="mallet-adv-menu">
 					<menuitem id="mallet_lda_MI" label="&papermachines.collectionmenu.mallet_lda_MI;"
