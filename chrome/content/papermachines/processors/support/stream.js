@@ -38,6 +38,7 @@ var graph = {};
 
 var indexTerms = d3.keys(index);
 
+
 var streaming = true,
     my,
     toggleState = categorical ? 2 : 0,
@@ -52,7 +53,6 @@ var maxStdDev = 3;
 var origTopicTimeData,
     dataSummed,
     xAxis,
-    yAxis,
     categories,
     legendLabels,
     topicLabels = null,
@@ -70,14 +70,18 @@ var x = d3.time.scale()
 var xOrdinal = d3.scale.ordinal()
     .rangePoints([100, width - 100]);
 
-var y = d3.scale.linear()
-    .range([height - marginVertical, marginVertical]);
+var y = {"domain": function (range) {
+  for (var i in graph) {
+    graph[i].y.domain(range);
+  }}
+};
 
 var y0, y1;
 
-var line, area, bars;
+var bars;
 
-generateSearch(searchN++);
+generateTimeSearch();
+createGraphObject(0);
 
 var vis = d3.select("#chart")
   .append("svg:svg")
@@ -115,18 +119,6 @@ endDate = graph[0].data[0][graph[0].data[0].length - 1].x;
 x.domain([startDate, endDate]);
 xOrdinal.domain(d3.keys(categories));
 
-line = d3.svg.line()
-  .interpolate("monotone")
-  .x(function(d) { return x(d.x); })
-  .y(function(d) { return y(d.y); });
-
-area = d3.svg.area()
-  .interpolate("monotone")
-  .x(function(d) { return x(d.x); })
-  .y0(function(d) { return y(d.y0); })
-  .y1(function(d) { return y(d.y0 + d.y); });
-
-var layout = d3.layout.stack().offset("silhouette");
 
 topicLabels = {};
 for (i in labels) {
@@ -142,11 +134,6 @@ xAxis = d3.svg.axis()
   .tickSubdivide(5)
   .tickSize(-height, -height);
 
-yAxis = d3.svg.axis()
-  .scale(y)
-  .orient("right")
-  .ticks(5)
-  .tickSize(width, width);
 
 xOrdinalAxis = d3.svg.axis()
   .scale(xOrdinal);
@@ -189,8 +176,14 @@ function transition(toggle) {
   var my_graphs = [];
   for (var i in graph) {
     sumUpData(i, origTopicTimeData);
+    setGraphPositions();
     if (streaming) {
-      graph[i].streamData = layout(graph[i].data);
+      graph[i].streamData = graph[i].layout(graph[i].data);
+    }
+  }
+
+  if (streaming) {
+    for (var i in graph) {
       if (graph[i].active) {
         my_graphs.push(d3.max(graph[i].streamData, function(d) {
             return d3.max(d, function(d) {
@@ -306,14 +299,10 @@ function sumUpData(graphIndex, origData) {
           datum.search = graphIndex;
           datum.y = 0.0;
 
-          if (firstRun) {
-            graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
-          }
+          graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
           e.y.forEach(function (f) {
-            if (firstRun) {
-              graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);              
-            }
             if (graph[graphIndex].searchFilter(f)) {
+              graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);              
               datum.y += f.ratio;
               var label = docMetadata[f.itemID]["label"];
               // if (categorical) {
@@ -344,7 +333,7 @@ function sumUpData(graphIndex, origData) {
     graph[graphIndex].data.forEach(function (d,i) {
       d.forEach(function (e) {
         var docsForYear = graph[graphIndex].contributingDocs[e.x.getFullYear()];
-        var s = (docsForYear ? docsForYear.length : 1) || 1;
+        var s = (docsForYear ? docsForYear.length : 0) || 1;
 
         // s is both the total number of docs in a given year and the sum of all topics
         // for that year
@@ -403,7 +392,8 @@ function sumUpData(graphIndex, origData) {
       var categoriesSorted = d3.keys(categories);
       categoriesSorted.sort();
       categoriesSorted.forEach(function (category) {
-        var s = graph[graphIndex].contributingDocsOrdinal[category].length || 1;
+        var category_docs = graph[graphIndex].contributingDocsOrdinal[category] ? graph[graphIndex].contributingDocsOrdinal[category].length : 0;
+        var s = category_docs || 1;
         for (var i in activeTopics) {
           var datum = categories[category][activeTopics[i]];
           if (datum) {
@@ -448,7 +438,7 @@ function createOrUpdateGraph(i) {
     .style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; })
     .style("stroke-width", streaming ? "0.5" : "1.5")
     .style("stroke-opacity", streaming ? "0.5" : "1.0")
-    .transition().duration(500).attr("d", streaming ? area : line);
+    .transition().duration(500).attr("d", streaming ? graph[i].area : graph[i].line);
 
   graphSelection.style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; });
   var graphEntering = graphSelection.enter();
@@ -461,7 +451,7 @@ function createOrUpdateGraph(i) {
         .style("stroke-dasharray", graph[i].dasharray)
         .on("mouseover", function (d) { highlightTopic(d[0]);})
         .on("mouseout", unhighlightTopic)
-        .attr("d", streaming ? area : line)
+        .attr("d", streaming ? graph[i].area : graph[i].line)
         .append("svg:title")
           .text(function (d) { return topicLabels[d[0].topic]["label"]; });
 
@@ -560,24 +550,27 @@ function refreshAxes() {
   }
 
   if (streaming) {
-    axesGroup.select("g.y.axis").transition().duration(500).style("fill-opacity", 0);
+    axesGroup.selectAll("g.y.axis").transition().duration(500).style("fill-opacity", 0);
     axesGroup.selectAll(".y.axis line").style("stroke-opacity", 0);
   } 
   if (categorical) {
-    axesGroup.select("g.y.axis").remove();
+    axesGroup.selectAll("g.y.axis").remove();
   }
   if (!streaming && !categorical) {
-    if (axesGroup.select("g.y.axis").empty()) {
-      axesGroup.append("svg:g")
-      .attr("class", "y axis")
-      .attr("transform", "translate(-15,0)")
-      .call(yAxis);
-    } else {
-      axesGroup.select("g.y.axis").transition().duration(500).style("fill-opacity", 1).call(yAxis);
-      axesGroup.selectAll(".y.axis line").transition().duration(500).style("stroke-opacity", 1);
+    for (var i in graph) {
+      if (axesGroup.selectAll("g.y.axis graph" +i.toString()).empty()) {
+        axesGroup.append("svg:g")
+        .attr("class", "y axis graph" +i.toString())
+        .attr("transform", "translate(-15,0)")
+        .call(graph[i].yAxis);        
+      } else {
+        axesGroup.select("g.y.axis graph" +i.toString()).transition().duration(500).style("fill-opacity", 1).call(graph[i].yAxis);        
+      }
     }
+    axesGroup.selectAll(".y.axis line").transition().duration(500).style("stroke-opacity", 1);
   }
 }
+
 function toggleTopic(d) {
   if (d3.event) {
     d3.event.preventDefault();
@@ -727,9 +720,9 @@ function setStartParameters() {
         }
       }
       else if (i == "legend") { 
-        showLegend = parseInt(query_obj[i]);
+        showLegend = parseInt(query_obj[i]) || 2;
       } else if (i == "compare") {
-        for (var j = 1; j <= query_obj[i]; j++) { compare();}
+        for (var j = 1; j <= query_obj[i]; j++) { generateSearch(searchN++);}
       } else if (i == "popup") {
         deferUntilSearchComplete.add(getDocsForYear, query_obj[i]);
       } else if (i == "state") {
@@ -739,14 +732,35 @@ function setStartParameters() {
         document.getElementById(i).value = query_obj[i];
       }
     }
-    searchAction();
+    // searchAction();
+  } else {
+    if (typeof tags === "object") {
+      var tag_keys = Object.keys(tags);
+      if (tag_keys && tag_keys.length > 0) {
+        for (var i in tags) {
+          index[i] = tags[i];
+        }
+        var tagsN = tag_keys.length;
+        if (tagsN > 0 && tagsN < 5) {
+          for (var i = 0; i < tagsN; i++) {
+            generateSearch(searchN++, tag_keys[i]);
+          }
+        } 
+      } else {
+        generateSearch(searchN++);
+
+      }
+    } else {
+      generateSearch(searchN++);    
+    }
   }
+  searchAction(); 
 }
 
 function save() {
   var url = "?";
   url += "&state="+(toggleState.toString());
-  url += "&compare="+(searchN - 1).toString();
+  url += "&compare="+(searchN).toString();
 
   var fields = document.getElementsByTagName("input");
   for (i in fields) {
@@ -762,6 +776,15 @@ function save() {
   var popups = d3.selectAll(".popupHolder[display=block]");
   if (!popups.empty()) {
     url += "&popup=" + popups.attr("data-year");  
+  }
+
+  for (var i in graph) {
+    if (graph[i].active && graph[i].queryStr != "") {
+      d3.select("svg").append("text")
+        .text(graph[i].queryStr)
+        .attr("x", 0)
+        .attr("y", graph[i].baseline);
+    }
   }
 
   saveSVG();
@@ -891,7 +914,7 @@ function getSpecifiedDocs(xval, xfunc, xaccessor, contributing) {
     d3.select("#popupHolder" + i).style("display", "block");
     d3.select("#popupHolder" + i).style("left", xfunc(xaccessor(xval)) + "px");      
     d3.select("#popupHolder" + i).style("top", height/2 + "px");
-    d3.select("#popupHolder" + i).attr("data-year", year);
+    d3.select("#popupHolder" + i).attr("data-year", xval);
   }
 }
 
@@ -915,36 +938,72 @@ function createPopup(i) {
   return popupHolder;
 }
 
-function generateSearch(i) {
+function generateTimeSearch() {
   var form = document.createElement("form");
-  form.id = "searchForm" + i;
+  form.id = "searchFormInitial";
+  form.className = "search";
   form.action = "javascript:void(0);";
 
-  if (i == 0) {
-    var searchTimeLabel = document.createElement("label");
-    searchTimeLabel.textContent = "Time:";
+  var searchTimeLabel = document.createElement("label");
+  searchTimeLabel.textContent = "Time:";
+  searchTimeLabel.htmlFor = "searchTime0";
+  searchTimeLabel.className = "searchLabel";
 
-    var searchTime = document.createElement("input");
-    searchTime.type = "text";
-    searchTime.id="searchTime" + i;
-    searchTime.alt="time";
-    searchTime.onchange = searchAction;
+  var searchTime = document.createElement("input");
+  searchTime.type = "text";
+  searchTime.id="searchTime0";
+  searchTime.alt="time";
+  searchTime.className = "searchText";
+  searchTime.onchange = searchAction;
 
-    searchTimeLabel.appendChild(searchTime);
-    form.appendChild(searchTimeLabel);
-  }
+  form.appendChild(searchTimeLabel);
+  form.appendChild(searchTime);
+  document.getElementById("searches").appendChild(form);
+}
 
+function generateSearch(i, initialValue) {
+  var form = document.createElement("form");
+  form.id = "searchForm" + i;
+  form.className = "search";
+  form.action = "javascript:void(0);";
+
+  var searchid = "search" + i;
   var searchLabel = document.createElement("label");
   searchLabel.textContent = "Search " + (i + 1);
+  searchLabel.htmlFor = searchid;
+  searchLabel.className = "searchLabel";
 
   var search = document.createElement("input");
   search.type = "text";
-  search.id="search" + i;
+  search.id = searchid;
   search.alt="enter to search";
+  search.className = "searchText";
+  if (initialValue) search.value = initialValue;
   search.onchange = searchAction;
 
-  searchLabel.appendChild(search);
+  var searchAdd = document.createElement("button");
+  searchAdd.innerHTML = "+";
+  searchAdd.className = "searchAddRemove";
+  searchAdd.type = "button";
+  searchAdd.onclick = function () { generateSearch(searchN++) };
+
   form.appendChild(searchLabel);
+  form.appendChild(search);
+  form.appendChild(searchAdd);
+  if (i != 0) {
+    var searchRemove = document.createElement("button");
+    searchRemove.innerHTML = "-";
+    searchRemove.className = "searchAddRemove";
+    searchRemove.type = "button";
+    searchRemove.onclick = function () {
+      var my_search = document.getElementById("search" + i);
+      my_search.parentNode.parentNode.removeChild(my_search.parentNode);
+      graph[i].active = false;
+      searchN--;      
+      searchAction();
+    };
+    form.appendChild(searchRemove);
+  }
 
   document.getElementById("searches").appendChild(form);
 
@@ -952,6 +1011,7 @@ function generateSearch(i) {
   document.getElementById("popupLayer").appendChild(popup);
   createGraphObject(i);
 }
+
 
 function createGraphObject(i) {
   graph[i] = {'searchFilter': function() { return true; }, 
@@ -962,8 +1022,48 @@ function createGraphObject(i) {
     'dasharray': i == 0 ? "" : 12 / (i+1),
     'contributingDocs': {},
     'contributingDocsOrdinal': {},
-    'baseline': 0
+    'baseline': 0,
+    'y': d3.scale.linear(),
+    'layout': d3.layout.stack().offset("silhouette")
   };
+  graph[i].line = (function (me) {
+    return d3.svg.line()
+      .interpolate("monotone")
+      .x(function(d) { return x(d.x); })
+      .y(function(d) { return me.y(d.y); });
+    })(graph[i]);
+
+  graph[i].area = (function (me) { 
+    return d3.svg.area()
+      .interpolate("monotone")
+      .x(function(d) { return x(d.x); })
+      .y0(function(d) { return me.y(d.y0); })
+      .y1(function(d) { return me.y(d.y0 + d.y); });
+  })(graph[i]);
+
+  graph[i].yAxis = (function (me) {
+    return d3.svg.axis()
+      .scale(me.y)
+      .orient("right")
+      .ticks(5)
+      .tickSize(width, width);
+  })(graph[i]);
+}
+
+function setGraphPositions() {
+  var totalHeight = height - (marginVertical * 2.0);
+  var graphs_active = [];
+  for (var i in graph) {
+    if (graph[i].active) graphs_active.push(i);
+  }
+
+  for (var i = 0, n = graphs_active.length; i < n; i++) {
+    var my_ambit = (totalHeight / n);
+    var my_top = marginVertical + (my_ambit * i);
+    var my_bottom = my_top + my_ambit;
+    graph[graphs_active[i]].y.range([my_bottom, my_top]);
+    graph[graphs_active[i]].baseline = (my_bottom + my_top)/2.0;
+  }
 }
 
 function highlightItem(itemID) {
@@ -999,9 +1099,13 @@ function searchAction() {
 
   var actives = 0;
   for (var i in graph) {
-    graph[i].queryStr = document.getElementById("search" + i).value;
-    if (graph[i].queryStr != "") {
-      actives++;
+    if (document.getElementById("search" + i)) {
+      graph[i].queryStr = document.getElementById("search" + i).value;
+      if (graph[i].queryStr != "") {
+        actives++;
+      }      
+    } else {
+      graph[i].queryStr = "";
     }
   }
   for (var i in graph) {
@@ -1022,17 +1126,21 @@ function searchAction() {
         var originalTerms = graph[i].queryStr.split(" ");
         var terms = {};
         graph[i].results = {};
-        for (var j in originalTerms) {
-          var term = originalTerms[j];
-          if (term in index) {
-            terms[term] = true;
-          } else {
-            for (var k in indexTerms) {
-              if (indexTerms[k].match(term)) {
-                terms[indexTerms[k]] = true;
+        if (graph[i].queryStr in index) {
+          terms[graph[i].queryStr] = true;          
+        } else {
+          for (var j in originalTerms) {
+            var term = originalTerms[j];
+            if (term in index) {
+              terms[term] = true;
+            } else {
+              for (var k in indexTerms) {
+                if (indexTerms[k].match(term)) {
+                  terms[indexTerms[k]] = true;
+                }
               }
             }
-          }
+          }          
         }
         for (var term in terms) {
           for (var j in index[term]) {
@@ -1124,24 +1232,26 @@ function createGradientScale() {
 
 function updateGradient() {
   defs.select("#linearGradientDensity").remove();
-  var docNumbers = [];
+  var docNumbers = [],
       yearsObj = {},
       startYear = startDate.getFullYear(),
       endYear = endDate.getFullYear();
 
   for (var i in graph) {
-    for (var year in graph[i].contributingDocs) {
-      yearsObj[year] = true;
+    if (graph[i].active) {
+      for (var year in graph[i].contributingDocs) {
+        yearsObj[year] = {};
+        graph[i].contributingDocs[year].forEach(function (doc) {
+          yearsObj[year][doc] = true;
+        });
+      }      
     }
   }
   var years = d3.keys(yearsObj);
   years.sort();
   years.forEach(function (year) {
     if (year >= startYear && year < endYear) {
-      var sum = 0;
-      for (var i in graph) {
-        sum += graph[i].contributingDocs[year].length;
-      }
+      var sum = Object.keys(yearsObj[year]).length;
       docNumbers.push({"percentage": 100.0 * (year - startYear) / (endYear - startYear), "value": sum});
     }
   });

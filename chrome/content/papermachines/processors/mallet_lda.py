@@ -211,7 +211,8 @@ class MalletLDA(mallet.Mallet):
 				"TOPIC_COHERENCE": json.dumps(coherence, separators=(',',':')),
 				"TOPIC_PROPORTIONS": json.dumps(self.proportions, separators=(',',':')),
 				"TOPIC_STDEVS": json.dumps(self.stdevs, separators=(',',':')),
-				"TOPIC_CORRELATIONS": json.dumps(self.correlations, separators=(',',':'))
+				"TOPIC_CORRELATIONS": json.dumps(self.correlations, separators=(',',':')),
+				"TAGS": json.dumps(getattr(self, "tags", {}), separators=(',',':'))
 		}
 
 		index = getattr(self, "index", {})

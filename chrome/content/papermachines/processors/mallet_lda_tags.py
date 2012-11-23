@@ -24,6 +24,9 @@ class MalletTagTopics(mallet_lda.MalletLDA):
 					my_tags = [x for x, y in self.tags.iteritems() if int(self.metadata[filename]["itemID"]) in y]
 					if len(my_tags) > 0:
 						self.metadata[filename]["label"] = my_tags[0]
+					else:
+						del self.metadata[filename]
+						self.files.remove(filename)
 
 if __name__ == "__main__":
 	try:

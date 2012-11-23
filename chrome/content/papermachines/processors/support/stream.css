@@ -25,8 +25,11 @@ svg {
   fill: #000;
 }
 button {
-  position: inline;
+  display: inline-block;
 }
+
+
+
 
 #controls {
   position: fixed;
@@ -35,6 +38,27 @@ input {
   display: block;
 }
 
+.search {
+  display: block;
+  clear: both;
+  padding: 5px 0px;
+}
+.searchLabel {
+  display: block;
+  float:left;
+  width: 100%;
+}
+.searchText {
+  float:left;
+  display:inline-block;
+}
+
+.searchAddRemove {
+  height: 20px;
+  width: 20px;
+  padding: 0px;
+  float: left;
+}
 .popupHolder {
   display: none;
   position: fixed;
