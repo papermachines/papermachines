@@ -277,8 +277,6 @@ Zotero.PaperMachines = {
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
 
-		this.java_exe = this.findJavaExecutable();
-
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 
 		this.selectStoplist(stoplist_lang);
@@ -298,6 +296,8 @@ Zotero.PaperMachines = {
 			function(addon) {
 				Zotero.PaperMachines._updateBundledFilesCallback(addon.getResourceURI("").QueryInterface(Components.interfaces.nsIFileURL).file);
 			});
+
+		this.java_exe = this.findJavaExecutable();
 
 		// Connect to (and create, if necessary) papermachines.sqlite in the Zotero directory
 		this.DB = new Zotero.DBConnection('papermachines');
@@ -1734,17 +1734,15 @@ Zotero.PaperMachines = {
 	                            .getService(Components.interfaces.nsIEnvironment);
 			var path = environment.get("PATH"),
 				java_name = "java",
-				directories = [];
+				directories = []
 
 			if (Zotero.platform == "Win32") {
-				java_name += ".exe";
+				java_name += "w.exe";
 
-				var windows_dir = Components.classes["@mozilla.org/file/directory_service;1"]
-                     .getService(Components.interfaces.nsIProperties)
-                     .get("SysD", Components.interfaces.nsIFile).parent.path;
-				directories = [windows_dir];
+				directories = path.split(";");
 			} else {
-				directories = ["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"];
+				directories = path.split(":");
+				directories = directories.concat(["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"]);
 			}
 
 			for (var i = 0, n = directories.length; i < n; i++) {

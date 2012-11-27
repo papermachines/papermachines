@@ -1,6 +1,5 @@
 #!/usr/bin/env python2.7
 import sys, os, json, logging, traceback, base64, time, codecs, urllib, urllib2
-import cPickle as pickle
 from xml.etree import ElementTree as ET
 import textprocessor
 
@@ -25,11 +24,11 @@ class Geoparser(textprocessor.TextProcessor):
 	
 	def get_places(self, xml_string):
 		xml_string = xml_string.replace("\n", " ")
-		elem = ET.fromstring(xml_string, parser=ET.XMLParser(encoding="utf-8"))
+		elem = ET.fromstring(xml_string)
 		annotated = elem.find('annotatedText')
 
 		current_length = 0
-		for entity in annotated.iter():
+		for entity in annotated.getiterator():
 			if entity.tag == 'PLACE':
 				place = {"name": entity.text, "entityURI": entity.get("entityURI"), "latitude": entity.get("latitude"), "longitude": entity.get("longitude")}
 				if entity.text is not None:
