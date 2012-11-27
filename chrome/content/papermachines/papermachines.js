@@ -18,7 +18,8 @@ Zotero.PaperMachines = {
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
-	python_exe: null,
+	java_exe: null,
+	jython_path: null,
 	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparser", "dbpedia", "export-output"],
 	processNames: null, // see locale files
 	prompts: null,
@@ -268,10 +269,15 @@ Zotero.PaperMachines = {
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
 		this.args_dir = this._getOrCreateDir("args");
 
+		var jython = this.processors_dir.clone();
+		jython.append("jython.jar");
+
+		this.jython_path = jython.path;
+
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
 
-		this.python_exe = this.findPythonExecutable();
+		this.java_exe = this.findJavaExecutable();
 
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 
@@ -478,11 +484,12 @@ Zotero.PaperMachines = {
 
 		var observer = new Zotero.PaperMachines.processObserver(processor, processPath, callback);
 
-		var python_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.python_exe);
+		var java_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.java_exe);
+		Zotero.PaperMachines.LOG("running " + procArgs.join(" "));
 
-		Zotero.PaperMachines.LOG("running " + python_exe_file.leafName + " " + procArgs.join(" "));
+		procArgs = ["-jar", this.jython_path].concat(procArgs);
 
-		proc.init(python_exe_file);
+		proc.init(java_exe_file);
 		proc.runAsync(procArgs, procArgs.length, observer);
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
@@ -1667,7 +1674,11 @@ Zotero.PaperMachines = {
 	},
 	ERROR: function (e) {
 		Components.utils.reportError(e);
-		Zotero.debug(e);
+		if (e && e.hasOwnProperty("stack")) {
+			Zotero.PaperMachines.LOG(e.stack);
+		} else {
+			Zotero.debug(e);
+		}
 	},
 	getStringsFromBundle: function () {
 		var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
@@ -1716,40 +1727,43 @@ Zotero.PaperMachines = {
 	 
 	  this._preferencesWindow.focus();
 	},
-	findPythonExecutable: function () { 
-		var python_exe = Preferences.get("extensions.papermachines.general.python_exe");
-		if (!python_exe) {
+	findJavaExecutable: function () { 
+		var java_exe = Preferences.get("extensions.papermachines.general.java_exe");
+		if (!java_exe) {
 			var environment = Components.classes["@mozilla.org/process/environment;1"]
 	                            .getService(Components.interfaces.nsIEnvironment);
 			var path = environment.get("PATH"),
-				python_name = "pythonw",
+				java_name = "java",
 				directories = [];
 
 			if (Zotero.platform == "Win32") {
-				python_name += ".exe";
-				directories = ["C:\\Python27\\", "C:\\Python26\\"];
+				java_name += ".exe";
+
+				var windows_dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                     .getService(Components.interfaces.nsIProperties)
+                     .get("SysD", Components.interfaces.nsIFile).parent.path;
+				directories = [windows_dir];
 			} else {
-				// python_name += "2.7";
 				directories = ["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"];
 			}
 
 			for (var i = 0, n = directories.length; i < n; i++) {
 				var executable = Zotero.PaperMachines._getLocalFile(directories[i]);
-				executable.append(python_name);
+				executable.append(java_name);
 				if (executable.exists()) {
-					python_exe = executable.path;
+					java_exe = executable.path;
 					break;
 				}
 			}
 
-			if (python_exe) {
-				Preferences.set("extensions.papermachines.general.python_exe", python_exe);
+			if (java_exe) {
+				Preferences.set("extensions.papermachines.general.java_exe", java_exe);
 			} else {
-				alert(Zotero.PaperMachines.prompts["no_python"]);
-				Zotero.PaperMachines.ERROR(Zotero.PaperMachines.prompts["no_python"]);
+				alert(Zotero.PaperMachines.prompts["no_java"]);
+				Zotero.PaperMachines.ERROR(Zotero.PaperMachines.prompts["no_java"]);
 			}
 		}
-		return python_exe;
+		return java_exe;
 
 	},
 	evtListener: function (evt) {

@@ -77,7 +77,7 @@
 <!ENTITY papermachines.prefs.general.extract_tags		"Tags">
 <!ENTITY papermachines.prefs.general.extract_standalone	"Extract files without metadata (standalone)">
 <!ENTITY papermachines.prefs.general.download_snapshots	"Download live pages and remote links (can be slow!)">
-<!ENTITY papermachines.prefs.general.python_exe 		"Path to Python executable: ">
+<!ENTITY papermachines.prefs.general.java_exe 		"Path to Java executable: ">
 
 <!ENTITY papermachines.prefs.general.experimental		"Enable Experimental Features">
 

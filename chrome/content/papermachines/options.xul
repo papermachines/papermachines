@@ -19,7 +19,7 @@
     <preference id="pref_extract_standalone" name="extensions.papermachines.general.extract_standalone" type="bool"/>
     <preference id="pref_download_snapshots" name="extensions.papermachines.general.download_snapshots" type="bool"/>
     <preference id="pref_experimental" name="extensions.papermachines.general.experimental" type="bool"/>
-    <preference id="pref_python_exe" name="extensions.papermachines.general.python_exe" type="unichar"/>
+    <preference id="pref_java_exe" name="extensions.papermachines.general.java_exe" type="unichar"/>
   </preferences>
  
    <vbox>
@@ -53,8 +53,8 @@
     </hbox>
 
     <hbox align="center">
-      <label control="python_exe" value="&papermachines.prefs.general.python_exe;"/>
-      <textbox preference="pref_python_exe" id="python_exe" maxlength="100"/>
+      <label control="java_exe" value="&papermachines.prefs.general.java_exe;"/>
+      <textbox preference="pref_java_exe" id="java_exe" maxlength="100"/>
     </hbox>
     <separator class="groove-thin"/>
     <label value="&papermachines.prefs.after_close;"/>
