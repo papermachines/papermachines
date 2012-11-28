@@ -93,7 +93,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 			self.min_df = int(self.named_args["min_df"])
 			self.stemming = self.named_args["stemming"]
 			self.topics = int(self.named_args["topics"])
-			self.lang = int(self.named_args["lang"])
+			self.lang = self.named_args["lang"]
 		else:
 			self.tfidf = True
 			self.min_df = 5
@@ -177,7 +177,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 		wordProbs = [[{'text': word, 'prob': prob} for word, prob in y.iteritems()] for x, y in top_topic_words.iteritems()]
 
 		DEFAULT_DOC_PROPORTIONS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]
-		numDocumentsAtProportions = dict((topic, dict((k, 0.0) for k in DEFAULT_DOC_PROPORTIONS) for topic in self.topic_words.keys())
+		numDocumentsAtProportions = dict((topic, dict((k, 0.0) for k in DEFAULT_DOC_PROPORTIONS)) for topic in self.topic_words.keys())
 		for doc, topics in self.doc_topics.iteritems():
 			doc_length = sum(topics.values())
 			for topic, count in topics.iteritems():
