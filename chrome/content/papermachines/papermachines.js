@@ -170,7 +170,7 @@ Zotero.PaperMachines = {
 
 				var file = false;
 				var _uri = "data:text/html,";
-				var progbar_str = '<html><head><meta http-equiv="refresh" content="2;URL=' + 
+				var progbar_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="2;URL=' + 
 					"'zotero://papermachines/" + path + "'" + '"/></head>' +
 					'<body><progress id="progressBar"/></body></html>';
 				_uri += encodeURIComponent(progbar_str);
@@ -1138,7 +1138,7 @@ Zotero.PaperMachines = {
 
 
 		var collectionName = thisGroup.name || thisGroup.getName();
-		var progbar_str = '<html><head><meta http-equiv="refresh" content="2;URL=' + 
+		var progbar_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="2;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
 			try {
 				progbar_str += '<div>' + Zotero.PaperMachines.processNames[processResult["processor"]] + ': ' + collectionName + '</div>';
@@ -1166,7 +1166,7 @@ Zotero.PaperMachines = {
 		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 		var collectionName = thisGroup.name || thisGroup.getName();
-		var logpage_str = '<html><head><meta http-equiv="refresh" content="20;URL=' + 
+		var logpage_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="20;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
 			try {
 				logpage_str += '<div>' + Zotero.PaperMachines.processNames[processResult["processor"]] + ': ' + collectionName + '</div>';
@@ -1757,7 +1757,10 @@ Zotero.PaperMachines = {
 			if (java_exe) {
 				Preferences.set("extensions.papermachines.general.java_exe", java_exe);
 			} else {
-				alert(Zotero.PaperMachines.prompts["no_java"]);
+				var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                        .getService(Components.interfaces.nsIPromptService);
+ 
+				prompts.alert(null, "No Java executable found", Zotero.PaperMachines.prompts["no_java"]);
 				Zotero.PaperMachines.ERROR(Zotero.PaperMachines.prompts["no_java"]);
 			}
 		}
