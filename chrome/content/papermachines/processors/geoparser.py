@@ -3,7 +3,6 @@ import sys, os, json, logging, traceback, base64, time, codecs, urllib, urllib2
 from xml.etree import ElementTree as ET
 import textprocessor
 
-
 class Geoparser(textprocessor.TextProcessor):
 	"""
 	Geoparsing using Europeana service (experimental)
