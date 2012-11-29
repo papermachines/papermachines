@@ -13,7 +13,7 @@ var setupTest = function() {
 	pm.pm_Setup_Test(controller);
 };
 
-var testExtractText = function () {
-	var menuitem = new elementslib.ID(controller.window.document, "extract_text");
-	controller.click(menuitem)
+var testGeoparserExport = function() {
+	var menuitem = new elementslib.ID(controller.window.document, "geoparser_export");
+	controller.click(menuitem);
 };
