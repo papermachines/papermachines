@@ -1257,7 +1257,7 @@ function updateGradient() {
   });
 
   gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
-  gradientOpacity.domain(gradientDomain);
+  gradientOpacity.domain([0, gradientDomain[1]]);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")
       .attr("id", "linearGradientDensity")
