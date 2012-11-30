@@ -118,6 +118,29 @@ class TextProcessor:
 		elif hasattr(seq, "iteritems"):
 			return sorted(seq.keys(), key=seq.__getitem__, reverse = reverse)
 
+	def set_java_log(self, log_filename):
+		from java.lang import System
+		from java.util import Properties
+		from tempfile import NamedTemporaryFile
+
+		settings = {"handlers": "java.util.logging.FileHandler",
+			".level": "INFO",
+			"java.util.logging.FileHandler.pattern": log_filename,
+			"java.util.logging.FileHandler.limit": "50000",
+			"java.util.logging.FileHandler.count": "1",
+			"java.util.logging.FileHandler.formatter": "cc.mallet.util.PlainLogFormatter"
+		}
+
+		props = Properties()
+		for key, value in settings.iteritems():
+			props.setProperty(key, value)
+		props_file = NamedTemporaryFile(delete = False)
+		props.store(props_file.file, '')
+		props_file.flush()
+		props_file.close()
+
+		System.setProperty("java.util.logging.config.file", props_file.name)
+
 	def write_html(self, user_params):
 		logging.info("writing HTML")
 		params = {"COLLECTION_NAME": self.collection_name, "DOC_METADATA": json.dumps(dict((v["itemID"], v) for k, v in self.metadata.iteritems()))}

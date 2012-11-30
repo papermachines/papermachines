@@ -109,7 +109,7 @@ y.domain([-maxStdDev, maxStdDev]);
 startDate = graph[0].data[0][0].x;
 if (startDate.getFullYear() < 1000) { // probably incorrect
   var i = 0;
-  while (startDate.getFullYear() < 1000 && i < graph[0].data[0].length - 2) {
+  while (startDate.getFullYear() < 1000 && i < graph[0].data[0].length - 1) {
     i++;
     startDate = graph[0].data[0][i].x;
   }
@@ -1257,7 +1257,7 @@ function updateGradient() {
   });
 
   gradientDomain = d3.extent(docNumbers.map(function(d) { return d.value;}));
-  gradientOpacity.domain(gradientDomain);
+  gradientOpacity.domain([0, gradientDomain[1]]);
   var gradients = defs.selectAll("#linearGradientDensity").data([docNumbers]);
   gradients.enter().append("svg:linearGradient")
       .attr("id", "linearGradientDensity")

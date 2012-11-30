@@ -19,7 +19,7 @@ class Mallet(textprocessor.TextProcessor):
 		for rowdict in self.parse_csv(citation_file):
 			doi = rowdict.pop("id")
 			citations[doi] = rowdict
-			self.metadata[doi] = {'title': citations[doi].get("title", ""), 'year': citations[doi].get('pubdate','')[0:4], 'label': "jstor", 'itemID': doi}
+			self.metadata[doi] = {'title': citations[doi].get("title", ""), 'date': citations[doi].get('pubdate',''), 'year': citations[doi].get('pubdate','')[0:4], 'label': "jstor", 'itemID': doi}
 		return citations
 
 	def _import_dfr(self, dfr_dir):
@@ -161,15 +161,11 @@ class Mallet(textprocessor.TextProcessor):
 
 	def _setup_mallet_command(self):
 		self.mallet_cp_dir = os.path.join(self.cwd, "lib", "mallet-2.0.7", "dist")
-		if self.sys == "Windows":
-			classpath_sep = u';'
-		else:
-			classpath_sep = u':'
 
-		self.mallet_classpath = os.path.join(self.mallet_cp_dir, "mallet.jar") + classpath_sep + os.path.join(self.mallet_cp_dir, "mallet-deps.jar")
-
-		self.mallet = "java -Xmx1g -ea -Djava.awt.headless=true -Dfile.encoding=UTF-8".split(' ')
-		self.mallet += ["-classpath", self.mallet_classpath]
+		self.mallet_classpath = [os.path.join(self.mallet_cp_dir, "mallet.jar"), os.path.join(self.mallet_cp_dir, "mallet-deps.jar")]
+		for jar in self.mallet_classpath:
+			if jar not in sys.path:
+				sys.path.append(jar)
 
 		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection)
 
@@ -224,8 +220,7 @@ class Mallet(textprocessor.TextProcessor):
 		with codecs.open(os.path.join(self.mallet_out_dir, "metadata.json"), 'w', encoding='utf-8') as meta_file:
 			json.dump(self.metadata, meta_file)
 
-		import_args = self.mallet + ["cc.mallet.classify.tui.Csv2Vectors", 
-			"--remove-stopwords",
+		import_args = ["--remove-stopwords",
 			"--stoplist-file", self.stoplist, 
 			"--input", self.texts_file,
 			"--line-regex", "^([^\\t]*)[\\t]([^\\t]*)[\\t](.*)$",
@@ -235,7 +230,10 @@ class Mallet(textprocessor.TextProcessor):
 			import_args.append("--keep-sequence")
 
 		if not self.dry_run and not os.path.exists(self.instance_file):
-			import_return = subprocess.call(import_args, stdout=self.progress_file)
+			self.set_java_log(self.progress_filename)
+			from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
+			Csv2Vectors(import_args)
+#			import_return = subprocess.call(import_args, stdout=self.progress_file)
 	
 	def process(self):
 		"""

@@ -106,8 +106,9 @@ class MalletLDA(mallet.Mallet):
 			'topic-keys': os.path.join(self.mallet_out_dir, "topic-keys.txt"),
 			'word-topics': os.path.join(self.mallet_out_dir, "word-topics.txt"),
 			'diagnostics-file': os.path.join(self.mallet_out_dir, "diagnostics-file.txt")}
-		process_args = self.mallet + ["cc.mallet.topics.tui.TopicTrainer",
-			"--input", self.instance_file,
+		from cc.mallet.topics.tui.TopicTrainer import main as TopicTrainer
+
+		process_args = ["--input", self.instance_file,
 			"--num-topics", str(self.topics),
 			"--num-iterations", str(self.iterations),
 			"--optimize-interval", str(self.optimize_interval),
@@ -125,7 +126,8 @@ class MalletLDA(mallet.Mallet):
 
 		start_time = time.time()
 		if not self.dry_run:
-			lda_return = subprocess.call(process_args, stdout=self.progress_file, stderr=self.progress_file)
+			self.set_java_log(self.progress_filename)
+			TopicTrainer(process_args)
 
 		logging.info("LDA complete in " + str(time.time() - start_time) + " seconds")
 
@@ -134,12 +136,12 @@ class MalletLDA(mallet.Mallet):
 		allocationRatios = {}
 		with file(self.mallet_files['diagnostics-file']) as diagnostics:
 			tree = et.parse(diagnostics)
-			for elem in tree.iter("topic"):
+			for elem in tree.getiterator("topic"):
 				topic = elem.get("id")
 				coherence[topic] = float(elem.get("coherence"))
 				allocationRatios[topic] = float(elem.get("allocation_ratio"))
 				wordProbs[topic] = []
-				for word in elem.iter("word"):
+				for word in elem.getiterator("word"):
 					wordProbs[topic].append({'text': word.text, 'prob': word.get("prob")})
 
 		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in file(self.mallet_files['topic-keys']).readlines()]}
