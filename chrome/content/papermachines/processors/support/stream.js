@@ -40,13 +40,16 @@ var indexTerms = d3.keys(index);
 
 
 var streaming = true,
+    stacked = false,
     my,
-    toggleState = categorical ? 2 : 0,
+    toggleState = categorical ? 3 : 0,
     width = 960,
     height = 500,
     smoothing = "mean",
     windowSize = 4,
     wordClouds = {};
+
+var graphTypes = {0: "stream", 1: "stacked area", 2: "line (std. dev. from mean)", 3: "categorical"};
 
 var maxStdDev = 3;
 
@@ -57,8 +60,13 @@ var origTopicTimeData,
     legendLabels,
     topicLabels = null,
     topicLabelsSorted,
+    sortMetric = 0, 
     total = 1;
 
+var sortMetrics = {0: {"text": "most variable"},
+  1: {"text": "most common"},
+  2: {"text": "most coherent"}
+};
 var dateParse = d3.time.format("%Y").parse;
 
 var offsetLeft = 0,
@@ -80,6 +88,8 @@ var y0, y1;
 
 var bars;
 
+createMenuOfGraphs();
+createSortingMenu();
 generateTimeSearch();
 createGraphObject(0);
 
@@ -143,27 +153,129 @@ mostVariantTopics(5);
 transition();
 setStartParameters();
 
+function onGraphSelect() {
+  var selectObj = document.getElementById("graphSelector");
+  var idx = selectObj.selectedIndex;
+  toggleState = parseInt(selectObj.options[idx].value);
+  transition();
+}
+function selectGraphState(state) {
+  var sel = document.getElementById("graphSelector");
+  for (var i in sel.options) {
+    var val = parseInt(sel.options[i].value);
+    if (val == state) {
+      sel.selectedIndex = i;
+    }
+  }
+}
+function createMenuOfGraphs () {
+  var sel = document.createElement("select");
+  sel.id = "graphSelector";
+  sel.onchange = onGraphSelect;
+
+  var graphTypeKeys = Object.keys(graphTypes);
+  graphTypeKeys.sort();
+  graphTypeKeys.forEach(function(type) {
+    var opt = document.createElement("option");
+    opt.value = type;
+    opt.text = graphTypes[type];
+    sel.add(opt, null);
+  });
+
+  var div = document.createElement("div");
+  var label = document.createElement("div");
+  var labeltext = document.createTextNode("Graph type:");
+  label.style.float = "left";
+  label.appendChild(labeltext);
+  div.appendChild(label);
+  div.appendChild(sel);
+  document.getElementById("searches").appendChild(div);
+}
+
+function onSortSelect() {
+  var selectObj = document.getElementById("sortSelector");
+  var idx = selectObj.selectedIndex;
+  sortMetric = parseInt(selectObj.options[idx].value);
+  topicLabelsSorted = Object.keys(topicLabels).sort(sortMetrics[sortMetric]["func"]);
+
+  updateActiveLabels();
+  updateLegend();
+}
+
+function selectSortMetric(metric) {
+  var sel = document.getElementById("sortSelector");
+  for (var i in sel.options) {
+    var val = parseInt(sel.options[i].value);
+    if (val == metric) {
+      sel.selectedIndex = i;
+    }
+  }
+}
+
+
+function createSortingMenu () {
+  var sel = document.createElement("select");
+  sel.id = "sortSelector";
+  sel.onchange = onSortSelect;
+
+  var sortMetricKeys = Object.keys(sortMetrics);
+  sortMetricKeys.sort();
+  sortMetricKeys.forEach(function(type) {
+    var opt = document.createElement("option");
+    opt.value = type;
+    opt.text = sortMetrics[type]["text"];
+    sel.add(opt, null);
+  });
+
+  var div = document.createElement("div");
+  var label = document.createElement("div");
+  var labeltext = document.createTextNode("Sort topics by:");
+  label.style.float = "left";
+  label.appendChild(labeltext);
+  div.appendChild(label);
+  div.appendChild(sel);
+  document.getElementById("searches").appendChild(div);
+}
+
+
 function doToggle(state) {
   switch(state) {
-    case 0:
+    case 0: // streamgraph 
       streaming = true;
+      stacked = false;
       categorical = false;
       break;
-    case 1:
-      streaming = false;
+    case 1: // stacked area graph
+      streaming = true;
+      stacked = true;
       categorical = false;
       break;
-    case 2:
+    case 2: // line graph of standard deviations
       streaming = false;
+      stacked = false;
+      categorical = false;
+      break;
+    case 3: // bar graph of each subcategory
+      streaming = false;
+      stacked = false;
       categorical = true;
   }
 }
-function transition(toggle) {
-  if (toggle) toggleState = (toggleState + 1) % 3; 
-  if (toggleState == 2 && d3.keys(categories).length > 50) {
+function transition() {
+  if (toggleState == 3 && d3.keys(categories).length > 50) {
     toggleState = 0;
   }
   doToggle(toggleState);
+
+  for (var i in graph) {
+    if (streaming && !stacked) {
+      graph[i].layout.offset("silhouette");
+    }
+    else if (stacked) {
+      graph[i].layout.offset("zero");
+    }
+  }
+
 
   if (streaming) {
     createGradientScale();
@@ -199,6 +311,7 @@ function transition(toggle) {
   my = d3.max(my_graphs);
 
   if (!streaming) y.domain([-maxStdDev,maxStdDev]);
+  else if (stacked) y.domain([0,1]);
   else y.domain([0, my]);
 
   resetColors();
@@ -509,7 +622,7 @@ function createCategoricalGraph (i) {
 }
 
 function highlightTopic(e) {
-  return;
+//  return;
   var topic = e.topic;
   for (i in graph) {
     var series = graphGroup.selectAll("path.line.graph" + i.toString());
@@ -520,7 +633,7 @@ function highlightTopic(e) {
 }
 
 function unhighlightTopic() {
-  return;
+//  return;
   for (i in graph) {
     var series = graphGroup.selectAll("path.line.graph" + i.toString());
     series.style(streaming ? "fill-opacity" : "stroke-opacity", graph[i].defaultOpacity);
@@ -659,7 +772,7 @@ function updateLegend() {
       .attr("dy", "0.5em")
       .text(function(d) { return d.label})
       .append("svg:title")
-      .text(function(d) { return d.topic;});
+      .text(function(d) { return (topicProportions[d.topic]*100.0).toFixed(2) + "% of corpus";});
 
   legendGroup.selectAll(".legend.label").transition().duration(500).attr("transform", legendLabelPositions)
       .style("fill-opacity", function (d) { return (d.active) ? 1.0 : 0.3;}); 
@@ -727,7 +840,10 @@ function setStartParameters() {
         deferUntilSearchComplete.add(getDocsForYear, query_obj[i]);
       } else if (i == "state") {
         toggleState = parseInt(query_obj[i]);
-        doToggle(toggleState);
+        selectGraphState(toggleState);
+      } else if (i == "sort") {
+        sortMetric = parseInt(query_obj[i]);
+        selectSortMetric(sortMetric);
       } else if (document.getElementById(i)) {
         document.getElementById(i).value = query_obj[i];
       }
@@ -761,6 +877,7 @@ function save() {
   var url = "?";
   url += "&state="+(toggleState.toString());
   url += "&compare="+(searchN).toString();
+  url += "&sort="+(sortMetric).toString();
 
   var fields = document.getElementsByTagName("input");
   for (i in fields) {
@@ -822,6 +939,12 @@ function mostCommonTopics(n) {
 function mostVariantTopics(n) {
   nMostTopicsByMetric(n, stdevSort)
 }
+
+
+sortMetrics[0]["func"] = stdevSort;
+sortMetrics[1]["func"] = prevalenceSort;
+sortMetrics[2]["func"] = topicCoherenceSort;
+
 function topNCorrelatedTopicPairs(n) {
   var keys = d3.keys(topicCorrelations);
   var values = d3.values(topicCorrelations);
