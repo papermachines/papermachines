@@ -25,7 +25,7 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 			subprocessor = geoparser_export.GeoparserExport()
 			subprocessor.process()
 
-		validEntityURIs = {}
+		validEntityURIs = set()
 		linksByYear = {}
 		itemIDToYear = {}
 		places = {}
