@@ -1667,7 +1667,11 @@ Zotero.PaperMachines = {
 	},
 	ERROR: function (e) {
 		Components.utils.reportError(e);
-		Zotero.debug(e);
+		if (e && e.hasOwnProperty("stack")) {
+			Zotero.PaperMachines.LOG(e.stack);
+		} else {
+			Zotero.debug(e);
+		}
 	},
 	getStringsFromBundle: function () {
 		var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
