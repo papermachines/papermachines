@@ -51,6 +51,8 @@ class Mallet(textprocessor.TextProcessor):
 	def _import_files(self):
 		if self.stemming:
 			self.stemmed = {}
+		if not getattr(self, "tfidf", False):
+			self.index = {}
 		self.docs = []
 		with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
 			for filename in self.files:
@@ -64,6 +66,11 @@ class Mallet(textprocessor.TextProcessor):
 								self.stemmed[word] = stem(self, word)
 							newtext += self.stemmed[word] + u' '
 						text = newtext
+					if not self.tfidf: # need to build index
+						for word in text.split():
+							if not word in self.index:
+								self.index[word] = []
+							self.index[word].append(self.metadata[filename]["itemID"])
 					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
 					self.docs.append(filename)
 			if self.dfr:
