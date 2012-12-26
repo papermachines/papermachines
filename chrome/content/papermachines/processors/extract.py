@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 import sys, os, json, re, cStringIO, logging, traceback, codecs, urllib, subprocess
+from lib.classpath import classPathHacker
 from HTMLParser import HTMLParser
 import textprocessor
 
@@ -27,10 +28,18 @@ class Extract(textprocessor.TextProcessor):
     """
     Extract text from PDF or HTML files
     """
+    import java.io.File
 
     def _basic_params(self):
         self.name = "extract"
         self.pdftotext = self.extra_args[0]
+        jarLoad = classPathHacker()
+        tikaPath = os.path.join(self.cwd, "lib", "tika-app-1.2.jar")
+        if os.path.exists(tikaPath):
+            jarLoad.addFile(tikaPath)
+            from org.apache.tika import Tika
+            self.tika = Tika()
+
 
     def process(self):
         logging.info("starting to process")
@@ -55,6 +64,17 @@ class Extract(textprocessor.TextProcessor):
                         text += codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read()
                     elif filename.lower().endswith(".html"):
                         text += strip_tags(filename)
+                    elif filename.lower().endswith(".doc") or filename.lower().endswith(".docx"):
+                        if getattr(self, "tika", None) is not None:
+                            txtfile = self.java.io.File(filename)
+                            b = self.tika.parse(txtfile)
+                            d = u""
+                            c = b.read()
+                            while c > 0:
+                                d += unichr(c)
+                                c = b.read()
+                            b.close()
+                            text += d
                     elif filename.lower().endswith(".pdf"):
                         import_args = [self.pdftotext, '-enc', 'UTF-8', '-nopgbrk', filename, '-']
                         import_proc = subprocess.Popen(import_args, stdout = subprocess.PIPE)

@@ -78,7 +78,6 @@ Zotero.PaperMachines = {
 			}
 		},
 		"mallet_lda_categorical": function (thisGroupID) {
-			var tags = Zotero.PaperMachines.promptForTags(thisGroupID);
 			var params = Zotero.PaperMachines.promptForProcessParams("mallet_lda");
 			if (params) {
 				return ["json", JSON.stringify(params)];
@@ -953,6 +952,7 @@ Zotero.PaperMachines = {
 		var gettingTags = Preferences.get("extensions.papermachines.general.extract_tags");
 		var gettingPDF = Preferences.get("extensions.papermachines.general.extract_pdf");
 		var gettingHTML = Preferences.get("extensions.papermachines.general.extract_html");
+		var gettingWord = Preferences.get("extensions.papermachines.general.extract_word");
 		var gettingTXT = Preferences.get("extensions.papermachines.general.extract_txt");
 
 		var outFile = dir.clone();
@@ -963,9 +963,11 @@ Zotero.PaperMachines = {
 		var attachments = item.getAttachments(false);
 		for (var a in attachments) {
 			var a_item = Zotero.Items.get(attachments[a]);
-			if ((a_item.attachmentMIMEType == 'application/pdf' && gettingPDF)
-			   || (a_item.attachmentMIMEType == 'text/html' && gettingHTML)
-			   || (a_item.attachmentMIMEType == 'text/plain' && gettingTXT)) {
+			var mimetype = a_item.attachmentMIMEType;
+			if ((mimetype == 'application/pdf' && gettingPDF)
+			   || (mimetype == 'text/html' && gettingHTML)
+			   || ((mimetype == 'application/msword' || mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') && gettingWord)
+			   || (mimetype == 'text/plain' && gettingTXT)) {
 				var orig_file = a_item.getFile().path;
 				if (orig_file) {
 					Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [orig_file, item.id, outFile.path, dir.leafName]);					
