@@ -1,6 +1,6 @@
-
 var map;
 var heatmap, heatmapData;
+var arcOverlay;
 var animating;
 var animationInterval = 250;
 var linksByText = {};
@@ -109,6 +109,8 @@ window.onload = function(){
                             "position": "br",
                             "offset": 30
                         }});
+
+  arcOverlay = new ArcOverlay(map);
   
   document.getElementById("togLegend").onclick = function(){
     var legend = heatmap.heatmap.get("legend").get("element");
@@ -124,20 +126,7 @@ window.onload = function(){
           if (!(year in link_polylines)) {
             link_polylines[year] = [];
           }
-          // var line = new google.maps.Polyline({
-          //     "map": map, 
-          //     "geodesic": true,
-          //     "strokeOpacity": 0.1,
-          //     "strokeWidth": 1,
-          //     "path": link.edge.map(function (d) { var coords = entityURIs[d]["coordinates"]; return new google.maps.LatLng(coords[1], coords[0]); })
-          // });
-          var line = new GradientPolyline({
-              "map": map,
-              "strokeOpacity": 0.1,
-              "strokeWidth": 1,
-              "colors": ["#ff0000", "#0000ff"],
-              "path": link.edge.map(function (d) { var coords = entityURIs[d]["coordinates"]; return new google.maps.LatLng(coords[1], coords[0]); })
-          });
+          var line = arcOverlay.Arc(link.edge.map(function (d) { return entityURIs[d]["coordinates"]; }));
 
           link_polylines[year].push(line);
 
@@ -150,99 +139,142 @@ window.onload = function(){
   });
 };
 
-
-function colorComponents(color_str) {
-  var hex;
-  if (color_str.length >= 6) {
-    hex = parseInt(color_str.replace("#",""), 16);
-  } else {
-    hex = 0xffffff;
-  }
-  var r = (hex & 0xff0000) >> 16;
-  var g = (hex & 0x00ff00) >> 8;
-  var b = hex & 0x0000ff;
-  return [r,g,b];
+var globalArcId = 0;
+function Arc(edge) {
+  this.id = globalArcId++;
+  this.source = edge[0];
+  this.target = edge[1];
 }
 
-function GradientPolyline(obj) {
-  var colors = obj["colors"];
-  var map = obj["map"];
-  var path = obj["path"];
-  this.strokeOpacity = obj["strokeOpacity"] || 0.1;
-
-  this.set('map', map);
-  this.set('visible', true);
-  var points = 50;
-
-  this.segments = this.generateSegments(path[0], path[1], points);
-  this.colors = this.generateColors(colors[0], colors[1], points);
-  this.segments_polylines = new Array();
-  for (var i = 0; i < this.segments.length - 1; i++) {
-    var new_poly = new google.maps.Polyline({
-      "path": [this.segments[i], this.segments[i+1]],
-      "strokeColor": this.colors[i],
-      "strokeOpacity": this.strokeOpacity
-    });
-    new_poly.bindTo('map', this);
-    new_poly.bindTo('visible', this);
-    this.segments_polylines.push(new_poly);
-  }
+Arc.prototype.setVisible = function (display) {
+  d3.select("#arc" + this.id).style("display", display ? "block" : none);
 }
 
-GradientPolyline.prototype = new google.maps.MVCObject();
 
-GradientPolyline.prototype.setVisible = function (visible) {
-  this.set('visible', visible);
+function ArcOverlay(map) {
+  this.div_ = null;
+  this.arcs = [];
+  this.arc_paths = null;
+  this.svg = null;
+  this.bounds = null;
+
+  this.greatArc = d3.geo.greatArc();
+
+  this.setMap(map);
+}
+
+ArcOverlay.prototype = new google.maps.OverlayView();
+
+ArcOverlay.prototype.Arc = function (edge) {
+  var arc = new Arc(edge);
+  this.arcs.push(arc);
+  return arc;
 };
 
-GradientPolyline.prototype.generateColors = function (start_color, end_color, points) {
-  var colors = new Array();
-  var start_rgb = colorComponents(start_color);
-  var end_rgb = colorComponents(end_color);
 
-  for (var i = 0, n = points - 1; i < n; i++) {
-    var p = (i*1.0)/n;
-    var new_color = new Array(3);
-    for (var j = 0; j < 3; j++) {
-      new_color[j] = Math.round((start_rgb[j] * (1-p)) + (end_rgb[j] * (p)));
-    }
-    var new_rgb = new_color.reduce(function (a, b) {
-      var b_hex = b.toString(16);
-      if (b_hex.length == 1) {
-        b_hex = "0" + b_hex;
-      }
-      return a + b_hex;
-    }, "#");
-    colors.push(new_rgb);
+ArcOverlay.prototype.onAdd = function() {
+  var w = this.getMap().getDiv().clientWidth,
+      h = this.getMap().getDiv().clientHeight;
+
+  // Add the container when the overlay is added to the map.
+  this.div_ = d3.select(this.getPanes().overlayLayer).append("div")
+      .attr("class", "arcoverlay")
+      .style("width", w + "px")
+      .style("height", h + "px")
+      .style("position", "absolute")
+      .style("top", "0")
+      .style("left", "0");
+  this.svg = this.div_.append("svg")
+    .attr("width", w + 500)
+    .attr("height", h + 500);
+
+  setGradient(this.svg);
+}
+
+ArcOverlay.prototype.draw = function() {
+  var me = this;
+  var projection = this.getProjection(),
+      currentBounds = this.map.getBounds(),
+      padding = 10;
+
+  if (currentBounds.equals(this.bounds)) {
+    // return;
   }
-  return colors;
-};
 
-GradientPolyline.prototype.generateSegments = function (start, end, points) {
+  function _projection(lat, lng) {
+    var e = new google.maps.LatLng(lat, lng);
+    e = projection.fromLatLngToDivPixel(e);
+    e = new google.maps.Point(e.x - leftX, e.y - topY);
 
-  var geodesicPoints = new Array();
-  with (Math) {
-    var lat1 = start.lat() * (PI/180);
-    var lon1 = start.lng() * (PI/180);
-    var lat2 = end.lat() * (PI/180);
-    var lon2 = end.lng() * (PI/180);
-
-    var d = 2*asin(sqrt( pow((sin((lat1-lat2)/2)),2) + cos(lat1)*cos(lat2)*pow((sin((lon1-lon2)/2)),2)));
-
-    for (var n = 0 ; n < points+1 ; n++ ) {
-      var f = (1/points) * n;
-      // f = f.toFixed(6);
-      var A = sin((1-f)*d)/sin(d)
-      var B = sin(f*d)/sin(d)
-      var x = A*cos(lat1)*cos(lon1) +  B*cos(lat2)*cos(lon2)
-      var y = A*cos(lat1)*sin(lon1) +  B*cos(lat2)*sin(lon2)
-      var z = A*sin(lat1)           +  B*sin(lat2)
-
-      var latN = atan2(z,sqrt(pow(x,2)+pow(y,2)))
-      var lonN = atan2(y,x)
-      var p = new google.maps.LatLng(latN/(PI/180), lonN/(PI/180));
-      geodesicPoints.push(p);
-    }
+    // return [ e.x - padding, e.y - padding]
+    return [e.x, e.y];
   }
-  return geodesicPoints;
+  function transform_path(data) {
+    var d = [];
+    for(var i = 0; i < data.length; i++) {
+      var c = _projection(data[i][1], data[i][0]);
+      d.push(c);
+    }
+    return d;
+  }
+
+  function pathFromArc(d) {
+    var e = transform_path(me.greatArc(d.value).coordinates);
+    var p = 'M' + e.join('L') + 'Z';
+    return p;
+  }
+
+  function transform(d) {
+    d = new google.maps.LatLng(d.value[0][1], d.value[0][0]);
+    d = projection.fromLatLngToDivPixel(d);
+    return d3.select(this)
+        .style("left", (d.x - padding) + "px")
+        .style("top", (d.y - padding) + "px");
+  }
+
+  this.bounds = currentBounds;
+
+  var ne = projection.fromLatLngToDivPixel(currentBounds.getNorthEast()),
+      sw = projection.fromLatLngToDivPixel(currentBounds.getSouthWest()),
+      topY = ne.y,
+      leftX = sw.x,
+      h = sw.y - ne.y,
+      w = ne.x - sw.x;
+
+  this.div_.style("left", leftX + "px")
+      .style("top", topY + "px")
+      .style("width", w + "px")
+      .style("height", h + "px");
+
+  this.arc_paths = this.svg.selectAll("path.arc")
+      .data(d3.entries(this.arcs))
+      .attr("d", pathFromArc)
+      .attr("fill", "none")      
+      .attr("stroke", "url(#fade)")
+      .attr("stroke-opacity", 0.1)
+    .enter().append("path")
+      .attr("d", pathFromArc)
+      .attr("fill", "none")
+      .attr("class", "arc")
+      .attr("id", function (d) { return d.value.id; })
+      .attr("stroke-opacity", 0.1)
+      .attr("stroke","url(#fade)");
 };
+
+function setGradient(svg) {
+  var defs = svg.append("svg:defs");
+
+  var gradient = defs.append("svg:linearGradient")
+    .attr("id", "fade")
+    .attr("x1", "0%")
+    .attr("y1", "0%")
+    .attr("x2", "100%")
+    .attr("y2", "0%");
+
+  var gradientColors = ["#ff0000", "#0000ff"];
+  gradient.selectAll("stop")
+    .data(gradientColors)
+    .enter().append("svg:stop")
+    .attr("offset", function (d,i) { return ((i * 100.0)/gradientColors.length).toString() + "%";})
+      .style("stop-color", function (d) { return d; });
+}
