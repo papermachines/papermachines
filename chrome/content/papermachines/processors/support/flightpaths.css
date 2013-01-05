@@ -79,6 +79,7 @@ path.arc {
   display: block; 
   stroke: url(#fade);
 }
+
 .site {
 fill-opacity: 0.7;
 }
