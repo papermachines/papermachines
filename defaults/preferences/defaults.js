@@ -33,5 +33,6 @@ pref("extensions.papermachines.lda.optimize_interval", 0);
 pref("extensions.papermachines.lda.symmetric_alpha", false);
 
 pref("extensions.papermachines.lda.stemming", true);
+pref("extensions.papermachines.lda.segmentation", false);
 pref("extensions.papermachines.lda.tfidf", true);
 pref("extensions.papermachines.lda.min_df", 3);

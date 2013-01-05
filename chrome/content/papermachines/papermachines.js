@@ -488,8 +488,15 @@ Zotero.PaperMachines = {
 
 		procArgs = ["-jar", this.jython_path].concat(procArgs);
 
+		if (Zotero.PaperMachines.memoryIntensive(processor)) {
+			procArgs = ["-Xmx1g"].concat(procArgs);
+		}
+
 		proc.init(java_exe_file);
 		proc.runAsync(procArgs, procArgs.length, observer);
+	},
+	memoryIntensive: function (processor) {
+		return processor.indexOf("mallet") != -1;
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
 		const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -1372,6 +1379,7 @@ Zotero.PaperMachines = {
 		"mallet_lda": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations", "advanced": true},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
+			{"name": "segmentation", "type": "check", "pref": "extensions.papermachines.lda.segmentation", "advanced": true},
 			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
 			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true},
 			{"name": "alpha", "type": "text", "pref": "extensions.papermachines.lda.alpha", "advanced": true},

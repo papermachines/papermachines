@@ -73,6 +73,7 @@
     <preference id="pref_lda_optimize_interval" name="extensions.papermachines.lda.optimize_interval" type="int"/>
     <preference id="pref_lda_symmetric_alpha" name="extensions.papermachines.lda.symmetric_alpha" type="bool"/>
     <preference id="pref_lda_stemming" name="extensions.papermachines.lda.stemming" type="bool"/>
+    <preference id="pref_lda_segmentation" name="extensions.papermachines.lda.segmentation" type="bool"/>
     <preference id="pref_lda_tfidf" name="extensions.papermachines.lda.tfidf" type="bool"/>
   </preferences>
  
@@ -112,6 +113,7 @@
         <checkbox preference="pref_lda_symmetric_alpha" label="&papermachines.prefs.lda.symmetric_alpha;" id="lda_symmetric_alpha"/>
         <checkbox preference="pref_lda_stemming" label="&papermachines.prefs.lda.stemming;" id="lda_stemming"/>
         <checkbox preference="pref_lda_tfidf" label="&papermachines.prefs.lda.tfidf;" id="lda_tfidf"/>
+        <checkbox preference="pref_lda_segmentation" label="&papermachines.prefs.lda.segmentation;" id="lda_segmentation"/>
 
       </groupbox>
       <spacer flex="1"/>

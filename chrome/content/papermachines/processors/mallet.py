@@ -48,24 +48,36 @@ class Mallet(textprocessor.TextProcessor):
 				logging.error(doi)
 				logging.error(traceback.format_exc())
 
+	def _output_text(self, text, f, filename):
+		text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
+		if self.stemming:
+			newtext = u''
+			for word in text.split():
+				if word not in self.stemmed:
+					self.stemmed[word] = stem(self, word)
+				newtext += self.stemmed[word] + u' '
+			text = newtext
+		f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
+		self.docs.append(filename)
+
 	def _import_files(self):
 		if self.stemming:
 			self.stemmed = {}
 		self.docs = []
+		self.segmentation = getattr(self, "segmentation", False)
+
 		with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
 			for filename in self.files:
 				with codecs.open(filename, 'r', encoding='utf-8') as input_file:
 					text = input_file.read()
-					text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
-					if self.stemming:
-						newtext = u''
-						for word in text.split():
-							if word not in self.stemmed:
-								self.stemmed[word] = stem(self, word)
-							newtext += self.stemmed[word] + u' '
-						text = newtext
-					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
-					self.docs.append(filename)
+					if self.segmentation:
+						segments = filter(lambda x: x.count(' ') > 5, text.split("\n\n"))
+						for i, text_seg in enumerate(segments):
+							seg_filename = filename + "#" + str(i)
+							self.metadata[seg_filename] = self.metadata[filename]
+							self._output_text(text_seg, f, seg_filename)
+					else:
+						self._output_text(text, f, filename)
 			if self.dfr:
 				for doi, text in self._import_dfr(self.dfr_dir):
 					f.write(u'\t'.join([doi, self.metadata[doi]["label"], text]) + u'\n')
@@ -224,7 +236,7 @@ class Mallet(textprocessor.TextProcessor):
 			"--stoplist-file", self.stoplist, 
 			"--input", self.texts_file,
 			"--line-regex", "^([^\\t]*)[\\t]([^\\t]*)[\\t](.*)$",
-			"--token-regex", '[\p{L}\p{M}]+',
+			"--token-regex", "\S+" if tfidf else "[\p{L}\p{M}]+",
 			"--output", self.instance_file]
 		if sequence:
 			import_args.append("--keep-sequence")

@@ -82,7 +82,6 @@
 
 <!ENTITY papermachines.prefs.general.experimental		"Enable Experimental Features">
 
-
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">
 <!ENTITY papermachines.prefs.lda.iterations				"Number of iterations: ">
 <!ENTITY papermachines.prefs.lda.burn_in				"Burn-in (iterations before estimating hyperparameters): ">
@@ -95,5 +94,6 @@
 <!ENTITY papermachines.prefs.lda.stemming				"Porter stemming">
 <!ENTITY papermachines.prefs.lda.tfidf					"tf*idf filtering">
 <!ENTITY papermachines.prefs.lda.min_df					"min doc frequency for tf*idf">
-
+<!ENTITY papermachines.prefs.lda.segmentation			"Segment by paragraph
+">
 

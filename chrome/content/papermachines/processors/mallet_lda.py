@@ -85,6 +85,7 @@ class MalletLDA(mallet.Mallet):
 			self.optimize_interval = self.named_args["optimize_interval"]
 			self.burn_in = int(self.named_args["burn_in"])
 			self.lang = self.named_args["lang"]
+			self.segmentation = self.named_args["segmentation"]
 		else:
 			self.tfidf = True
 			self.min_df = 5
@@ -96,8 +97,8 @@ class MalletLDA(mallet.Mallet):
 			self.burn_in = 200
 			self.symmetric_alpha = "false"
 			self.optimize_interval = 0
+			self.segmentation = False
 			self.lang = "en"
-
 
 		self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, stemming=self.stemming)
 
