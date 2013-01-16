@@ -54,6 +54,14 @@ Zotero.PaperMachines = {
 				return false;
 			}
 		},
+		"wordcloud_translate": function () {
+			var params = Zotero.PaperMachines.promptForProcessParams("wordcloud_translate");
+			if (params) {
+				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
 		"wordcloud_chronological": function () {
 			var filter = Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
 			if (!filter) return false;
@@ -1419,6 +1427,10 @@ Zotero.PaperMachines = {
 			{"name": "top_ngrams", "type": "text", "value": "100"},
 			{"name": "min_df", "type": "text", "value": "3"},
 			{"name": "interval", "type": "text", "value": "1", "advanced": true}
+		],
+		"wordcloud_translate":  [{"name": "lang_from", "type": "text", "value": "he"},
+			{"name": "lang_to", "type": "text", "value": "en"},
+			{"name": "tfidf", "type": "check", "value": true}
 		],
 		"change_field":  [{"name": "field", "type": "text", "value": ""},
 			{"name": "value", "type": "text", "value": ""},

@@ -7,6 +7,7 @@
 <!ENTITY papermachines.collectionmenu.wordcloud				"Word Cloud">
 <!ENTITY papermachines.collectionmenu.wordcloud_large		"Word Cloud">
 <!ENTITY papermachines.collectionmenu.wordcloud_large_tfidf	"Word Cloud (tf*idf filtered)">
+<!ENTITY papermachines.collectionmenu.wordcloud_translate	"Word Cloud Translation...">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple_menu	"Multiple Word Clouds">
 <!ENTITY papermachines.collectionmenu.wordcloud_chronological	"Word Clouds by Time Interval...">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection...">

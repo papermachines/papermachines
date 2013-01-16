@@ -20,6 +20,8 @@
 					oncommand="Zotero.PaperMachines.runProcess('wordcloud_large')"/>
 				<menuitem id="wordcloud_large_tfidf" label="&papermachines.collectionmenu.wordcloud_large_tfidf;"
 					oncommand="Zotero.PaperMachines.runProcess('wordcloud_large', 'tfidf')"/>
+				<menuitem id="wordcloud_translate" label="&papermachines.collectionmenu.wordcloud_translate;"
+					oncommand="Zotero.PaperMachines.runProcess('wordcloud_translate')"/>
 				<menu id="wordcloud_multiple_options" label="&papermachines.collectionmenu.wordcloud_multiple_menu;">
 					<menupopup id="wordcloud-multiple-menu">
 						<menuitem id="wordcloud_multiple" label="&papermachines.collectionmenu.wordcloud_multiple;"
