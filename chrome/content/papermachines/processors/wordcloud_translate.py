@@ -1,7 +1,6 @@
 #!/usr/bin/env python2.7
 import sys, os, logging, traceback, codecs, json
-from lib.classpath import classPathHacker
-from lib.bing_api import *
+from lib.translate import *
 import wordcloud_large
 
 class WordCloudTranslate(wordcloud_large.LargeWordCloud):
@@ -16,30 +15,10 @@ class WordCloudTranslate(wordcloud_large.LargeWordCloud):
         self.template_filename = os.path.join(self.cwd, "templates", "wordcloud_large.html")
         self.n = 150
         self.tfidf_scoring = self.named_args.get("tfidf", False)
-        self.translate_file = os.path.join(self.out_dir, "translator.cache")
-        if os.path.exists(self.translate_file):
-            with codecs.open(self.translate_file, 'r', encoding='utf-8') as f:
-                self.translations = json.load(f)
-        else:
-            self.translations = {}
-        self.translator = None
         self.lang_from = self.named_args.get("lang_from", "Hebrew")
         self.lang_to = self.named_args.get("lang_to", "English")
-
-    def _translate(self, text):
-        return self.translator.execute(text, getattr(self.language, self.lang_from.upper(), "HEBREW"), getattr(self.language, self.lang_to.upper(), "ENGLISH"))
-
-    def _init_translator(self, clientid, clientsecret):
-        jarLoad = classPathHacker()
-        mtjPath = os.path.join(self.cwd, "lib", "mtjapi-0.6.1-deps.jar")
-        if os.path.exists(mtjPath):
-            jarLoad.addFile(mtjPath)
-            from com.memetix.mst.language import Language
-            from com.memetix.mst.translate import Translate
-            Translate.setClientId(clientid)
-            Translate.setClientSecret(clientsecret)
-            self.translator = Translate
-            self.language = Language
+        self.translator = Translator(self.cwd)
+        self.translator.setLanguages(self.out_dir, self.lang_from, self.lang_to)
 
     def process(self):
         logging.info("starting to process")
@@ -54,18 +33,11 @@ class WordCloudTranslate(wordcloud_large.LargeWordCloud):
         else:
             freqs = self._findWordFreqs(self.files)
 
-        translator = None
         for item in freqs:
-            word = item["text"]
-            if word not in self.translations:
-                if self.translator is None:
-                    self._init_translator(client_id, client_secret)
-                self.translations[word] = self._translate(word)
-                logging.info("translating {:} as {:}".format(word, self.translations[word]).encode('utf-8'))
-            item["text"] = self.translations[word]
+            word = item["text"]            
+            item["text"] = self.translator.translate(word)
 
-        with codecs.open(self.translate_file, 'w', encoding='utf-8') as f:
-            json.dump(self.translations, f, indent=4)
+        self.translator.saveTranslations()
 
         params = {"DATA": json.dumps(freqs),
                 "WIDTH": self.width,
