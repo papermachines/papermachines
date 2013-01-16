@@ -23,11 +23,11 @@ class WordCloudTranslate(wordcloud_large.LargeWordCloud):
         else:
             self.translations = {}
         self.translator = None
-        self.lang_from = self.named_args.get("lang_from", "he")
-        self.lang_to = self.named_args.get("lang_to", "en")
+        self.lang_from = self.named_args.get("lang_from", "Hebrew")
+        self.lang_to = self.named_args.get("lang_to", "English")
 
     def _translate(self, text):
-        return self.translator.execute(text, self.language.HEBREW, self.language.ENGLISH)
+        return self.translator.execute(text, getattr(self.language, self.lang_from.upper(), "HEBREW"), getattr(self.language, self.lang_to.upper(), "ENGLISH"))
 
     def _init_translator(self, clientid, clientsecret):
         jarLoad = classPathHacker()

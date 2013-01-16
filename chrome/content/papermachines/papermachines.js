@@ -1428,8 +1428,8 @@ Zotero.PaperMachines = {
 			{"name": "min_df", "type": "text", "value": "3"},
 			{"name": "interval", "type": "text", "value": "1", "advanced": true}
 		],
-		"wordcloud_translate":  [{"name": "lang_from", "type": "text", "value": "he"},
-			{"name": "lang_to", "type": "text", "value": "en"},
+		"wordcloud_translate":  [{"name": "lang_from", "type": "text", "value": "Hebrew"},
+			{"name": "lang_to", "type": "text", "value": "English"},
 			{"name": "tfidf", "type": "check", "value": true}
 		],
 		"change_field":  [{"name": "field", "type": "text", "value": ""},
