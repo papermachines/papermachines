@@ -137,9 +137,10 @@ class TextProcessor:
         props_file = NamedTemporaryFile(delete = False)
         props.store(props_file.file, '')
         props_file.flush()
+        filename = props_file.name
         props_file.close()
 
-        System.setProperty("java.util.logging.config.file", props_file.name)
+        System.setProperty("java.util.logging.config.file", filename)
 
     def write_html(self, user_params):
         logging.info("writing HTML")

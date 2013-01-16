@@ -20,7 +20,7 @@ Zotero.PaperMachines = {
 	processors_dir: null,
 	java_exe: null,
 	jython_path: null,
-	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparser", "dbpedia", "export-output"],
+	processors: ["wordcloud", "ngrams_menu", "phrasenet", "mallet", "mallet_classify", "geoparser", "dbpedia", "export-output"],
 	processNames: null, // see locale files
 	prompts: null,
 	paramLabels: null,
@@ -45,6 +45,14 @@ Zotero.PaperMachines = {
 				}
 			})
 			return Zotero.PaperMachines.selectFromOptions("mallet_classify-file", classifiers);
+		},
+		"ngrams": function () {
+			var params = Zotero.PaperMachines.promptForProcessParams("ngrams");
+			if (params) {
+				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
 		},
 		"wordcloud_chronological": function () {
 			var filter = Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
@@ -272,6 +280,7 @@ Zotero.PaperMachines = {
 		jython.append("jython.jar");
 
 		this.jython_path = jython.path;
+		this.createLogPropertiesFile();
 
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
@@ -484,19 +493,21 @@ Zotero.PaperMachines = {
 		var observer = new Zotero.PaperMachines.processObserver(processor, processPath, callback);
 
 		var java_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.java_exe);
-		Zotero.PaperMachines.LOG("running " + procArgs.join(" "));
 
-		procArgs = ["-jar", this.jython_path].concat(procArgs);
+		procArgs = ["-Djava.util.logging.config.file="+this.jython_logging_properties_file, "-jar", this.jython_path].concat(procArgs);
 
 		if (Zotero.PaperMachines.memoryIntensive(processor)) {
 			procArgs = ["-Xmx1g"].concat(procArgs);
+		} else {
+			procArgs = ["-Xmx256m"].concat(procArgs);			
 		}
+		Zotero.PaperMachines.LOG(java_exe_file.path + " " + procArgs.map(function(d) { return d.indexOf(" ") != -1 ? '"' + d + '"' : d; }).join(" "));
 
 		proc.init(java_exe_file);
 		proc.runAsync(procArgs, procArgs.length, observer);
 	},
 	memoryIntensive: function (processor) {
-		return processor.indexOf("mallet") != -1;
+		return processor.indexOf("mallet") != -1 || processor == "ngrams";
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
 		const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -1404,6 +1415,11 @@ Zotero.PaperMachines = {
 			{"name": "issueregex", "type": "text", "pref": "extensions.papermachines.import.issueregex"},
 			{"name": "startingoffset", "type": "text", "pref": "extensions.papermachines.import.startingoffset"},
 		],
+		"ngrams":  [{"name": "n", "type": "text", "value": "1"},
+			{"name": "top_ngrams", "type": "text", "value": "100"},
+			{"name": "min_df", "type": "text", "value": "3"},
+			{"name": "interval", "type": "text", "value": "1", "advanced": true}
+		],
 		"change_field":  [{"name": "field", "type": "text", "value": ""},
 			{"name": "value", "type": "text", "value": ""},
 			{"name": "force", "type": "check", "value": false}
@@ -1736,6 +1752,18 @@ Zotero.PaperMachines = {
 	  }
 	 
 	  this._preferencesWindow.focus();
+	},
+	createLogPropertiesFile: function() {
+		var logging_properties_file = this._getOrCreateFile("logging.properties", this.processors_dir);
+
+		this.jython_logging_properties_file = logging_properties_file.path;
+		this.jython_log_filepath = this._getOrCreateFile("jython.log", this.log_dir).path;
+
+		var log_str = "handlers=java.util.logging.FileHandler\n" +
+			".level=INFO\n" +
+			"java.util.logging.FileHandler.formatter=java.util.logging.SimpleFormatter\n" +
+			"java.util.logging.FileHandler.pattern=" + this.jython_log_filepath;
+		Zotero.File.putContents(logging_properties_file, log_str);
 	},
 	findJavaExecutable: function () { 
 		var java_exe = Preferences.get("extensions.papermachines.general.java_exe");

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>N-grams: COLLECTION_NAME</title>
+	<style type="text/css">
+		path {
+			stroke: steelblue;
+			stroke-width: 1;
+			fill: none;
+		}
+
+		.axis {
+		  shape-rendering: crispEdges;
+		}
+
+		.x.axis line {
+		  stroke: lightgrey;
+		}
+
+		.x.axis .minor {
+		  stroke-opacity: .5;
+		}
+
+		.x.axis path {
+		  display: none;
+		}
+
+		.y.axis line, .y.axis path {
+		  fill: none;
+		  stroke: #000;
+		}
+	</style>
+    <script type="text/javascript" src="support/d3.js"></script>
+	<script type="text/javascript">
+	var data = NGRAMS_INTERVALS;
+	var times = TIMES;
+	var maxFreq = MAX_FREQ;
+	var ngramsToDocs = NGRAMS_TO_DOCS;
+	var docMetadata = DOC_METADATA;
+	</script>
+</head>
+<body>
+<script type="text/javascript" src="support/ngrams.js"></script>
+</body>
+</html>
