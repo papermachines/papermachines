@@ -510,7 +510,7 @@ Zotero.PaperMachines = {
 			procArgs = ["-Djava.util.logging.config.file="+loggingProperties].concat(procArgs);
 		}
 
-		procArgs = ["-jar", this.jython_path].concat(procArgs);
+		procArgs = ["-Dfile.encoding=UTF8","-jar", this.jython_path].concat(procArgs);
 
 		if (Zotero.PaperMachines.memoryIntensive(processor)) {
 			procArgs = ["-Xmx1g"].concat(procArgs);

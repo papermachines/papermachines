@@ -231,8 +231,7 @@ class Mallet(textprocessor.TextProcessor):
 		with codecs.open(os.path.join(self.mallet_out_dir, "metadata.json"), 'w', encoding='utf-8') as meta_file:
 			json.dump(self.metadata, meta_file)
 
-		import_args = ["--input", self.texts_file,
-			# "--line-regex", "^([^\\t]*)[\\t]([^\\t]*)[\\t](.*)$",
+		import_args = ["--encoding", "UTF-8", "--input", self.texts_file,
 			"--line-regex", "^([^\t]*)[\t]([^\t]*)[\t](.*)$",
 			"--token-regex", "\S+" if tfidf else "[\p{L}\p{M}]+",
 			"--output", self.instance_file]
