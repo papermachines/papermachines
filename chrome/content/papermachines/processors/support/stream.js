@@ -168,6 +168,7 @@ function selectGraphState(state) {
     }
   }
 }
+
 function createMenuOfGraphs () {
   var sel = document.createElement("select");
   sel.id = "graphSelector";
@@ -615,6 +616,8 @@ function createCategoricalGraph (i) {
       .attr("x", 0)
       .attr("y", height)
       .attr("height", 0)
+      .on("mouseover", function (d) { highlightTopic(d);})
+      .on("mouseout", unhighlightTopic)
     .transition()
       .delay(function(d, i) { return i * 10; })
       .attr("y", y1)
@@ -624,19 +627,34 @@ function createCategoricalGraph (i) {
 function highlightTopic(e) {
 //  return;
   var topic = e.topic;
+  if (!topicLabels[topic].active) return;
+  legend.style("fill-opacity", function (d) { return (d.topic == topic) ? 1.0 : (d.active ? 0.7 : 0.3);})
   for (i in graph) {
     var series = graphGroup.selectAll("path.line.graph" + i.toString());
-    series.style(streaming ? "fill-opacity": "stroke-opacity", function (d) {
-        return (d[0].topic == topic) ? graph[i].defaultOpacity * 0.7 : graph[i].defaultOpacity;
+    series.transition().style(streaming ? "fill-opacity": "stroke-opacity", function (d) {
+        return (d[0].topic != topic) ? graph[i].defaultOpacity * 0.5 : graph[i].defaultOpacity;
       });
+
+    if (categorical) {
+      var bars = graphGroup.selectAll("g.bar.graph" + i.toString());
+      bars.transition().style("fill-opacity", function (d) {
+        return (d.topic != topic) ? graph[i].defaultOpacity * 0.5 : graph[i].defaultOpacity;
+      });
+    }
+
   }
 }
 
 function unhighlightTopic() {
 //  return;
+  legend.style("fill-opacity", function (d) { return (d.active) ? 1.0 : 0.3;})
   for (i in graph) {
     var series = graphGroup.selectAll("path.line.graph" + i.toString());
-    series.style(streaming ? "fill-opacity" : "stroke-opacity", graph[i].defaultOpacity);
+    series.transition().style(streaming ? "fill-opacity" : "stroke-opacity", graph[i].defaultOpacity);
+    if (categorical) {
+      var bars = graphGroup.selectAll("g.bar.graph" + i.toString());
+      bars.transition().style("fill-opacity", graph[i].defaultOpacity);
+    }
   }
 }
 
@@ -777,7 +795,6 @@ function updateLegend() {
   legendGroup.selectAll(".legend.label").transition().duration(500).attr("transform", legendLabelPositions)
       .style("fill-opacity", function (d) { return (d.active) ? 1.0 : 0.3;}); 
 
-
   legend.exit().remove();
 
 }
@@ -807,7 +824,6 @@ function legendToggle() {
   legend.style("visibility", showLegend > 0 ? "visible" : "hidden");
   var gradientScale = d3.select("#gradientScale");
   gradientScale.style("visibility", showLegend > 1 ? "visible" : "hidden");
-
 }
 
 function setStartParameters() {
@@ -870,6 +886,7 @@ function setStartParameters() {
       generateSearch(searchN++);    
     }
   }
+  selectGraphState(toggleState);
   searchAction(); 
 }
 
