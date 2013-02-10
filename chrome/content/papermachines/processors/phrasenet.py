@@ -59,7 +59,7 @@ class PhraseNet(textprocessor.TextProcessor):
 
 		logging.info("extracting phrases according to pattern "+ repr(pattern))
 
-		self._findPhrases(re.compile(pattern))
+		self._findPhrases(re.compile(pattern, flags=re.UNICODE))
 
 		logging.info("generating JSON")
 

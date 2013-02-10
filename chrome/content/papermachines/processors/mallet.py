@@ -190,7 +190,6 @@ class Mallet(textprocessor.TextProcessor):
 		self.progress_file = file(self.progress_filename, 'w+')
 
 	def _import_texts(self):
-
 		logging.info("copying texts into single file")
 		self.texts_file = os.path.join(self.mallet_out_dir, self.collection + ".txt")
 
@@ -232,12 +231,14 @@ class Mallet(textprocessor.TextProcessor):
 		with codecs.open(os.path.join(self.mallet_out_dir, "metadata.json"), 'w', encoding='utf-8') as meta_file:
 			json.dump(self.metadata, meta_file)
 
-		import_args = ["--remove-stopwords",
-			"--stoplist-file", self.stoplist, 
-			"--input", self.texts_file,
-			"--line-regex", "^([^\\t]*)[\\t]([^\\t]*)[\\t](.*)$",
+		import_args = ["--input", self.texts_file,
+			# "--line-regex", "^([^\\t]*)[\\t]([^\\t]*)[\\t](.*)$",
+			"--line-regex", "^([^\t]*)[\t]([^\t]*)[\t](.*)$",
 			"--token-regex", "\S+" if tfidf else "[\p{L}\p{M}]+",
 			"--output", self.instance_file]
+		if not tfidf:
+			import_args = ["--remove-stopwords", "--stoplist-file", self.stoplist] + import_args
+
 		if sequence:
 			import_args.append("--keep-sequence")
 

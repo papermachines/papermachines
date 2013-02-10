@@ -1169,7 +1169,9 @@ Zotero.PaperMachines = {
 			var progTextFile = Zotero.PaperMachines._getLocalFile(processResult["progressfile"].replace(".html",".txt"));
 			var prog_str = Zotero.File.getContents(progTextFile);
 			var iterString = prog_str.match(/(?:<)\d+/g);
-			iterations = parseInt(iterString.slice(-1)[0].substring(1));
+			if (iterString) {
+				iterations = parseInt(iterString.slice(-1)[0].substring(1));				
+			}
 		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 

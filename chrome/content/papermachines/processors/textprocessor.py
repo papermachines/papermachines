@@ -1,8 +1,6 @@
 #!/usr/bin/env python2.7
 import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json, operator, platform
 from itertools import izip
-reload(sys)
-sys.setdefaultencoding("utf-8")
 
 class TextProcessor:
     """
