@@ -135,17 +135,22 @@ class MalletLDA(mallet.Mallet):
 		coherence = {}
 		wordProbs = {}
 		allocationRatios = {}
-		with file(self.mallet_files['diagnostics-file']) as diagnostics:
-			tree = et.parse(diagnostics)
-			for elem in tree.getiterator("topic"):
-				topic = elem.get("id")
-				coherence[topic] = float(elem.get("coherence"))
-				allocationRatios[topic] = float(elem.get("allocation_ratio"))
-				wordProbs[topic] = []
-				for word in elem.getiterator("word"):
-					wordProbs[topic].append({'text': word.text, 'prob': word.get("prob")})
+		with codecs.open(self.mallet_files['diagnostics-file'], 'r', encoding='utf-8', errors='ignore') as diagnostics:
+			try:
+				tree = et.parse(diagnostics)
+				for elem in tree.getiterator("topic"):
+					topic = elem.get("id")
+					coherence[topic] = float(elem.get("coherence"))
+					allocationRatios[topic] = float(elem.get("allocation_ratio"))
+					wordProbs[topic] = []
+					for word in elem.getiterator("word"):
+						wordProbs[topic].append({'text': word.text, 'prob': word.get("prob")})
+			except:
+				logging.error("The diagnostics file could not be parsed!")
+				logging.error("The error is reproduced below.")
+				logging.error(traceback.format_exc())
 
-		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in file(self.mallet_files['topic-keys']).readlines()]}
+		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in codecs.open(self.mallet_files['topic-keys'], 'r', encoding='utf-8').readlines()]}
 
 		weights_by_topic = []
 		doc_metadata = {}
@@ -155,7 +160,7 @@ class MalletLDA(mallet.Mallet):
 		for i in range(self.topics):
 			weights_by_topic.append([{'x': str(j), 'y': [], 'topic': i} for j in self.intervals])		
 
-		for line in file(self.mallet_files['doc-topics']):
+		for line in codecs.open(self.mallet_files['doc-topics'], 'r', encoding='utf-8'):
 			try:
 				values = line.split('\t')
 				

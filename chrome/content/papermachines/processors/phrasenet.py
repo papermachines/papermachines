@@ -40,7 +40,7 @@ class PhraseNet(textprocessor.TextProcessor):
 
 		stopfile = os.path.join(self.cwd, "stopwords.txt")
 		logging.info("reading stopwords from " + stopfile)
-		self.stopwords = [line.strip() for line in file(stopfile)]
+		self.stopwords = [line.strip() for line in codecs.open(stopfile, 'r', encoding='utf-8')]
 
 		self.edgesep = ','
 
