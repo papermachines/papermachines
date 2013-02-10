@@ -14,6 +14,7 @@ Zotero.PaperMachines = {
 	extract_csv_dir: null,
 	out_dir: null,
 	log_dir: null,
+	props_dir: null,
 	args_dir: null,
 	install_dir: null,
 	tagCloudReplace: true,
@@ -282,13 +283,13 @@ Zotero.PaperMachines = {
 		this.out_dir = this._getOrCreateDir("out");
 		this.processors_dir = this._getOrCreateDir("processors");
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
+		this.props_dir = this._getOrCreateDir("props", this.log_dir);
 		this.args_dir = this._getOrCreateDir("args");
 
 		var jython = this.processors_dir.clone();
 		jython.append("jython.jar");
 
 		this.jython_path = jython.path;
-		this.createLogPropertiesFile();
 
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
@@ -480,7 +481,7 @@ Zotero.PaperMachines = {
 		var argFile = Zotero.PaperMachines._getOrCreateFile(argsHashFilename, Zotero.PaperMachines.args_dir);
 		Zotero.File.putContents(argFile, args_str);
 
-		var loggingProperties = Zotero.PaperMachines.createLogPropertiesFile(args_hash);
+		var loggingProperties = Zotero.PaperMachines.createLogPropertiesFile(args_hash, progressFile.path.replace(".html", ".txt"));
 
 		var procArgs = [processor_file.path, argFile.path];
 
@@ -504,7 +505,12 @@ Zotero.PaperMachines = {
 
 		var java_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.java_exe);
 
-		procArgs = ["-Djava.util.logging.config.file="+loggingproperties, "-jar", this.jython_path].concat(procArgs);
+
+		if (processor.indexOf("mallet") != -1) {
+			procArgs = ["-Djava.util.logging.config.file="+loggingProperties].concat(procArgs);
+		}
+
+		procArgs = ["-jar", this.jython_path].concat(procArgs);
 
 		if (Zotero.PaperMachines.memoryIntensive(processor)) {
 			procArgs = ["-Xmx1g"].concat(procArgs);
@@ -1767,11 +1773,9 @@ Zotero.PaperMachines = {
 	 
 	  this._preferencesWindow.focus();
 	},
-	createLogPropertiesFile: function(hash, progress_filename) {
-		var logging_properties_file = this._getOrCreateFile("log" + hash + ".properties", this.out_dir);
-
+	createLogPropertiesFile: function(hash, progress_file_path) {
+		var logging_properties_file = this._getOrCreateFile("log_" + hash + ".properties", this.props_dir);
 		var logging_properties_file_path = logging_properties_file.path;
-		var progress_file_path = this._getOrCreateFile(progress_filename, this.out_dir).path;
 
 		var log_str = "handlers=java.util.logging.FileHandler\n" +
 			".level=INFO\n" +
