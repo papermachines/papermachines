@@ -20,7 +20,7 @@ Zotero.PaperMachines = {
 	processors_dir: null,
 	java_exe: null,
 	jython_path: null,
-	processors: ["wordcloud", "ngrams_menu", "phrasenet", "mallet", "mallet_classify", "geoparser", "dbpedia", "export-output"],
+	processors: ["wordcloud", "phrasenet", "mallet", "geoparser", "dbpedia", "export-output"], //"ngrams_menu", "mallet_classify",
 	processNames: null, // see locale files
 	prompts: null,
 	paramLabels: null,
@@ -480,6 +480,8 @@ Zotero.PaperMachines = {
 		var argFile = Zotero.PaperMachines._getOrCreateFile(argsHashFilename, Zotero.PaperMachines.args_dir);
 		Zotero.File.putContents(argFile, args_str);
 
+		var loggingProperties = Zotero.PaperMachines.createLogPropertiesFile(args_hash);
+
 		var procArgs = [processor_file.path, argFile.path];
 
 		outFile.append(processor + thisID + "-" + args_hash + ".html");
@@ -502,7 +504,7 @@ Zotero.PaperMachines = {
 
 		var java_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.java_exe);
 
-		procArgs = ["-Djava.util.logging.config.file="+this.jython_logging_properties_file, "-jar", this.jython_path].concat(procArgs);
+		procArgs = ["-Djava.util.logging.config.file="+loggingproperties, "-jar", this.jython_path].concat(procArgs);
 
 		if (Zotero.PaperMachines.memoryIntensive(processor)) {
 			procArgs = ["-Xmx1g"].concat(procArgs);
@@ -1765,17 +1767,18 @@ Zotero.PaperMachines = {
 	 
 	  this._preferencesWindow.focus();
 	},
-	createLogPropertiesFile: function() {
-		var logging_properties_file = this._getOrCreateFile("logging.properties", this.processors_dir);
+	createLogPropertiesFile: function(hash, progress_filename) {
+		var logging_properties_file = this._getOrCreateFile("log" + hash + ".properties", this.out_dir);
 
-		this.jython_logging_properties_file = logging_properties_file.path;
-		this.jython_log_filepath = this._getOrCreateFile("jython.log", this.log_dir).path;
+		var logging_properties_file_path = logging_properties_file.path;
+		var progress_file_path = this._getOrCreateFile(progress_filename, this.out_dir).path;
 
 		var log_str = "handlers=java.util.logging.FileHandler\n" +
 			".level=INFO\n" +
 			"java.util.logging.FileHandler.formatter=java.util.logging.SimpleFormatter\n" +
-			"java.util.logging.FileHandler.pattern=" + this.jython_log_filepath;
+			"java.util.logging.FileHandler.pattern=" + progress_file_path;
 		Zotero.File.putContents(logging_properties_file, log_str);
+		return logging_properties_file_path;
 	},
 	findJavaExecutable: function () { 
 		var java_exe = Preferences.get("extensions.papermachines.general.java_exe");

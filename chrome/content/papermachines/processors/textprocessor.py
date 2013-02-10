@@ -119,28 +119,34 @@ class TextProcessor:
             return sorted(seq.keys(), key=seq.__getitem__, reverse = reverse)
 
     def set_java_log(self, log_filename):
-        from java.lang import System
-        from java.util import Properties
-        from tempfile import NamedTemporaryFile
+        pass
+        # from java.lang import System
+        # from java.io import File, PrintStream, FileOutputStream
+        # from java.util import Properties
 
-        settings = {"handlers": "java.util.logging.FileHandler",
-            ".level": "INFO",
-            "java.util.logging.FileHandler.pattern": log_filename,
-            "java.util.logging.FileHandler.limit": "50000",
-            "java.util.logging.FileHandler.count": "1",
-            "java.util.logging.FileHandler.formatter": "cc.mallet.util.PlainLogFormatter"
-        }
+        # System.setOut(PrintStream(FileOutputStream(File(log_filename))))
+        # System.setErr(PrintStream(FileOutputStream(log_filename + '.err')))
 
-        props = Properties()
-        for key, value in settings.iteritems():
-            props.setProperty(key, value)
-        props_file = NamedTemporaryFile(delete = False)
-        props.store(props_file.file, '')
-        props_file.flush()
-        filename = props_file.name
-        props_file.close()
+        # from tempfile import NamedTemporaryFile
 
-        System.setProperty("java.util.logging.config.file", filename)
+        # settings = {"handlers": "java.util.logging.FileHandler",
+        #     ".level": "INFO",
+        #     "java.util.logging.FileHandler.pattern": log_filename,
+        #     "java.util.logging.FileHandler.limit": "50000",
+        #     "java.util.logging.FileHandler.count": "1",
+        #     "java.util.logging.FileHandler.formatter": "cc.mallet.util.PlainLogFormatter"
+        # }
+
+        # props = Properties()
+        # for key, value in settings.iteritems():
+        #     props.setProperty(key, value)
+        # props_file = NamedTemporaryFile(delete = False)
+        # props.store(props_file.file, '')
+        # props_file.flush()
+        # filename = props_file.name
+        # props_file.close()
+
+        # System.setProperty("java.util.logging.config.file", filename)
 
     def write_html(self, user_params):
         logging.info("writing HTML")
