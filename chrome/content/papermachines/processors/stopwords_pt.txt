@@ -286,3 +286,6 @@ bmw
 motors
 auto
 honda
+brazilian
+national
+newspaper

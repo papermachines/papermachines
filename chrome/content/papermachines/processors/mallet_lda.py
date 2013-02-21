@@ -103,7 +103,7 @@ class MalletLDA(mallet.Mallet):
 
 		labels = {x[0]: {"label": x[2:5], "fulltopic": wordProbs[x[0]], "allocation_ratio": allocationRatios[x[0]]} for x in [y.split() for y in codecs.open(self.mallet_files['topic-keys'], 'r', encoding='utf-8').readlines()]}
 
-		weights_by_topic = []
+		
 		doc_metadata = {}	
 
 		for line in codecs.open(self.mallet_files['doc-topics'], 'r', encoding='utf-8'):
@@ -119,18 +119,33 @@ class MalletLDA(mallet.Mallet):
 				itemid = self.metadata[filename]["itemID"]
 
 				freqs = dict((int(y[0]), float(y[1])) for y in self.xpartition(values))
-				main_topic = None
-				topic_max = 0.0
-				for i in freqs.keys():
-					if freqs[i] > topic_max:
-						main_topic = i
-						topic_max = freqs[i]
-				self.metadata[filename]["main_topic"] = main_topic
-				self.metadata[filename]["topics"] = freqs
+				if itemid.count('.') > 0:
+					orig_item = self.metadata[filename.split('#')[0]]
+					if not "segments" in orig_item:
+						orig_item["segments"] = 0
+					orig_item["segments"] += 1
+					if not "topics" in orig_item:
+						orig_item["topics"] = {}
+					for topic, value in freqs.iteritems():
+						if not topic in orig_item["topics"]:
+							orig_item["topics"][topic] = 0.0
+						orig_item["topics"][topic] += value
+					del self.metadata[filename]
+				else:
+					self.metadata[filename]["topics"] = freqs
 			except KeyboardInterrupt:
 				sys.exit(1)
 			except:
 				logging.error(traceback.format_exc())
+
+		for filename in self.metadata:
+			if "segments" in self.metadata[filename]:
+				total_topics = sum(self.metadata[filename]["topics"].values())
+				normalized = dict((k, 1.0 * v / total_topics) for k, v in self.metadata[filename]["topics"].iteritems())
+				self.metadata[filename]["main_topic"] = self.argmax(normalized)
+				self.metadata[filename]["topics"] = normalized
+			else:
+				self.metadata[filename]["main_topic"] = self.argmax(self.metadata[filename]["topics"])
 
 		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
 

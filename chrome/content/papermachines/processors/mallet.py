@@ -76,7 +76,8 @@ class Mallet(textprocessor.TextProcessor):
 						segments = filter(lambda x: x.count(' ') > 5, text.split("\n\n"))
 						for i, text_seg in enumerate(segments):
 							seg_filename = filename + "#" + str(i)
-							self.metadata[seg_filename] = self.metadata[filename]
+							self.metadata[seg_filename] = copy.deepcopy(self.metadata[filename])
+							self.metadata[seg_filename]["itemID"] += '.' + str(i)
 							self._output_text(text_seg, f, seg_filename)
 					else:
 						self._output_text(text, f, filename)

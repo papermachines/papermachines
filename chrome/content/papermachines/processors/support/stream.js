@@ -32,12 +32,19 @@ var gradientOpacity = d3.scale.pow().exponent(gradientExponentScale).clamp(true)
 var gradientBox, gradientDomain;
 
 var legend, showLegend = 2;
+var index = data["INDEX"];
 var startDate, endDate;
 var activeTopicLabels = [], inactiveTopicLabels = [];
 var graph = {};
 
 var indexTerms = d3.keys(index);
 
+var docMetadata = data["DOC_METADATA"],
+    categorical = data["CATEGORICAL"],
+    topicCoherence = data["TOPIC_COHERENCE"],
+    labels = data["TOPIC_LABELS"],
+    topicProportions,
+    topicStdevs;
 
 var streaming = true,
     stacked = false,
@@ -45,13 +52,19 @@ var streaming = true,
     toggleState = categorical ? 3 : 0,
     width = 960,
     height = 500,
-    smoothing = "mean",
+   smoothing = "mean",
     windowSize = 4,
     wordClouds = {};
 
 var graphTypes = {0: "stream", 1: "stacked area", 2: "line (std. dev. from mean)", 3: "categorical"};
 
 var maxStdDev = 3;
+
+var interval = d3.time.month;
+
+function getIntervalName (date) {
+  return interval.floor(date).toISOString();
+}
 
 var origTopicTimeData,
     dataSummed,
@@ -62,6 +75,58 @@ var origTopicTimeData,
     topicLabelsSorted,
     sortMetric = 0, 
     total = 1;
+
+function binDocsIntoIntervals() {
+  var topics_keys, timeframe, intervalsObj = {}, intervals = [];
+  for (var itemID in docMetadata) {
+    var item = docMetadata[itemID],
+        date_str = item.date,
+        date_stripped = date_str.split(' ')[0].replace(/-00/g, '-01'),
+        date;
+    try { 
+      date = new Date(date_stripped);
+    } catch (e) { console.log(e); }
+
+    if (date) {
+      var my_interval = interval.floor(date),
+          interval_name = getIntervalName(my_interval);
+      intervals.push(my_interval);
+      if (!(intervalsObj.hasOwnProperty(interval_name))) {
+        intervalsObj[interval_name] = [];
+      }
+      intervalsObj[interval_name].push(itemID);
+    }
+    if (!topics_keys) {
+      topics_keys = d3.keys(item.topics);
+      topics_keys.sort();
+    }
+  }
+
+  timeframe = d3.extent(intervals);
+  var interval_bins = interval.range(timeframe[0], interval.offset(timeframe[1], 1));
+  var intervals_n = interval_bins.length;
+  var topics_n = topics_keys.length;
+  topicProportions = new Array(topics_n);
+  topicStdevs = new Array(topics_n);
+  origTopicTimeData = [];
+  for (var i = 0, n = topics_n; i < n; i++) {
+    origTopicTimeData.push(new Array(intervals_n));
+    for (var j = 0, m = intervals_n; j < m; j++) {
+      var items = intervalsObj[getIntervalName(interval_bins[j])];
+      origTopicTimeData[i][j] = {"topic": i,
+        "x": interval_bins[j],
+        "y": []
+      };
+      if (items) {
+        items.forEach(function (itemID) {
+          origTopicTimeData[i][j].y.push({"itemID": itemID, "ratio": docMetadata[itemID].topics[j] || 0});
+        });       
+      } else {
+        console.log(interval_bins[j])
+      }
+    }
+  }
+}
 
 var sortMetrics = {0: {"text": "most variable"},
   1: {"text": "most common"},
@@ -109,21 +174,14 @@ var legendGroup = vis.append("svg:g").attr("id", "legendGroup");
 var wordCloudGroup = vis.append("svg:g").attr("id", "wordCloudGroup")
   .attr("transform", "translate(0," + (height - 100) + ")");
 
-origTopicTimeData = data;
+binDocsIntoIntervals();
 dataSummed = [];
 graph[0].active = true;
-sumUpData(0, origTopicTimeData);
+sumUpData(0);
 
 y.domain([-maxStdDev, maxStdDev]);
 
 startDate = graph[0].data[0][0].x;
-if (startDate.getFullYear() < 1000) { // probably incorrect
-  var i = 0;
-  while (startDate.getFullYear() < 1000 && i < graph[0].data[0].length - 2) {
-    i++;
-    startDate = graph[0].data[0][i].x;
-  }
-}
 endDate = graph[0].data[0][graph[0].data[0].length - 1].x;
 
 x.domain([startDate, endDate]);
@@ -140,7 +198,7 @@ for (i in labels) {
 
 xAxis = d3.svg.axis()
   .scale(x)
-  .ticks(d3.time.years, 10)
+  .ticks(interval.range, 10)
   .tickSubdivide(5)
   .tickSize(-height, -height);
 
@@ -288,7 +346,7 @@ function transition() {
 
   var my_graphs = [];
   for (var i in graph) {
-    sumUpData(i, origTopicTimeData);
+    sumUpData(i);
     setGraphPositions();
     if (streaming) {
       graph[i].streamData = graph[i].layout(graph[i].data);
@@ -375,59 +433,56 @@ function resetColors() {
   }
 }
 
-function sumUpData(graphIndex, origData) {
+function sumUpData(graphIndex) {
   graph[graphIndex].data = [];
-  // if (categorical) {  
-    graph[graphIndex].categoricalData = [];
-    categories = {};
-    origData.forEach(function(d, i) {
-      if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
-        d.forEach(function(e) {
-          e.y.forEach(function (f) {
-            var label = docMetadata[f.itemID]["label"];
-            if (!categories.hasOwnProperty(label)) {
-              categories[label] = {};
-            }
-            if (!categories[label].hasOwnProperty(i)) {
-              categories[label][i] = {'x': label, 'topic': i, 'y': 0};
-            }
-          });
+  graph[graphIndex].categoricalData = [];
+  categories = {};
+  origTopicTimeData.forEach(function(d, i) {
+    if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
+      d.forEach(function(e) {
+        e.y.forEach(function (f) {
+          var label = docMetadata[f.itemID]["label"];
+          if (!categories.hasOwnProperty(label)) {
+            categories[label] = {};
+          }
+          if (!categories[label].hasOwnProperty(i)) {
+            categories[label][i] = {'x': label, 'topic': i, 'y': 0};
+          }
         });
-      }
-    });
-  // }
+      });
+    }
+  });
 
   var firstRun = dataSummed.length == 0;
 
   var ordinalDocs = {};
 
-  origData.forEach(function (d, i) {
+  origTopicTimeData.forEach(function (d, i) {
     if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
       var length = graph[graphIndex].data.push([]);
       d.forEach(function (e) {
         if (timeFilter(e)) {
           var datum = {};
-          if (!Date.prototype.isPrototypeOf(e.x)) e.x = dateParse(e.x);
+          // if (!Date.prototype.isPrototypeOf(e.x)) e.x = dateParse(e.x);
           datum.x = e.x;
           datum.topic = e.topic;
           datum.search = graphIndex;
           datum.y = 0.0;
 
-          graph[graphIndex].contributingDocs[e.x.getFullYear()] = []; 
+          graph[graphIndex].contributingDocs[getIntervalName(e.x)] = []; 
           e.y.forEach(function (f) {
             if (graph[graphIndex].searchFilter(f)) {
-              graph[graphIndex].contributingDocs[e.x.getFullYear()].push(f.itemID);              
+              graph[graphIndex].contributingDocs[getIntervalName(e.x)].push(f.itemID);              
               datum.y += f.ratio;
               var label = docMetadata[f.itemID]["label"];
-              // if (categorical) {
-                categories[label][i].y += f.ratio;
-                if (!ordinalDocs.hasOwnProperty(label)) {
-                  ordinalDocs[label] = {};
-                }
-                ordinalDocs[label][f.itemID] = true;
-              // }
+              categories[label][i].y += f.ratio;
+              if (!ordinalDocs.hasOwnProperty(label)) {
+                ordinalDocs[label] = {};
+              }
+              ordinalDocs[label][f.itemID] = true;
             }
           });
+          if (!datum.y) datum.y = 0.0;
 
           graph[graphIndex].data[length - 1].push(datum);
         }
@@ -435,10 +490,10 @@ function sumUpData(graphIndex, origData) {
     }
   });
   
-  // for (var j in graph[graphIndex].data) {
-  //   var i = graph[graphIndex].data[j][0].topic;
-  //   findTopicProportionAndStdev(i, graph[graphIndex].contributingDocs, graph[graphIndex].data[j]);
-  // }
+  for (var j in graph[graphIndex].data) {
+    var i = graph[graphIndex].data[j][0].topic;
+    findTopicProportionAndStdev(i, graph[graphIndex].contributingDocs, graph[graphIndex].data[j]);
+  }
   for (var label in ordinalDocs) {
     graph[graphIndex].contributingDocsOrdinal[label] = d3.keys(ordinalDocs[label]);    
   }
@@ -446,11 +501,11 @@ function sumUpData(graphIndex, origData) {
 
     graph[graphIndex].data.forEach(function (d,i) {
       d.forEach(function (e) {
-        var docsForYear = graph[graphIndex].contributingDocs[e.x.getFullYear()];
-        var s = (docsForYear ? docsForYear.length : 0) || 1;
+        var docsForInterval = graph[graphIndex].contributingDocs[interval.floor(e.x)];
+        var s = (docsForInterval ? docsForInterval.length : 0) || 1;
 
-        // s is both the total number of docs in a given year and the sum of all topics
-        // for that year
+        // s is both the total number of docs in a given interval and the sum of all topics
+        // for that interval
 
         if (!streaming) { // find standard score
           e.y /= s;
@@ -497,7 +552,7 @@ function sumUpData(graphIndex, origData) {
           if (topicLabels[i]["active"]) activeTopics.push(i);
         }
       } else {
-        activeTopics = d3.range(origData.length);
+        activeTopics = d3.range(origTopicTimeData.length);
       }
       for (var i in activeTopics) {
         graph[graphIndex].categoricalData.push([]);
@@ -853,7 +908,7 @@ function setStartParameters() {
       } else if (i == "compare") {
         for (var j = 1; j <= query_obj[i]; j++) { generateSearch(searchN++);}
       } else if (i == "popup") {
-        deferUntilSearchComplete.add(getDocsForYear, query_obj[i]);
+        deferUntilSearchComplete.add(getDocsForInterval, query_obj[i]);
       } else if (i == "state") {
         toggleState = parseInt(query_obj[i]);
         selectGraphState(toggleState);
@@ -909,7 +964,7 @@ function save() {
   url += "&legend=" + showLegend;
   var popups = d3.selectAll(".popupHolder[display=block]");
   if (!popups.empty()) {
-    url += "&popup=" + popups.attr("data-year");  
+    url += "&popup=" + popups.attr("data-interval");  
   }
 
   for (var i in graph) {
@@ -1011,9 +1066,9 @@ function argsort(array) {
 function getDocs(d, i, p) {
   var mouse = [d3.event.pageX, d3.event.pageY];
   // var date = d3.time.year.floor(x.invert(mouse[0]));
-  var year = x.invert(mouse[0]).getFullYear();
+  var intervalName = getIntervalName(x.invert(mouse[0]));
 
-  getDocsForYear(year);
+  getDocsForInterval(intervalName);
 }
 
 function getDocsForCategory(d) {
@@ -1022,8 +1077,8 @@ function getDocsForCategory(d) {
   getSpecifiedDocs(category, xOrdinal, function (d) { return d; }, graph[0].contributingDocsOrdinal);
 }
 
-function getDocsForYear(year) {
-  getSpecifiedDocs(year, x, function (year) { return new Date(year, 0, 1); }, graph[0].contributingDocs);
+function getDocsForInterval(intervalName) {
+  getSpecifiedDocs(intervalName, x, function (d) { return new Date(d); }, graph[0].contributingDocs);
 }
 
 
@@ -1054,7 +1109,7 @@ function getSpecifiedDocs(xval, xfunc, xaccessor, contributing) {
     d3.select("#popupHolder" + i).style("display", "block");
     d3.select("#popupHolder" + i).style("left", xfunc(xaccessor(xval)) + "px");      
     d3.select("#popupHolder" + i).style("top", height/2 + "px");
-    d3.select("#popupHolder" + i).attr("data-year", xval);
+    d3.select("#popupHolder" + i).attr("data-interval", xval);
   }
 }
 
@@ -1207,7 +1262,7 @@ function setGraphPositions() {
 }
 
 function highlightItem(itemID) {
-  getDocsForYear(docMetadata[itemID]["year"]);
+  getDocsForInterval(docMetadata[itemID]["interval"]);
   d3.select("#doc" + itemID.toString()).call(flash);
 }
 
@@ -1373,26 +1428,25 @@ function createGradientScale() {
 function updateGradient() {
   defs.select("#linearGradientDensity").remove();
   var docNumbers = [],
-      yearsObj = {},
-      startYear = startDate.getFullYear(),
-      endYear = endDate.getFullYear();
+      intervalsObj = {};
 
   for (var i in graph) {
     if (graph[i].active) {
-      for (var year in graph[i].contributingDocs) {
-        yearsObj[year] = {};
-        graph[i].contributingDocs[year].forEach(function (doc) {
-          yearsObj[year][doc] = true;
+      for (var intervalName in graph[i].contributingDocs) {
+        intervalsObj[intervalName] = {};
+        graph[i].contributingDocs[intervalName].forEach(function (doc) {
+          intervalsObj[intervalName][doc] = true;
         });
       }      
     }
   }
-  var years = d3.keys(yearsObj);
-  years.sort();
-  years.forEach(function (year) {
-    if (year >= startYear && year < endYear) {
-      var sum = Object.keys(yearsObj[year]).length;
-      docNumbers.push({"percentage": 100.0 * (year - startYear) / (endYear - startYear), "value": sum});
+  var intervals = d3.keys(intervalsObj);
+  intervals.sort();
+  intervals.forEach(function (intervalName) {
+    var intervalDate = new Date(intervalName);
+    if (intervalDate >= startDate && intervalDate < endDate) {
+      var sum = Object.keys(intervalsObj[intervalName]).length;
+      docNumbers.push({"percentage": 100.0 * (intervalDate - startDate) / (endDate - startDate), "value": sum});
     }
   });
 
@@ -1452,7 +1506,7 @@ function topicCloud(i, parent) {
 }
 
 function findTopicProportionAndStdev(i, contributingDocs, data) {
-  var vals = data.map(function (d) { var total = contributingDocs[d.x.getFullYear()].length || 1; return d.y / total;});
+  var vals = data.map(function (d) { var total = contributingDocs[getIntervalName(d.x)].length || 1; return d.y / total;});
   topicProportions[i] = d3.mean(vals);
   var variances = [];
   for (var j = 0, n = vals.length; j < n; j++) {
