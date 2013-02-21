@@ -226,28 +226,6 @@ class MalletDMR(mallet_lda.MalletLDA):
 			except:
 				logging.error(traceback.format_exc())
 
-		topics_by_year = []
-		for topic in weights_by_topic:
-			topic_sums = []	
-			for year in topic:
-				year_sum = 0.0
-				if len(year['y']) != 0:
-					for doc in year['y']:
-						year_sum += doc['ratio']
-					topic_sums.append(year_sum / float(len(year['y'])))
-				else:
-					topic_sums.append(0)
-			topics_by_year.append(topic_sums)
-
-		self.topics_by_year = topics_by_year
-		self._find_proportions(topics_by_year)
-		try:		
-			self._find_stdevs(topics_by_year)
-			self._find_correlations(topics_by_year)
-		except:
-			self.stdevs = {}
-			self.correlations = {}
-
 		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
 
 		params = {"CATEGORICAL": "true" if self.categorical else "false",

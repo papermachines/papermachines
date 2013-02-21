@@ -14,7 +14,7 @@ class GeoparserExport(geoparser.Geoparser):
 		self.require_stopwords = False
 
 	def _sanitize_context(self, context):
-		return re.sub(r'[^\w ]+', u'', context, flags=re.UNICODE)
+		return re.sub(r'[^\w ]+', u' ', context, flags=re.UNICODE)
 
 	def process(self):
 		"""

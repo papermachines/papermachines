@@ -52,7 +52,7 @@ class MalletClassifierTest(mallet.Mallet):
 		with codecs.open(outfile_name, 'w', encoding='utf-8') as f:
 			json.dump(classifications, f)
 
-		params = {'CLASSIFIED': json.dumps(classifications)}
+		params = {'CLASSIFIED': classifications}
 
 		self.write_html(params)
 

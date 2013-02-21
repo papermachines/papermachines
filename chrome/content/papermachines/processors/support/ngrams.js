@@ -9,8 +9,8 @@ maxFreq = 0.0;
 
 // smooth data
 
-for (var i in data) {
-	var d = data[i];
+for (var i in ngrams_intervals) {
+	var d = ngrams_intervals[i];
     var smoothed = [];
     for (var j = 0, n = d.length; j < n; j++) {
       var sample = [];
@@ -37,19 +37,19 @@ for (var i in data) {
 times = times.map(function (d) { return new Date(d);});
 
 
-data = d3.entries(data);
-for (var i in data) {
-	var new_data = [];
-	for (var j = 0; j < data[i].value.length; j++) {
-		var e = {'x': times[j], 'y': data[i].value[j]};
-		new_data.push(e);
+ngrams_intervals = d3.entries(ngrams_intervals);
+for (var i in ngrams_intervals) {
+	var new_ngrams_intervals = [];
+	for (var j = 0; j < ngrams_intervals[i].value.length; j++) {
+		var e = {'x': times[j], 'y': ngrams_intervals[i].value[j]};
+		new_ngrams_intervals.push(e);
 	}
-	data[i].value = new_data;
+	ngrams_intervals[i].value = new_ngrams_intervals;
 }
 
 
-// for (var i in data) {
-// 	data[i].active = false;
+// for (var i in ngrams_intervals) {
+// 	ngrams_intervals[i].active = false;
 // }
 
 var x = d3.time.scale().domain(d3.extent(times)).range([0, w]);
@@ -86,7 +86,7 @@ function sanitizeKey(text) {
 	return text.replace(/\W+/g, '_');
 }
 graph.selectAll("path.line")
-	.data(data)
+	.data(ngrams_intervals)
 	.enter().append("svg:path")
 		.attr("class", function (d) { return "line " + sanitizeKey(d.key); })
 		.attr("d", function (d) { return line(d.value); })
@@ -118,8 +118,8 @@ function onNgramSelect() {
 
 function generateList() {
 	var keys = [];
-	for (var i in data) {
-		keys.push(data[i].key);
+	for (var i in ngrams_intervals) {
+		keys.push(ngrams_intervals[i].key);
 	}
 
 	var sel = document.createElement("select");

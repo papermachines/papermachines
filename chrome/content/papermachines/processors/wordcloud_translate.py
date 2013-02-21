@@ -8,9 +8,9 @@ class WordCloudTranslate(wordcloud_large.LargeWordCloud):
     Generate large word cloud using Bing translation
     """
     def _basic_params(self):
-        self.width = "960"
-        self.height = "500"
-        self.fontsize = "[10,72]"
+        self.width = 960
+        self.height = 500
+        self.fontsize = [10,72]
         self.name = "wordcloud_translate"
         self.template_filename = os.path.join(self.cwd, "templates", "wordcloud_large.html")
         self.n = 150
@@ -39,7 +39,7 @@ class WordCloudTranslate(wordcloud_large.LargeWordCloud):
 
         self.translator.saveTranslations()
 
-        params = {"DATA": json.dumps(freqs),
+        params = {"DATA": freqs,
                 "WIDTH": self.width,
                 "HEIGHT": self.height,
                 "FONTSIZE": self.fontsize

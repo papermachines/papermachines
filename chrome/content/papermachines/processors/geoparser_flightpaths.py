@@ -100,11 +100,11 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 				places[entityURI]["counts"][year] = 0			
 			places[entityURI]["counts"][year] += 1
 
-		params = {"STARTDATE": str(min(linksByYear.keys())),
-			"ENDDATE": str(max(linksByYear.keys())),
-			"ENTITYURIS": json.dumps(places),
-			"YEARS": json.dumps(years),
-			"LINKS_BY_YEAR": json.dumps(groupedLinksByYear)
+		params = {"STARTDATE": min(linksByYear.keys()),
+			"ENDDATE": max(linksByYear.keys()),
+			"ENTITYURIS": places,
+			"YEARS": years,
+			"LINKS_BY_YEAR": groupedLinksByYear
 		}
 		self.write_html(params)
 

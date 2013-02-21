@@ -4,72 +4,8 @@
   <meta charset="UTF-8" />
     <title>Geoparser: COLLECTION_NAME</title>
     <script type="text/javascript" src="support/html5slider.js"></script>
+    <script type="text/javascript" src="DATA_PATH"></script>
     <link type="text/css" rel="text/stylesheet" href="support/button.css"/>
-    <style type="text/css">
-      body, html {
-              margin:0;
-              padding:0;
-              font-family:Arial;
-            }
-      h1 {
-        margin-bottom:10px;
-        display: inline;
-      }
-      #searches {
-        float: right;
-      }
-      #main {
-        position:relative;
-        width:1020px;
-        padding:20px;
-        margin:auto;
-      }
-      #popup {
-        background: white;
-        border: 1px solid black;
-        padding: 15px;
-        width: 240px;
-        height: 300px;
-        -moz-border-radius:15px;
-        -o-border-radius:15px;
-        -webkit-border-radius:15px;
-        border-radius:15px;
-        overflow: scroll;       
-      }
-      .popupclose {
-        float: right;
-        margin-right: 15px;
-      }
-      #heatmapArea {
-        position:relative;
-        float:left;
-        margin-left: 20px;
-        width:960px;
-        height:600px;
-        border:1px dashed black;
-      }
-      #configArea {
-        position:relative;
-        float:left;
-        width:200px;
-        padding:15px;
-        padding-top:0;
-        padding-right:0;
-      }
-      .btn {
-        margin-top:25px;
-        padding:10px 20px 10px 20px;
-        -moz-border-radius:15px;
-        -o-border-radius:15px;
-        -webkit-border-radius:15px;
-        border-radius:15px;
-        border:2px solid black;
-        cursor:pointer;
-        color:white;
-        background-color:black;
-      }
-    </style>
-
     <link type="text/css" rel="text/stylesheet" href="support/flightpaths.css"/>
     <script type="text/javascript" src="support/d3.js"></script>
     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
@@ -90,11 +26,11 @@
       </div>
     </div>
     <script type="text/javascript">
-    var linksByYear = LINKS_BY_YEAR;
-    var entityURIs = ENTITYURIS;
-    var startDate = STARTDATE;
-    var endDate = ENDDATE;
-    var doc_metadata = DOC_METADATA;
+    var linksByYear = data["LINKS_BY_YEAR"];
+    var entityURIs = data["ENTITYURIS"];
+    var startDate = data["STARTDATE"];
+    var endDate = data["ENDDATE"];
+    var doc_metadata = data["DOC_METADATA"];
     </script>
   <script type="text/javascript" src="support/flightpaths_gmaps_d3.js"> </script>
   </body>

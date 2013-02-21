@@ -5,22 +5,23 @@
     <title>Word Cloud: COLLECTION_NAME</title>
   <script src="support/d3.js"></script>
   <script src="support/d3.layout.cloud.js"></script>
+  <script type="text/javascript" src="DATA_PATH"></script>
 </head>
 <body>
 <script>
-var fontSize = d3.scale.log().range(FONTSIZE);
+var fontSize = d3.scale.log().range(data["FONTSIZE"]);
 
 var color = d3.scale.category10().domain(d3.range(10));
 
-var data = DATA;
+var width = data["WIDTH"], height = data["HEIGHT"],
+    word_data = data["DATA"];
 
-var width = WIDTH, height = HEIGHT;
 
-var vals = data.map(function (d) { return +d.value});
+var vals = word_data.map(function (d) { return +d.value});
 fontSize.domain([d3.min(vals), d3.max(vals)]);
 
 var layout = d3.layout.cloud().size([width, height])
-    .words(data)
+    .words(word_data)
     .timeInterval(10)
     .rotate(function() { return ~~(Math.random() * 2) * 90; })
     .fontSize(function(d) { return fontSize(+d.value); })

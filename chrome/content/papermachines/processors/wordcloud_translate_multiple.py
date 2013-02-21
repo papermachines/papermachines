@@ -9,9 +9,9 @@ class WordCloudTranslateMultiple(wordcloud_multiple.MultipleWordClouds):
     """
     def _basic_params(self):
         self.name = "wordcloud_translate_multiple"
-        self.width = "300"
-        self.height = "150"
-        self.fontsize = "[10,32]"
+        self.width = 300
+        self.height = 150
+        self.fontsize = [10,32]
         self.n = 50
         self.tfidf_scoring = False
         self.MWW = False
@@ -94,8 +94,8 @@ class WordCloudTranslateMultiple(wordcloud_multiple.MultipleWordClouds):
 
         self.translator.saveTranslations()
 
-        params = {"CLOUDS": json.dumps(clouds),
-                "ORDER": json.dumps(self.label_order),
+        params = {"CLOUDS": clouds,
+                "ORDER": self.label_order,
                 "WIDTH": self.width,
                 "HEIGHT": self.height,
                 "FONTSIZE": self.fontsize

@@ -8,9 +8,9 @@ class MultipleWordClouds(wordcloud.WordCloud):
 	"""
 	def _basic_params(self):
 		self.name = "wordcloud_multiple"
-		self.width = "300"
-		self.height = "150"
-		self.fontsize = "[10,32]"
+		self.width = 300
+		self.height = 150
+		self.fontsize = [10,32]
 		self.n = 50
 		self.tfidf_scoring = False
 		self.MWW = False
@@ -182,8 +182,8 @@ class MultipleWordClouds(wordcloud.WordCloud):
 			else:
 				clouds[label] = self._findWordFreqs(filenames)
 
-		params = {"CLOUDS": json.dumps(clouds),
-				"ORDER": json.dumps(self.label_order),
+		params = {"CLOUDS": clouds,
+				"ORDER": self.label_order,
 				"WIDTH": self.width,
 				"HEIGHT": self.height,
 				"FONTSIZE": self.fontsize

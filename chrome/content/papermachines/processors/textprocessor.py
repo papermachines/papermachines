@@ -148,19 +148,24 @@ class TextProcessor:
 
         # System.setProperty("java.util.logging.config.file", filename)
 
-    def write_html(self, user_params):
+    def write_html(self, data_params):
         logging.info("writing HTML")
-        params = {"COLLECTION_NAME": self.collection_name, "DOC_METADATA": json.dumps(dict((v["itemID"], v) for k, v in self.metadata.iteritems()))}
-        params.update(user_params)
+        self.data_filename = self.out_filename.replace(".html", ".js")
+        html_params = {"COLLECTION_NAME": self.collection_name, "DATA_PATH": os.path.basename(self.data_filename)}
+        data_params.update({"DOC_METADATA": dict((v["itemID"], v) for k, v in self.metadata.iteritems())})
         try:
             template_filename = getattr(self, "template_filename", os.path.join(self.cwd, "templates", self.name + ".html"))
 
             with codecs.open(self.out_filename, 'w', encoding='utf-8') as outfile:
                 with codecs.open(template_filename, 'r', encoding='utf-8') as template:
                     template_str = template.read()
-                    for k, v in params.iteritems():
+                    for k, v in html_params.iteritems():
                         template_str = template_str.replace(k, v)
                     outfile.write(template_str)
+            with codecs.open(self.data_filename, 'w', encoding='utf-8') as datafile:
+                datafile.write('var data=')
+                json.dump(data_params, datafile)
+                datafile.write(';')
         except:
             logging.error(traceback.format_exc())
 

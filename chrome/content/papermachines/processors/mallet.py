@@ -181,7 +181,7 @@ class Mallet(textprocessor.TextProcessor):
 			if jar not in sys.path:
 				sys.path.append(jar)
 
-		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection)
+		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection + "-" + self.args_basename)
 
 		if not self.dry_run:
 			if os.path.exists(self.mallet_out_dir):
@@ -244,10 +244,8 @@ class Mallet(textprocessor.TextProcessor):
 			import_args.append("--keep-sequence")
 
 		if not self.dry_run and not os.path.exists(self.instance_file):
-			self.set_java_log(self.progress_filename)
 			from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
 			Csv2Vectors(import_args)
-#			import_return = subprocess.call(import_args, stdout=self.progress_file)
 	
 	def process(self):
 		"""

@@ -9,9 +9,9 @@ class WordCloud(textprocessor.TextProcessor):
 	"""
 	def _basic_params(self):
 		self.name = "wordcloud"
-		self.width = "300"
-		self.height = "150"
-		self.fontsize = "[10,32]"
+		self.width = 300
+		self.height = 150
+		self.fontsize = [10, 32]
 		self.n = 50
 		self.tfidf_scoring = False
 
@@ -101,7 +101,7 @@ class WordCloud(textprocessor.TextProcessor):
 		else:
 			freqs = self._findWordFreqs(self.files)
 
-		params = {"DATA": json.dumps(freqs),
+		params = {"DATA": freqs,
 				"WIDTH": self.width,
 				"HEIGHT": self.height,
 				"FONTSIZE": self.fontsize

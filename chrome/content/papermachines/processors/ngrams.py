@@ -170,10 +170,10 @@ class NGrams(textprocessor.TextProcessor):
         self.max_freq = max([max(l) for l in self.ngrams_intervals.values()])
         # self.ngrams_intervals = dict((self.num_to_ngram[ngram], values) for ngram, values in self.ngrams_intervals.iteritems())
 
-        params = {"NGRAMS_INTERVALS": json.dumps(self.ngrams_intervals),
-            "TIMES": json.dumps(self.interval_names),
-            "MAX_FREQ": json.dumps(self.max_freq),
-            "NGRAMS_TO_DOCS": json.dumps(self.doc_freqs)
+        params = {"NGRAMS_INTERVALS": self.ngrams_intervals,
+            "TIMES": self.interval_names,
+            "MAX_FREQ": self.max_freq,
+            "NGRAMS_TO_DOCS": self.doc_freqs
         }
 
         self.write_html(params)
