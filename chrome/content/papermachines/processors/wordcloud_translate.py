@@ -34,8 +34,8 @@ class WordCloudTranslate(wordcloud_large.LargeWordCloud):
             freqs = self._findWordFreqs(self.files)
 
         for item in freqs:
-            word = item["text"]            
-            item["text"] = self.translator.translate(word)
+            item["original_text"] = item["text"]
+            item["text"] = self.translator.translate(item["original_text"])
 
         self.translator.saveTranslations()
 

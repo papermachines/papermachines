@@ -38,7 +38,10 @@ function draw(label, words) {
       .attr("transform", function(d) {
         return "translate(" + [d.x, d.y] +")rotate(" + d.rotate + ")";
       })
-      .text(function(d) { return d.text; });
+      .text(function(d) { return d.text; })
+      .filter(function (d) { return d.hasOwnProperty("original_text");})
+      .append("title")
+      .text(function (d) { return d.original_text; });
 
   vis.append("text")
     .attr("transform", "translate(0," + ((height/2)) + ")")

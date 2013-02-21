@@ -575,7 +575,7 @@ function createOrUpdateGraph(i) {
 }
 
 function createCategoricalGraph (i) {
-  d3.layout.stack()(graph[i].categoricalData);
+  d3.layout.stack().offset("expand")(graph[i].categoricalData);
   my = d3.max(graph[i].categoricalData, function(d) {
       return d3.max(d, function(d) {
         return d.y0 + d.y;

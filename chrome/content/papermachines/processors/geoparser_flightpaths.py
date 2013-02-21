@@ -38,8 +38,6 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 			if os.path.exists(file_geoparsed):
 				try:
 					geoparse_obj = json.load(file(file_geoparsed))
-					if not "places_by_entityURI" in geoparse_obj:
-						os.remove(file_geoparsed)
 				except:
 					logging.error("File " + file_geoparsed + " could not be read.")
 					continue

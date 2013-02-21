@@ -11,6 +11,7 @@
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple_menu	"Multiple Word Clouds">
 <!ENTITY papermachines.collectionmenu.wordcloud_chronological	"Word Clouds by Time Interval...">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection...">
+<!ENTITY papermachines.collectionmenu.wordcloud_translate_multiple	"Translated Word Clouds by Subcollection...">
 
 <!ENTITY papermachines.collectionmenu.ngrams_menu			"N-grams">
 <!ENTITY papermachines.collectionmenu.ngrams				"Top N-grams...">

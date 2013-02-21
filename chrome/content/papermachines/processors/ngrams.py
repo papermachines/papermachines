@@ -101,7 +101,8 @@ class NGrams(textprocessor.TextProcessor):
         total_n = len(words)
         i = 0
         while i < (total_n - (n - 1)):
-            yield u' '.join(words[i:i+n])
+            if not any([word in self.stopwords for word in words[i:i+n]]):
+                yield u' '.join(words[i:i+n])
             i += 1
 
     def _filter_by_df(self):

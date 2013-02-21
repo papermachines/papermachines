@@ -21,7 +21,7 @@ Zotero.PaperMachines = {
 	processors_dir: null,
 	java_exe: null,
 	jython_path: null,
-	processors: ["wordcloud", "phrasenet", "mallet", "geoparser", "dbpedia", "export-output"], //"ngrams_menu", "mallet_classify",
+	processors: ["wordcloud", "phrasenet", "mallet", "geoparser", "dbpedia", "export-output", "ngrams_menu"], //, "mallet_classify",
 	processNames: null, // see locale files
 	prompts: null,
 	paramLabels: null,
@@ -59,6 +59,17 @@ Zotero.PaperMachines = {
 			var params = Zotero.PaperMachines.promptForProcessParams("wordcloud_translate");
 			if (params) {
 				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
+		"wordcloud_translate": function () {
+			var filter = Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
+			if (!filter) return false;
+
+			var params = Zotero.PaperMachines.promptForProcessParams("wordcloud_translate");
+			if (params) {
+				return filter.concat(["json", JSON.stringify(params)]);
 			} else {
 				return false;
 			}

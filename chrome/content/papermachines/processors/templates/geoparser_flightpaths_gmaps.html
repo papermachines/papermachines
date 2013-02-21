@@ -13,6 +13,10 @@
             }
       h1 {
         margin-bottom:10px;
+        display: inline;
+      }
+      #searches {
+        float: right;
       }
       #main {
         position:relative;
@@ -20,9 +24,26 @@
         padding:20px;
         margin:auto;
       }
+      #popup {
+        background: white;
+        border: 1px solid black;
+        padding: 15px;
+        width: 240px;
+        height: 300px;
+        -moz-border-radius:15px;
+        -o-border-radius:15px;
+        -webkit-border-radius:15px;
+        border-radius:15px;
+        overflow: scroll;       
+      }
+      .popupclose {
+        float: right;
+        margin-right: 15px;
+      }
       #heatmapArea {
         position:relative;
         float:left;
+        margin-left: 20px;
         width:960px;
         height:600px;
         border:1px dashed black;
@@ -55,28 +76,27 @@
   </head>
   <body>
     <div id="body">
-      <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><span id="timeDisplay"></div></div>
-    <div id="main">
-      <h1>Flight Paths: COLLECTION_NAME</h1>
-      <div id="heatmapArea">
-      
-      </div>
+      <div id="main">
+        <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><span id="timeDisplay"></div>
+        <h1>Flight Paths: COLLECTION_NAME</h1>
+        <div id="heatmapArea">
+        
+        </div>
 
-      <div id="configArea">
-        <div id="togLegend" class="btn">Toggle Legend</div>
+        <div id="configArea">
+          <div id="togLegend" class="btn">Toggle Legend</div>
+        </div>
+        
       </div>
-      
     </div>
     <script type="text/javascript">
     var linksByYear = LINKS_BY_YEAR;
     var entityURIs = ENTITYURIS;
     var startDate = STARTDATE;
     var endDate = ENDDATE;
+    var doc_metadata = DOC_METADATA;
     </script>
-
-  <script type="text/javascript" src="support/heatmap.js"></script>
-  <script type="text/javascript" src="support/heatmap-gmaps.js"></script>
-  <script type="text/javascript" src="support/flightpaths_gmaps.js"> </script>
+  <script type="text/javascript" src="support/flightpaths_gmaps_d3.js"> </script>
   </body>
 </html>
 

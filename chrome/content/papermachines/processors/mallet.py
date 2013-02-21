@@ -49,7 +49,7 @@ class Mallet(textprocessor.TextProcessor):
 				logging.error(traceback.format_exc())
 
 	def _output_text(self, text, f, filename):
-		text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
+		text = re.sub(r"[^\w ]+", u' ', text.lower(), flags=re.UNICODE)
 		if self.stemming:
 			newtext = u''
 			for word in text.split():
