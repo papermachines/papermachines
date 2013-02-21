@@ -55,6 +55,8 @@ class Mallet(textprocessor.TextProcessor):
 			for word in text.split():
 				if word not in self.stemmed:
 					self.stemmed[word] = stem(self, word)
+				if len(self.stemmed[word]) < 4 or word in self.stopwords:
+					continue
 				newtext += self.stemmed[word] + u' '
 			text = newtext
 		f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
