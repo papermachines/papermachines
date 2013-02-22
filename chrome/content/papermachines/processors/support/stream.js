@@ -52,15 +52,16 @@ var streaming = true,
     toggleState = categorical ? 3 : 0,
     width = 960,
     height = 500,
-   smoothing = "mean",
-    windowSize = 4,
+    smoothing = false, //"mean",
+    windowSize = 0, // 4
     wordClouds = {};
 
 var graphTypes = {0: "stream", 1: "stacked area", 2: "line (std. dev. from mean)", 3: "categorical"};
 
 var maxStdDev = 3;
 
-var interval = d3.time.month;
+var intervalType = "month";
+var interval = d3.time[intervalType];
 
 function getIntervalName (date) {
   return interval.floor(date).toISOString();
@@ -76,13 +77,15 @@ var origTopicTimeData,
     sortMetric = 0, 
     total = 1;
 
+var intervalsObj = {};
 function binDocsIntoIntervals() {
-  var topics_keys, timeframe, intervalsObj = {}, intervals = [];
+  var topics_n, timeframe, intervals = [];
   for (var itemID in docMetadata) {
     var item = docMetadata[itemID],
         date_str = item.date,
         date_stripped = date_str.split(' ')[0].replace(/-00/g, '-01'),
         date;
+        if (!item.hasOwnProperty("topics")) continue;
     try { 
       date = new Date(date_stripped);
     } catch (e) { console.log(e); }
@@ -96,33 +99,30 @@ function binDocsIntoIntervals() {
       }
       intervalsObj[interval_name].push(itemID);
     }
-    if (!topics_keys) {
-      topics_keys = d3.keys(item.topics);
-      topics_keys.sort();
+    if (!topics_n) {
+      topics_n = item.topics.length;
     }
   }
 
   timeframe = d3.extent(intervals);
   var interval_bins = interval.range(timeframe[0], interval.offset(timeframe[1], 1));
+  var interval_names = interval_bins.map(getIntervalName);
   var intervals_n = interval_bins.length;
-  var topics_n = topics_keys.length;
   topicProportions = new Array(topics_n);
   topicStdevs = new Array(topics_n);
   origTopicTimeData = [];
   for (var i = 0, n = topics_n; i < n; i++) {
     origTopicTimeData.push(new Array(intervals_n));
     for (var j = 0, m = intervals_n; j < m; j++) {
-      var items = intervalsObj[getIntervalName(interval_bins[j])];
+      var items = intervalsObj[interval_names[j]];
       origTopicTimeData[i][j] = {"topic": i,
         "x": interval_bins[j],
         "y": []
       };
       if (items) {
         items.forEach(function (itemID) {
-          origTopicTimeData[i][j].y.push({"itemID": itemID, "ratio": docMetadata[itemID].topics[j] || 0});
+          origTopicTimeData[i][j].y.push({"itemID": itemID, "ratio": docMetadata[itemID].topics[i] || 0});
         });       
-      } else {
-        console.log(interval_bins[j])
       }
     }
   }
@@ -198,8 +198,8 @@ for (i in labels) {
 
 xAxis = d3.svg.axis()
   .scale(x)
-  .ticks(interval.range, 10)
-  .tickSubdivide(5)
+  // .ticks(interval.range, 10)
+  .tickSubdivide(1)
   .tickSize(-height, -height);
 
 
@@ -437,10 +437,10 @@ function sumUpData(graphIndex) {
   graph[graphIndex].data = [];
   graph[graphIndex].categoricalData = [];
   categories = {};
-  origTopicTimeData.forEach(function(d, i) {
+  origTopicTimeData.forEach(function(d, i) { // for each topic
     if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
-      d.forEach(function(e) {
-        e.y.forEach(function (f) {
+      d.forEach(function(e) { // for each interval
+        e.y.forEach(function (f) { // for each item within interval
           var label = docMetadata[f.itemID]["label"];
           if (!categories.hasOwnProperty(label)) {
             categories[label] = {};
@@ -457,20 +457,19 @@ function sumUpData(graphIndex) {
 
   var ordinalDocs = {};
 
-  origTopicTimeData.forEach(function (d, i) {
+  origTopicTimeData.forEach(function (d, i) { // for each topic
     if (topicLabels == null || i in topicLabels && topicLabels[i]["active"]) {
       var length = graph[graphIndex].data.push([]);
-      d.forEach(function (e) {
+      d.forEach(function (e) { // for each interval
         if (timeFilter(e)) {
           var datum = {};
-          // if (!Date.prototype.isPrototypeOf(e.x)) e.x = dateParse(e.x);
           datum.x = e.x;
           datum.topic = e.topic;
           datum.search = graphIndex;
           datum.y = 0.0;
 
           graph[graphIndex].contributingDocs[getIntervalName(e.x)] = []; 
-          e.y.forEach(function (f) {
+          e.y.forEach(function (f) { // for each item within interval
             if (graph[graphIndex].searchFilter(f)) {
               graph[graphIndex].contributingDocs[getIntervalName(e.x)].push(f.itemID);              
               datum.y += f.ratio;
@@ -482,7 +481,7 @@ function sumUpData(graphIndex) {
               ordinalDocs[label][f.itemID] = true;
             }
           });
-          if (!datum.y) datum.y = 0.0;
+          // if (!datum.y) console.log(e);
 
           graph[graphIndex].data[length - 1].push(datum);
         }
@@ -490,9 +489,11 @@ function sumUpData(graphIndex) {
     }
   });
   
-  for (var j in graph[graphIndex].data) {
-    var i = graph[graphIndex].data[j][0].topic;
-    findTopicProportionAndStdev(i, graph[graphIndex].contributingDocs, graph[graphIndex].data[j]);
+  if (firstRun) {
+    for (var j in graph[graphIndex].data) {
+      var i = graph[graphIndex].data[j][0].topic;
+      findTopicProportionAndStdev(i, graph[graphIndex].contributingDocs, graph[graphIndex].data[j]);
+    }    
   }
   for (var label in ordinalDocs) {
     graph[graphIndex].contributingDocsOrdinal[label] = d3.keys(ordinalDocs[label]);    
@@ -501,7 +502,7 @@ function sumUpData(graphIndex) {
 
     graph[graphIndex].data.forEach(function (d,i) {
       d.forEach(function (e) {
-        var docsForInterval = graph[graphIndex].contributingDocs[interval.floor(e.x)];
+        var docsForInterval = graph[graphIndex].contributingDocs[getIntervalName(interval.floor(e.x))];
         var s = (docsForInterval ? docsForInterval.length : 0) || 1;
 
         // s is both the total number of docs in a given interval and the sum of all topics
@@ -512,8 +513,7 @@ function sumUpData(graphIndex) {
           e.y -= topicProportions[d[0].topic];
           e.y /= topicStdevs[d[0].topic];
 
-          // e.y has been standardized (although, this is a Dirichlet distribution
-          // not a normal one; is there some more appropriate way to do this?)
+          // e.y is now a z-score for that topic
 
         } else {
           e.y /= s;
@@ -521,7 +521,7 @@ function sumUpData(graphIndex) {
       });
     });
 
-    if (!categorical && smoothing) { // smooth using simple moving median
+    if (!categorical && smoothing) { // smooth using simple moving average/median
       graph[graphIndex].data.forEach(function (d,i) {
         var smoothed = [];
         for (var j = 0, n = d.length; j < n; j++) {
@@ -545,7 +545,6 @@ function sumUpData(graphIndex) {
       });
     }
 
-    // if (categorical) {
       var activeTopics = [];
       if (topicLabels != null) {
         for (var i in topicLabels) {
@@ -571,7 +570,6 @@ function sumUpData(graphIndex) {
           }
         }
       });      
-    // }
 
     if (firstRun) dataSummed = graph[graphIndex].data;
 }
@@ -1505,13 +1503,10 @@ function topicCloud(i, parent) {
   return parent.select("g.cloud" + i.toString());
 }
 
-function findTopicProportionAndStdev(i, contributingDocs, data) {
-  var vals = data.map(function (d) { var total = contributingDocs[getIntervalName(d.x)].length || 1; return d.y / total;});
+function findTopicProportionAndStdev(i, contributingDocs, intervals_data) {
+  var vals = intervals_data.map(function (d) { var total = contributingDocs[getIntervalName(d.x)].length || 1; return d.y / total;});
   topicProportions[i] = d3.mean(vals);
-  var variances = [];
-  for (var j = 0, n = vals.length; j < n; j++) {
-    variances.push(Math.pow(vals[j] - topicProportions[i], 2));
-  }
+  var variances = vals.map(function (val) { return Math.pow(val - topicProportions[i], 2); });
   topicStdevs[i] = Math.sqrt((1.0 / (vals.length - 1.0)) * d3.sum(variances));
 }
 

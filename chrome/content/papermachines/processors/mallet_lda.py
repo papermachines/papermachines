@@ -143,11 +143,18 @@ class MalletLDA(mallet.Mallet):
 				total_topics = sum(self.metadata[filename]["topics"].values())
 				normalized = dict((k, 1.0 * v / total_topics) for k, v in self.metadata[filename]["topics"].iteritems())
 				self.metadata[filename]["main_topic"] = self.argmax(normalized)
-				self.metadata[filename]["topics"] = normalized
+				self.metadata[filename]["topics"] = [normalized[x] for x in sorted(normalized.keys())]
 			else:
-				self.metadata[filename]["main_topic"] = self.argmax(self.metadata[filename]["topics"])
+				pass
+				# self.metadata[filename]["main_topic"] = self.argmax(self.metadata[filename]["topics"])
+				# self.metadata[filename]["topics"] = [self.metadata[filename]["topics"][x] for x in sorted(self.metadata[filename]["topics"].keys())]
 
 		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
+
+		if getattr(self, "index", None) is not None:
+			for term in self.index:
+				if isinstance(self.index[term], set):
+					self.index[term] = list(self.index[term])
 
 		params = {"CATEGORICAL": self.categorical,
 				"TOPIC_LABELS": labels,

@@ -57,6 +57,14 @@ class Mallet(textprocessor.TextProcessor):
 					self.stemmed[word] = stem(self, word)
 				if len(self.stemmed[word]) < 4 or word in self.stopwords:
 					continue
+
+				# if word not in self.index:
+				# 	self.index[word] = set()
+				if self.stemmed[word] not in self.index:
+					self.index[self.stemmed[word]] = set()
+				# self.index[word].add(self.metadata[filename]["itemID"].split('.')[0])
+				self.index[self.stemmed[word]].add(self.metadata[filename]["itemID"].split('.')[0])
+
 				newtext += self.stemmed[word] + u' '
 			text = newtext
 		f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
@@ -65,6 +73,7 @@ class Mallet(textprocessor.TextProcessor):
 	def _import_files(self):
 		if self.stemming:
 			self.stemmed = {}
+			self.index = {}
 		self.docs = []
 		self.segmentation = getattr(self, "segmentation", False)
 
