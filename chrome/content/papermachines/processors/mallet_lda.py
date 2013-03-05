@@ -119,7 +119,7 @@ class MalletLDA(mallet.Mallet):
 				itemid = self.metadata[filename]["itemID"]
 
 				freqs = dict((int(y[0]), float(y[1])) for y in self.xpartition(values))
-				if itemid.count('.') > 0:
+				if itemid.count('.') > 0 and self.segmentation:
 					orig_item = self.metadata[filename.split('#')[0]]
 					if not "segments" in orig_item:
 						orig_item["segments"] = 0
