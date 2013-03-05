@@ -1,5 +1,6 @@
-var nodedata = data['nodes'];
-var edgedata = data['edges'];
+var pattern = data["PATTERN"];
+var nodedata = data["DATA"]['nodes'];
+var edgedata = data["DATA"]['edges'];
 
 var fontSize = d3.scale.log().range([10,32]);
 var linkSize = d3.scale.linear().range([2,10]);
@@ -27,7 +28,7 @@ var diagonal = d3.svg.diagonal()
     // return {'x': d.target.x, 'y': d.target.y - (d.source.y < d.target.y ? textOffset : -textOffset)};
   });
 
-var width = 960, height = 500;
+var width = 1024, height = 768;
 
 d3.select("body").append("h1").text(pattern);
 
@@ -51,8 +52,8 @@ svg.append("svg:defs").selectAll("marker")
 
 var force = d3.layout.force().size([width, height])
     .distance(100)
-    .charge(-200)
-    .gravity(0.1)
+    .charge(-300)
+    .gravity(0.25)
     .nodes(nodedata)
     .links(edgedata)
     .start();
@@ -83,16 +84,16 @@ var link = svg.selectAll(".link")
 force.on("tick", function() {
   link.attr("d", diagonal);
 
-  var q = d3.geom.quadtree(nodedata),
-    i = 0,
-    n = nodedata.length;
-  while (++i < n) {
-    q.visit(collide(nodedata[i]));
-  }
+  // var q = d3.geom.quadtree(nodedata),
+  //   i = 0,
+  //   n = nodedata.length;
+  // while (++i < n) {
+  //   q.visit(collide(nodedata[i]));
+  // }
 
   node.attr("transform", function(d) {
-    d.x = Math.max(fontSize(+d.freq), Math.min(d.x, width - fontSize(+d.freq)));
-    d.y = Math.max(fontSize(+d.freq), Math.min(d.y, height - fontSize(+d.freq)));
+    // d.x = Math.max(fontSize(+d.freq), Math.min(d.x, width - fontSize(+d.freq)));
+    // d.y = Math.max(fontSize(+d.freq), Math.min(d.y, height - fontSize(+d.freq)));
   return "translate(" + d.x + "," + d.y + ")"; });
 });
 
