@@ -52,15 +52,16 @@ var streaming = true,
     toggleState = categorical ? 3 : 0,
     width = 960,
     height = 500,
-    smoothing = false, //"mean",
-    windowSize = 0, // 4
+    smoothing = "mean",
+    windowSize = 2,
+    interpolateType = "monotone",
     wordClouds = {};
 
 var graphTypes = {0: "stream", 1: "stacked area", 2: "line (std. dev. from mean)", 3: "categorical"};
 
 var maxStdDev = 3;
 
-var intervalType = "month";
+var intervalType = "year";
 var interval = d3.time[intervalType];
 
 function getIntervalName (date) {
@@ -83,14 +84,14 @@ function binDocsIntoIntervals() {
   for (var itemID in docMetadata) {
     var item = docMetadata[itemID],
         date_str = item.date,
-        date_stripped = date_str.split(' ')[0].replace(/-00/g, '-01'),
+        date_stripped = date_str.split(' ')[0].substring(0,10).replace(/-00/g, '-01'),
         date;
-        if (!item.hasOwnProperty("topics")) continue;
+    if (!item.hasOwnProperty("topics")) continue;
     try { 
       date = new Date(date_stripped);
     } catch (e) { console.log(e); }
 
-    if (date) {
+    if (date instanceof Date && isFinite(date)) {
       var my_interval = interval.floor(date),
           interval_name = getIntervalName(my_interval);
       intervals.push(my_interval);
@@ -100,10 +101,9 @@ function binDocsIntoIntervals() {
       intervalsObj[interval_name].push(itemID);
     }
     if (!topics_n) {
-      topics_n = item.topics.length;
+      topics_n = Object.keys(item.topics).length;
     }
   }
-
   timeframe = d3.extent(intervals);
   var interval_bins = interval.range(timeframe[0], interval.offset(timeframe[1], 1));
   var interval_names = interval_bins.map(getIntervalName);
@@ -407,7 +407,7 @@ function shuffle(array) {
     return array;
 }
 
-function resetColors() {
+function resetColors(force) {
   var currentColors = activeTopicLabels.map(function (d) { return graphColors(d); });
   currentColors.sort();
   var anyRepeats = false;
@@ -416,7 +416,7 @@ function resetColors() {
       anyRepeats = true;
     }
   }
-  if (!anyRepeats) {
+  if (!anyRepeats && !force) {
     return;
   }
 
@@ -489,12 +489,12 @@ function sumUpData(graphIndex) {
     }
   });
   
-  if (firstRun) {
+  // if (firstRun) {
     for (var j in graph[graphIndex].data) {
       var i = graph[graphIndex].data[j][0].topic;
       findTopicProportionAndStdev(i, graph[graphIndex].contributingDocs, graph[graphIndex].data[j]);
     }    
-  }
+  // }
   for (var label in ordinalDocs) {
     graph[graphIndex].contributingDocsOrdinal[label] = d3.keys(ordinalDocs[label]);    
   }
@@ -1221,14 +1221,14 @@ function createGraphObject(i) {
   };
   graph[i].line = (function (me) {
     return d3.svg.line()
-      .interpolate("monotone")
+      .interpolate(interpolateType)
       .x(function(d) { return x(d.x); })
       .y(function(d) { return me.y(d.y); });
     })(graph[i]);
 
   graph[i].area = (function (me) { 
     return d3.svg.area()
-      .interpolate("monotone")
+      .interpolate(interpolateType)
       .x(function(d) { return x(d.x); })
       .y0(function(d) { return me.y(d.y0); })
       .y1(function(d) { return me.y(d.y0 + d.y); });
