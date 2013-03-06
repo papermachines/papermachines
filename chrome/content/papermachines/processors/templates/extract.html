@@ -6,20 +6,15 @@
     <script type="text/javascript" src="DATA_PATH"></script>
 </head>
 <body>
+<p id="extracted"></div>
 <div>
-	<p>Extracted SUCCEEDED out of TOTAL new texts.</p>
 	<p>If this is the first extraction completed on your machine, you may need to restart Firefox/Zotero Standalone (and/or click on a different collection from the one you extracted, then on the original one) for the visualization tools to become accessible.</p>
 	<br/>
 	<p>This window can now be closed.</p>
 </div>
 <script>
-    var element = document.createElement("PaperMachinesDataElement");
-    element.setAttribute("refresh", true);
-    document.documentElement.appendChild(element);
-
-    var evt = document.createEvent("HTMLEvents");
-    evt.initEvent("papermachines-request", true, false);
-    element.dispatchEvent(evt);
+    var p = document.getElementById("extracted");
+    p.textContent = "Extracted " + data["SUCCEEDED"] + " out of " + data["TOTAL"] + " new texts.";
 </script>
 </body>
 </html>
