@@ -1287,6 +1287,8 @@ Zotero.PaperMachines = {
 				for (var i in export_processes) {
 					var file = Zotero.PaperMachines._getLocalFile(export_processes[i]);
 					file.copyTo(new_dir, file.leafName);
+					var file2 = Zotero.PaperMachines._getLocalFile(export_processes[i].replace('.html', '.js'));
+					if (file2.exists()) file2.copyTo(new_dir, file2.leafName);
 				}
 			}
 		}
