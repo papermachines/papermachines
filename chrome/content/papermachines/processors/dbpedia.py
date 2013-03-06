@@ -85,10 +85,8 @@ class DBpedia(textprocessor.TextProcessor):
 			if sum(items.values()) > min_weight:
 				filtered_uris[uri] = items
 
-
-
 		# params = {"DATA": json.dumps(uris_to_docs)}
-		params = {"URIS_TO_DOCS": json.dumps(filtered_uris)}
+		params = {"URIS_TO_DOCS": filtered_uris}
 		self.write_html(params)
 
 		logging.info("finished")

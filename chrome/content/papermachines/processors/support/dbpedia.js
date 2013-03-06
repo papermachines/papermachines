@@ -9,15 +9,18 @@ var nodes, links;
 
 var overallWeight = {}, nameLinks = {}, links, nodes;
 
-for (var i in data) {
+var dbData = data["URIS_TO_DOCS"],
+	docMetadata = data["DOC_METADATA"];
+for (var i in dbData) {
 	var sum = 0;
 	var name = decodeURIComponent(i.replace("http://dbpedia.org/resource/","")).replace(/_/g, " ");
-	for (var item in data[i]) {
-		sum += data[i][item];
-		if (!overallWeight.hasOwnProperty(item)){
+	for (var item in dbData[i]) {
+		console.log(item);
+		sum += dbData[i][item];
+		if (!overallWeight.hasOwnProperty(item) && docMetadata.hasOwnProperty(item)){
 			overallWeight[item] = {"name": docMetadata[item]["title"].substring(0,20), "value": 1, "id": item, "url": "zotero://select/item/" + item, "group": "document"};
 		} else {
-			// overallWeight[item]["value"] += 1;
+			overallWeight[item]["value"] += 1;
 		}
 		if (!(name in nameLinks)) {
 			nameLinks[name] = [item];
