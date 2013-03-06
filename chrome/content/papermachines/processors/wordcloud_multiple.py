@@ -15,7 +15,9 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		self.tfidf_scoring = False
 		self.MWW = False
 		self.dunning = False
+		self.comparison_type = "plain"
 		if len(self.extra_args) > 0:
+			self.comparison_type = self.extra_args[0]
 			if self.extra_args[0] == "tfidf":
 				self.tfidf_scoring = True
 			elif self.extra_args[0] == "mww":
@@ -189,6 +191,14 @@ class MultipleWordClouds(wordcloud.WordCloud):
 				"FONTSIZE": self.fontsize
 		}
 
+		if self.comparison_type == "tfidf":
+			params["FORMAT"] = u"tf-idf:{0}"
+		elif self.comparison_type == "mww":
+			params["FORMAT"] = u"\u03c1:{0}"
+		elif self.comparison_type == "dunning":
+			params["FORMAT"] = u"G\u00b2: {0}"
+		else:
+			params["FORMAT"] = u'{0} occurrences in subset'
 		self.write_html(params)
 
 

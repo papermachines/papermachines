@@ -104,7 +104,8 @@ class WordCloud(textprocessor.TextProcessor):
 		params = {"DATA": freqs,
 				"WIDTH": self.width,
 				"HEIGHT": self.height,
-				"FONTSIZE": self.fontsize
+				"FONTSIZE": self.fontsize,
+				"FORMAT": u"tf-idf: {0}" if self.tfidf_scoring else u"{0} occurrences in corpus"
 		}
 
 		self.write_html(params)
