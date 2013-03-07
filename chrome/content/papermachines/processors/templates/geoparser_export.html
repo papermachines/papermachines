@@ -6,6 +6,10 @@
     <script type="text/javascript" src="DATA_PATH"></script>
 </head>
 <body>
-<div>The CSV file may be found at the following path: CSVPATH</div>
+<p id="path"></p>
+<script>
+    var p = document.getElementById("extracted");
+    p.textContent = "The CSV file may be found at the following path: " + data["CSVPATH"];
+</script>
 </body>
 </html>

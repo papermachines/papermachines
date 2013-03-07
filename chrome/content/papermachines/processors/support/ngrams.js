@@ -1,3 +1,9 @@
+var ngrams_intervals = data["NGRAMS_INTERVALS"];
+var times = data["TIMES"];
+var maxFreq = data["MAX_FREQ"];
+var ngramsToDocs = data["NGRAMS_TO_DOCS"];
+var docMetadata = data["DOC_METADATA"];
+
 var m = [80, 80, 80, 80]; // margins
 var w = 1000 - m[1] - m[3]; // width
 var h = 400 - m[0] - m[2]; // height
