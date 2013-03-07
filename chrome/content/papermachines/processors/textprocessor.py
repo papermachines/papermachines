@@ -42,7 +42,7 @@ class TextProcessor:
 
         if self.require_stopwords:
             self.stoplist = os.path.join(self.cwd, "stopwords.txt")
-            self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines()]
+            self.stopwords = [x.strip() for x in codecs.open(self.stoplist, 'r', encoding='utf-8').readlines() if x.strip() != '']
 
         self.out_filename = os.path.join(self.out_dir, self.name + self.collection + "-" + self.args_basename + ".html")
 
