@@ -12,7 +12,7 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 		self.name = "geoparser_flightpaths"
 		self.dry_run = False
 		self.require_stopwords = False
-		self.template_filename = os.path.join(self.cwd, "templates", "geoparser_flightpaths_gmaps.html")
+		self.template_filename = os.path.join(self.cwd, "templates", "geoparser_flightpaths.html")
 
 	def process(self):
 		"""
