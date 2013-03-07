@@ -20,21 +20,21 @@
 					oncommand="Zotero.PaperMachines.runProcess('wordcloud_large')"/>
 				<menuitem id="wordcloud_large_tfidf" label="&papermachines.collectionmenu.wordcloud_large_tfidf;"
 					oncommand="Zotero.PaperMachines.runProcess('wordcloud_large', 'tfidf')"/>
-				<menuitem id="wordcloud_translate" label="&papermachines.collectionmenu.wordcloud_translate;"
-					oncommand="Zotero.PaperMachines.runProcess('wordcloud_translate')"/>
+<!--				<menuitem id="wordcloud_translate" label="&papermachines.collectionmenu.wordcloud_translate;"
+					oncommand="Zotero.PaperMachines.runProcess('wordcloud_translate')"/> -->
 				<menu id="wordcloud_multiple_options" label="&papermachines.collectionmenu.wordcloud_multiple_menu;">
 					<menupopup id="wordcloud-multiple-menu">
 						<menuitem id="wordcloud_multiple" label="&papermachines.collectionmenu.wordcloud_multiple;"
 							oncommand="Zotero.PaperMachines.runProcess('wordcloud_multiple')"/>
 						<menuitem id="wordcloud_chronological" label="&papermachines.collectionmenu.wordcloud_chronological;"
 							oncommand="Zotero.PaperMachines.runProcess('wordcloud_chronological')"/>
-						<menuitem id="wordcloud_translate_multiple" label="&papermachines.collectionmenu.wordcloud_translate_multiple;"
-							oncommand="Zotero.PaperMachines.runProcess('wordcloud_translate_multiple')"/>
+<!--						<menuitem id="wordcloud_translate_multiple" label="&papermachines.collectionmenu.wordcloud_translate_multiple;"
+							oncommand="Zotero.PaperMachines.runProcess('wordcloud_translate_multiple')"/> -->
 					</menupopup>
 				</menu>
 			</menupopup>
 		</menu>
-		<menu id="ngrams_menu" label="&papermachines.collectionmenu.ngrams_menu;" disabled="true">
+<!--		<menu id="ngrams_menu" label="&papermachines.collectionmenu.ngrams_menu;" disabled="true">
 			<menupopup id="ngrams-menu">
 				<menuitem id="ngrams" label="&papermachines.collectionmenu.ngrams;"
 					oncommand="Zotero.PaperMachines.runProcess('ngrams')"/>
@@ -42,7 +42,7 @@
 					disabled="true"
 					oncommand="Zotero.PaperMachines.runProcess('ngrams_specific')"/>
 			</menupopup>
-		</menu>
+		</menu> -->
 		<menu id="phrasenet" label="&papermachines.collectionmenu.phrasenet;" disabled="true">
 			<menupopup id="phrasenet-menu">
 				<menuitem id="phrasenet-x_and_y" label="x and y"
@@ -101,7 +101,7 @@
 				</menu>
 			</menupopup>
 		</menu>
-		<!--<menu id="mallet_classify" label="&papermachines.collectionmenu.mallet_classify;" disabled="true">
+<!--		<menu id="mallet_classify" label="&papermachines.collectionmenu.mallet_classify;" disabled="true">
 			<menupopup id="mallet_classify-menu">
 				<menuitem id="mallet_train-classifier" label="&papermachines.collectionmenu.mallet_train-classifier;"
 					oncommand="Zotero.PaperMachines.runProcess('mallet_train-classifier')"/>
@@ -111,8 +111,10 @@
 		</menu> -->
 
 		<menuseparator hidden="false"/>
-		<menuitem id="bulk-import" label="&papermachines.collectionmenu.bulk_import;"
-			oncommand="Zotero.PaperMachines.bulkImport()"/>
+<!--		<menuitem id="bulk-import" label="&papermachines.collectionmenu.bulk_import;"
+			oncommand="Zotero.PaperMachines.bulkImport()"/> -->
+		<menuitem id="view-output" label="&papermachines.collectionmenu.view_output;"
+			disabled="true" oncommand="Zotero.PaperMachines.viewOutput()"/>
 		<menuitem id="export-output" label="&papermachines.collectionmenu.export_output;"
 			disabled="true" oncommand="Zotero.PaperMachines.exportOutput()"/>
 		<menuitem id="reset-output" label="&papermachines.collectionmenu.reset_output;"
@@ -124,12 +126,12 @@
 		<menuseparator hidden="false"/>
 		<menuitem id="change-field" label="&papermachines.itemmenu.change_field;"
 			oncommand="Zotero.PaperMachines.changeField()"/>
-		<menuitem id="mallet-highlight" label="&papermachines.itemmenu.text_in_topic_view;"
+<!--		<menuitem id="mallet-highlight" label="&papermachines.itemmenu.text_in_topic_view;"
 			disabled="true"
 			oncommand="Zotero.PaperMachines.showTextInTopicView()"/>
 		<menuitem id="map-highlight" label="&papermachines.itemmenu.text_in_map_view;"
 			disabled="true"
-			oncommand="Zotero.PaperMachines.locateTextInMapView()"/>
+			oncommand="Zotero.PaperMachines.locateTextInMapView()"/> -->
 	</menupopup>
 
 	<!-- Include the main extension logic -->
