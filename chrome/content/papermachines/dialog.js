@@ -35,6 +35,8 @@ Zotero_PaperMachines_Dialog.init = function () {
                 checkbox.setUserData('value', item.value, null);
                 checkboxes.appendChild(checkbox);
             });
+            document.getElementById("zotero-papermachines-selectall").hidden = false;
+            document.getElementById("zotero-papermachines-deselectall").hidden = false;
             break;
         case "multiple":
             list.selType = "multiple";
@@ -71,6 +73,13 @@ Zotero_PaperMachines_Dialog.init = function () {
             break;
     }
 };
+
+Zotero_PaperMachines_Dialog.selectAll = function(deselect) {
+    var listbox = document.getElementById("zotero-papermachines-checkboxes");
+    for (var i=0; i<listbox.childNodes.length; i++){
+        listbox.childNodes[i].setAttribute('checked', !deselect);
+    }
+}
 
 Zotero_PaperMachines_Dialog.acceptSelection = function() {
     switch (this.io.dataIn["type"]) {
