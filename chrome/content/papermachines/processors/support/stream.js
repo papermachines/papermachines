@@ -128,8 +128,9 @@ function binDocsIntoIntervals() {
   }
 }
 
-var sortMetrics = {0: {"text": "most variable"},
-  1: {"text": "most common"},
+var sortMetrics = {
+  0: {"text": "most common"},
+  1: {"text": "most variable"},
   2: {"text": "most coherent"}
 };
 var dateParse = d3.time.format("%Y").parse;
@@ -206,7 +207,7 @@ xAxis = d3.svg.axis()
 xOrdinalAxis = d3.svg.axis()
   .scale(xOrdinal);
 
-mostVariantTopics(5);
+mostCommonTopics(5);
 
 transition();
 setStartParameters();
@@ -1011,8 +1012,8 @@ function mostVariantTopics(n) {
 }
 
 
-sortMetrics[0]["func"] = stdevSort;
-sortMetrics[1]["func"] = prevalenceSort;
+sortMetrics[0]["func"] = prevalenceSort;
+sortMetrics[1]["func"] = stdevSort;
 sortMetrics[2]["func"] = topicCoherenceSort;
 
 function topNCorrelatedTopicPairs(n) {
