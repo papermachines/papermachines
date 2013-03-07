@@ -53,7 +53,7 @@ svg.append("svg:defs").selectAll("marker")
 var force = d3.layout.force().size([width, height])
     .distance(100)
     .charge(-300)
-    .gravity(0.25)
+    .gravity(0.15)
     .nodes(nodedata)
     .links(edgedata)
     .start();
@@ -92,8 +92,8 @@ force.on("tick", function() {
   // }
 
   node.attr("transform", function(d) {
-    // d.x = Math.max(fontSize(+d.freq), Math.min(d.x, width - fontSize(+d.freq)));
-    // d.y = Math.max(fontSize(+d.freq), Math.min(d.y, height - fontSize(+d.freq)));
+    d.x = Math.max(fontSize(+d.freq), Math.min(d.x, width - fontSize(+d.freq)));
+    d.y = Math.max(fontSize(+d.freq), Math.min(d.y, height - fontSize(+d.freq)));
   return "translate(" + d.x + "," + d.y + ")"; });
 });
 
