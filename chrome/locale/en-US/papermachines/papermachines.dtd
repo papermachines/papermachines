@@ -42,9 +42,9 @@
 <!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test MaxEnt Classification...">
 
 <!ENTITY papermachines.collectionmenu.bulk_import			"Periodical PDF Import...">
+<!ENTITY papermachines.collectionmenu.view_output			"View Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines...">
-
 
 <!ENTITY papermachines.collectionmenu.preferences		"Paper Machines Preferences...">
 
@@ -58,6 +58,8 @@
 <!ENTITY papermachines.dialog.disclosure					"Advanced Options">
 <!ENTITY papermachines.dialog.cancel						"Cancel">
 <!ENTITY papermachines.dialog.accept						"OK">
+<!ENTITY papermachines.dialog.selectall						"Select All">
+<!ENTITY papermachines.dialog.deselectall						"Deselect All">
 
 <!ENTITY papermachines.prefs.advanced					"Advanced Options">
 <!ENTITY papermachines.prefs.reset						"Reset to Defaults">
@@ -88,6 +90,8 @@
 
 <!ENTITY papermachines.prefs.general.experimental		"Enable Experimental Features">
 
+<!ENTITY papermachines.prefs.stopwords					"Stop Words">
+<!ENTITY papermachines.prefs.stopwords.label			"A list of words (one per line) that should be excluded from analysis:">
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">
 <!ENTITY papermachines.prefs.lda.iterations				"Number of iterations: ">
 <!ENTITY papermachines.prefs.lda.burn_in				"Burn-in (iterations before estimating hyperparameters): ">
@@ -100,6 +104,5 @@
 <!ENTITY papermachines.prefs.lda.stemming				"Porter stemming">
 <!ENTITY papermachines.prefs.lda.tfidf					"tf*idf filtering">
 <!ENTITY papermachines.prefs.lda.min_df					"min doc frequency for tf*idf">
-<!ENTITY papermachines.prefs.lda.segmentation			"Segment by paragraph
-">
+<!ENTITY papermachines.prefs.lda.segmentation			"Segment by paragraph">
 
