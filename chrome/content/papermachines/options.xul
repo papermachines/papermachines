@@ -123,6 +123,22 @@
     </vbox>
 </prefpane>
 
+<prefpane id="papermachines-stopwords-pane" label="&papermachines.prefs.stopwords;">
+  <preferences>
+    <preference id="pref_stopwords" name="extensions.papermachines.stopwords" type="unichar"/>
+  </preferences>
+ 
+   <groupbox orient="horizontal">
+    <vbox>
+      <label control="stopwords" value="&papermachines.prefs.stopwords.label;"/>
+      <textbox preference="pref_stopwords" id="stopwords" multiline="true" cols="5" newlines="replacewithcommas"/>
+      <separator class="groove-thin"/>
+      <label value="&papermachines.prefs.after_close;"/>
+    </vbox>
+  </groupbox>
+</prefpane>
+
+<!--
 <prefpane id="papermachines-import-pane" label="&papermachines.prefs.import;">
   <preferences>
     <preference id="pref_import_title" name="extensions.papermachines.import.title" type="unichar"/>
@@ -165,6 +181,8 @@
     </vbox>
   </groupbox>
 </prefpane>
+
+-->
 
 <script src="chrome://papermachines/content/options.js"/>
  
