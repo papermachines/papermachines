@@ -1,2 +1,4 @@
 *.pyc
 .DS_Store
+chrome/content/papermachines/processors/lib/tika-app-1.2.jar
+chrome/content/papermachines/processors/lib/bing_api.py

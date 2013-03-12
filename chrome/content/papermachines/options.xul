@@ -13,13 +13,14 @@
     <preference id="pref_lang" name="extensions.papermachines.general.lang" type="unichar"/>
     <preference id="pref_extract_pdf" name="extensions.papermachines.general.extract_pdf" type="bool"/>
     <preference id="pref_extract_html" name="extensions.papermachines.general.extract_html" type="bool"/>
+    <preference id="pref_extract_word" name="extensions.papermachines.general.extract_word" type="bool"/>
     <preference id="pref_extract_txt" name="extensions.papermachines.general.extract_txt" type="bool"/>
     <preference id="pref_extract_notes" name="extensions.papermachines.general.extract_notes" type="bool"/>
     <preference id="pref_extract_tags" name="extensions.papermachines.general.extract_tags" type="bool"/>
     <preference id="pref_extract_standalone" name="extensions.papermachines.general.extract_standalone" type="bool"/>
     <preference id="pref_download_snapshots" name="extensions.papermachines.general.download_snapshots" type="bool"/>
     <preference id="pref_experimental" name="extensions.papermachines.general.experimental" type="bool"/>
-    <preference id="pref_python_exe" name="extensions.papermachines.general.python_exe" type="unichar"/>
+    <preference id="pref_java_exe" name="extensions.papermachines.general.java_exe" type="unichar"/>
   </preferences>
  
    <vbox>
@@ -39,6 +40,7 @@
       <checkbox preference="pref_extract_pdf" label="&papermachines.prefs.general.extract_pdf;" id="extract_pdf"/>
       <checkbox preference="pref_extract_html" label="&papermachines.prefs.general.extract_html;" id="extract_html"/>
       <checkbox preference="pref_extract_txt" label="&papermachines.prefs.general.extract_txt;" id="extract_txt"/>
+<!--      <checkbox preference="pref_extract_word" label="&papermachines.prefs.general.extract_word;" id="extract_word"/> -->
       <checkbox preference="pref_extract_notes" label="&papermachines.prefs.general.extract_notes;" id="extract_notes"/>
       <checkbox preference="pref_extract_tags" label="&papermachines.prefs.general.extract_tags;" id="extract_tags"/>
     </groupbox>
@@ -53,8 +55,8 @@
     </hbox>
 
     <hbox align="center">
-      <label control="python_exe" value="&papermachines.prefs.general.python_exe;"/>
-      <textbox preference="pref_python_exe" id="python_exe" maxlength="100"/>
+      <label control="java_exe" value="&papermachines.prefs.general.java_exe;"/>
+      <textbox preference="pref_java_exe" id="java_exe" maxlength="100"/>
     </hbox>
     <separator class="groove-thin"/>
     <label value="&papermachines.prefs.after_close;"/>
@@ -71,6 +73,7 @@
     <preference id="pref_lda_optimize_interval" name="extensions.papermachines.lda.optimize_interval" type="int"/>
     <preference id="pref_lda_symmetric_alpha" name="extensions.papermachines.lda.symmetric_alpha" type="bool"/>
     <preference id="pref_lda_stemming" name="extensions.papermachines.lda.stemming" type="bool"/>
+    <preference id="pref_lda_segmentation" name="extensions.papermachines.lda.segmentation" type="bool"/>
     <preference id="pref_lda_tfidf" name="extensions.papermachines.lda.tfidf" type="bool"/>
   </preferences>
  
@@ -110,6 +113,7 @@
         <checkbox preference="pref_lda_symmetric_alpha" label="&papermachines.prefs.lda.symmetric_alpha;" id="lda_symmetric_alpha"/>
         <checkbox preference="pref_lda_stemming" label="&papermachines.prefs.lda.stemming;" id="lda_stemming"/>
         <checkbox preference="pref_lda_tfidf" label="&papermachines.prefs.lda.tfidf;" id="lda_tfidf"/>
+        <checkbox preference="pref_lda_segmentation" label="&papermachines.prefs.lda.segmentation;" id="lda_segmentation"/>
 
       </groupbox>
       <spacer flex="1"/>
@@ -119,6 +123,22 @@
     </vbox>
 </prefpane>
 
+<prefpane id="papermachines-stopwords-pane" label="&papermachines.prefs.stopwords;">
+  <preferences>
+    <preference id="pref_stopwords" name="extensions.papermachines.stopwords" type="unichar"/>
+  </preferences>
+ 
+   <groupbox orient="horizontal">
+    <vbox>
+      <label control="stopwords" value="&papermachines.prefs.stopwords.label;"/>
+      <textbox preference="pref_stopwords" id="stopwords" multiline="true" cols="5" newlines="replacewithcommas"/>
+      <separator class="groove-thin"/>
+      <label value="&papermachines.prefs.after_close;"/>
+    </vbox>
+  </groupbox>
+</prefpane>
+
+<!--
 <prefpane id="papermachines-import-pane" label="&papermachines.prefs.import;">
   <preferences>
     <preference id="pref_import_title" name="extensions.papermachines.import.title" type="unichar"/>
@@ -161,6 +181,8 @@
     </vbox>
   </groupbox>
 </prefpane>
+
+-->
 
 <script src="chrome://papermachines/content/options.js"/>
  

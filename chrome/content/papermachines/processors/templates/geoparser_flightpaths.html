@@ -3,31 +3,27 @@
   <head>
   <meta charset="UTF-8" />
     <title>Geoparser: COLLECTION_NAME</title>
-    <script type="text/javascript" src="support/d3.v2.js"></script>
     <script type="text/javascript" src="support/html5slider.js"></script>
-    <script type="text/javascript" src="support/colorbrewer.js"></script>
-    <link type="text/css" rel="text/stylesheet" href="support/button.css"/>
-    <link type="text/css" rel="text/stylesheet" href="support/flightpaths.css"/>
+    <script type="text/javascript" src="DATA_PATH"></script>
+    <link type="text/css" rel="stylesheet" href="support/button.css"/>
+    <link type="text/css" rel="stylesheet" href="support/flightpaths.css"/>
+    <script type="text/javascript" src="support/d3.js"></script>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
   </head>
   <body>
     <div id="body">
-      <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><span id="timeDisplay"></div></div>
+      <div id="main">
+        <div id="togLegend" class="btn">Toggle Legend</div>
+        <div id="searches"><label for="searchTime" value="Time:"><input type="range" id="searchTime"/></label><span id="timeDisplay"></div>
+        <h1>Flight Paths: COLLECTION_NAME</h1>
+        <div id="heatmapArea">
+        
+        </div>
+
+        
+      </div>
     </div>
-    <script type="text/javascript">
-    var linksByYear = LINKS_BY_YEAR;
-    var placeIDsToCoords = PLACEIDSTOCOORDS;
-    var placeIDsToNames = PLACEIDSTONAMES;
-    var placesMentioned = PLACESMENTIONED;
-    var textsFromPlace = TEXTSFROMPLACE;
-    var countries = COUNTRIES;
-    var max_country_weight = MAX_COUNTRY_WEIGHT;
-    var startDate = STARTDATE;
-    var endDate = ENDDATE;
-    </script>
-    <script type="text/javascript" src="support/flightpaths.js"></script>
-    <script type="text/javascript">
-      window.onload = function () { generateSearch(); };
-    </script>
+  <script type="text/javascript" src="support/flightpaths.js"> </script>
   </body>
 </html>
 

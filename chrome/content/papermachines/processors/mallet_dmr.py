@@ -93,7 +93,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 			self.min_df = int(self.named_args["min_df"])
 			self.stemming = self.named_args["stemming"]
 			self.topics = int(self.named_args["topics"])
-			self.lang = int(self.named_args["lang"])
+			self.lang = self.named_args["lang"]
 		else:
 			self.tfidf = True
 			self.min_df = 5
@@ -177,7 +177,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 		wordProbs = [[{'text': word, 'prob': prob} for word, prob in y.iteritems()] for x, y in top_topic_words.iteritems()]
 
 		DEFAULT_DOC_PROPORTIONS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5]
-		numDocumentsAtProportions = dict((topic, dict((k, 0.0) for k in DEFAULT_DOC_PROPORTIONS) for topic in self.topic_words.keys())
+		numDocumentsAtProportions = dict((topic, dict((k, 0.0) for k in DEFAULT_DOC_PROPORTIONS)) for topic in self.topic_words.keys())
 		for doc, topics in self.doc_topics.iteritems():
 			doc_length = sum(topics.values())
 			for topic, count in topics.iteritems():
@@ -225,28 +225,6 @@ class MalletDMR(mallet_lda.MalletLDA):
 				sys.exit(1)
 			except:
 				logging.error(traceback.format_exc())
-
-		topics_by_year = []
-		for topic in weights_by_topic:
-			topic_sums = []	
-			for year in topic:
-				year_sum = 0.0
-				if len(year['y']) != 0:
-					for doc in year['y']:
-						year_sum += doc['ratio']
-					topic_sums.append(year_sum / float(len(year['y'])))
-				else:
-					topic_sums.append(0)
-			topics_by_year.append(topic_sums)
-
-		self.topics_by_year = topics_by_year
-		self._find_proportions(topics_by_year)
-		try:		
-			self._find_stdevs(topics_by_year)
-			self._find_correlations(topics_by_year)
-		except:
-			self.stdevs = {}
-			self.correlations = {}
 
 		self.template_filename = os.path.join(self.cwd, "templates", self.template_name + ".html")
 

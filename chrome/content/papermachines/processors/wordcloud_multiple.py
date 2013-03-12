@@ -8,14 +8,16 @@ class MultipleWordClouds(wordcloud.WordCloud):
 	"""
 	def _basic_params(self):
 		self.name = "wordcloud_multiple"
-		self.width = "300"
-		self.height = "150"
-		self.fontsize = "[10,32]"
+		self.width = 300
+		self.height = 150
+		self.fontsize = [10,32]
 		self.n = 50
 		self.tfidf_scoring = False
 		self.MWW = False
 		self.dunning = False
+		self.comparison_type = "plain"
 		if len(self.extra_args) > 0:
+			self.comparison_type = self.extra_args[0]
 			if self.extra_args[0] == "tfidf":
 				self.tfidf_scoring = True
 			elif self.extra_args[0] == "mww":
@@ -182,13 +184,21 @@ class MultipleWordClouds(wordcloud.WordCloud):
 			else:
 				clouds[label] = self._findWordFreqs(filenames)
 
-		params = {"CLOUDS": json.dumps(clouds),
-				"ORDER": json.dumps(self.label_order),
+		params = {"CLOUDS": clouds,
+				"ORDER": self.label_order,
 				"WIDTH": self.width,
 				"HEIGHT": self.height,
 				"FONTSIZE": self.fontsize
 		}
 
+		if self.comparison_type == "tfidf":
+			params["FORMAT"] = u"tf-idf:{0}"
+		elif self.comparison_type == "mww":
+			params["FORMAT"] = u"\u03c1:{0}"
+		elif self.comparison_type == "dunning":
+			params["FORMAT"] = u"G\u00b2: {0}"
+		else:
+			params["FORMAT"] = u'{0} occurrences in subset'
 		self.write_html(params)
 
 

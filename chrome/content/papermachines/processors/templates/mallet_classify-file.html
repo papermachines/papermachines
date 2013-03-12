@@ -3,8 +3,12 @@
 <head>
 	<meta charset="UTF-8" />
 	<title>Classifier: COLLECTION_NAME</title>
+    <script type="text/javascript" src="DATA_PATH"></script>
 </head>
 <body>
-<pre>CLASSIFIED</pre>
+<pre id="classified"></pre>
+<script type="text/javascript">
+	document.getElementById("classified").textContent = data["CLASSIFIED"];
+</script>
 </body>
 </html>

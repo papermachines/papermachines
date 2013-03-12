@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: LATIN-1 -*-
+# -*- coding: utf-8
 '''
  * PTStemmer - A Stemming toolkit for the Portuguese language (C) 2008-2010 Pedro Oliveira
  * 
@@ -62,7 +62,7 @@ class OrengoStemmer(Stemmer):
         if end == 's':
             stem = self.__applyRules(stem, self.__pluralreductionrules)
         end = word[len(stem)-1]
-        if end == 'a' or end == 'ã':
+        if end == 'a' or end == 'Ã£':
             stem = self.__applyRules(stem, self.__femininereductionrules)
         stem = self.__applyRules(stem, self.__augmentativediminutivereductionrules)
         stem = self.__applyRules(stem, self.__adverbreductionrules)     

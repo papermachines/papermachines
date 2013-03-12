@@ -14,12 +14,14 @@ Zotero.PaperMachines = {
 	extract_csv_dir: null,
 	out_dir: null,
 	log_dir: null,
+	props_dir: null,
 	args_dir: null,
 	install_dir: null,
 	tagCloudReplace: true,
 	processors_dir: null,
-	python_exe: null,
-	processors: ["wordcloud", "phrasenet", "mallet", "mallet_classify", "geoparser", "dbpedia", "export-output"],
+	java_exe: null,
+	jython_path: null,
+	processors: ["wordcloud", "phrasenet", "mallet", "geoparser", "dbpedia", "view-output", "export-output", "reset-output"], //ngrams_menu", "mallet_classify",
 	processNames: null, // see locale files
 	prompts: null,
 	paramLabels: null,
@@ -44,6 +46,33 @@ Zotero.PaperMachines = {
 				}
 			})
 			return Zotero.PaperMachines.selectFromOptions("mallet_classify-file", classifiers);
+		},
+		"ngrams": function () {
+			var params = Zotero.PaperMachines.promptForProcessParams("ngrams");
+			if (params) {
+				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
+		"wordcloud_translate": function () {
+			var params = Zotero.PaperMachines.promptForProcessParams("wordcloud_translate");
+			if (params) {
+				return ["json", JSON.stringify(params)];
+			} else {
+				return false;
+			}
+		},
+		"wordcloud_translate_multiple": function () {
+			var filter = Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
+			if (!filter) return false;
+
+			var params = Zotero.PaperMachines.promptForProcessParams("wordcloud_translate");
+			if (params) {
+				return filter.concat(["json", JSON.stringify(params)]);
+			} else {
+				return false;
+			}
 		},
 		"wordcloud_chronological": function () {
 			var filter = Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
@@ -77,7 +106,6 @@ Zotero.PaperMachines = {
 			}
 		},
 		"mallet_lda_categorical": function (thisGroupID) {
-			var tags = Zotero.PaperMachines.promptForTags(thisGroupID);
 			var params = Zotero.PaperMachines.promptForProcessParams("mallet_lda");
 			if (params) {
 				return ["json", JSON.stringify(params)];
@@ -169,7 +197,7 @@ Zotero.PaperMachines = {
 
 				var file = false;
 				var _uri = "data:text/html,";
-				var progbar_str = '<html><head><meta http-equiv="refresh" content="2;URL=' + 
+				var progbar_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="2;URL=' + 
 					"'zotero://papermachines/" + path + "'" + '"/></head>' +
 					'<body><progress id="progressBar"/></body></html>';
 				_uri += encodeURIComponent(progbar_str);
@@ -266,12 +294,16 @@ Zotero.PaperMachines = {
 		this.out_dir = this._getOrCreateDir("out");
 		this.processors_dir = this._getOrCreateDir("processors");
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
+		this.props_dir = this._getOrCreateDir("props", this.log_dir);
 		this.args_dir = this._getOrCreateDir("args");
+
+		var jython = this.processors_dir.clone();
+		jython.append("jython.jar");
+
+		this.jython_path = jython.path;
 
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
-
-		this.python_exe = this.findPythonExecutable();
 
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 
@@ -292,6 +324,8 @@ Zotero.PaperMachines = {
 			function(addon) {
 				Zotero.PaperMachines._updateBundledFilesCallback(addon.getResourceURI("").QueryInterface(Components.interfaces.nsIFileURL).file);
 			});
+
+		this.java_exe = this.findJavaExecutable();
 
 		// Connect to (and create, if necessary) papermachines.sqlite in the Zotero directory
 		this.DB = new Zotero.DBConnection('papermachines');
@@ -458,6 +492,8 @@ Zotero.PaperMachines = {
 		var argFile = Zotero.PaperMachines._getOrCreateFile(argsHashFilename, Zotero.PaperMachines.args_dir);
 		Zotero.File.putContents(argFile, args_str);
 
+		var loggingProperties = Zotero.PaperMachines.createLogPropertiesFile(args_hash, progressFile.path.replace(".html", ".txt"));
+
 		var procArgs = [processor_file.path, argFile.path];
 
 		outFile.append(processor + thisID + "-" + args_hash + ".html");
@@ -478,12 +514,27 @@ Zotero.PaperMachines = {
 
 		var observer = new Zotero.PaperMachines.processObserver(processor, processPath, callback);
 
-		var python_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.python_exe);
+		var java_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.java_exe);
 
-		Zotero.PaperMachines.LOG("running " + python_exe_file.leafName + " " + procArgs.join(" "));
 
-		proc.init(python_exe_file);
+		if (processor.indexOf("mallet") != -1) {
+			procArgs = ["-Djava.util.logging.config.file="+loggingProperties].concat(procArgs);
+		}
+
+		procArgs = ["-Dfile.encoding=UTF8","-jar", this.jython_path].concat(procArgs);
+
+		if (Zotero.PaperMachines.memoryIntensive(processor)) {
+			procArgs = ["-Xmx1g"].concat(procArgs);
+		} else {
+			procArgs = ["-Xmx256m"].concat(procArgs);			
+		}
+		Zotero.PaperMachines.LOG(java_exe_file.path + " " + procArgs.map(function(d) { return d.indexOf(" ") != -1 ? '"' + d + '"' : d; }).join(" "));
+
+		proc.init(java_exe_file);
 		proc.runAsync(procArgs, procArgs.length, observer);
+	},
+	memoryIntensive: function (processor) {
+		return processor.indexOf("mallet") != -1 || processor == "ngrams";
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
 		const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -946,6 +997,7 @@ Zotero.PaperMachines = {
 		var gettingTags = Preferences.get("extensions.papermachines.general.extract_tags");
 		var gettingPDF = Preferences.get("extensions.papermachines.general.extract_pdf");
 		var gettingHTML = Preferences.get("extensions.papermachines.general.extract_html");
+		var gettingWord = Preferences.get("extensions.papermachines.general.extract_word");
 		var gettingTXT = Preferences.get("extensions.papermachines.general.extract_txt");
 
 		var outFile = dir.clone();
@@ -956,9 +1008,11 @@ Zotero.PaperMachines = {
 		var attachments = item.getAttachments(false);
 		for (var a in attachments) {
 			var a_item = Zotero.Items.get(attachments[a]);
-			if ((a_item.attachmentMIMEType == 'application/pdf' && gettingPDF)
-			   || (a_item.attachmentMIMEType == 'text/html' && gettingHTML)
-			   || (a_item.attachmentMIMEType == 'text/plain' && gettingTXT)) {
+			var mimetype = a_item.attachmentMIMEType;
+			if ((mimetype == 'application/pdf' && gettingPDF)
+			   || (mimetype == 'text/html' && gettingHTML)
+			   || ((mimetype == 'application/msword' || mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') && gettingWord)
+			   || (mimetype == 'text/plain' && gettingTXT)) {
 				var orig_file = a_item.getFile().path;
 				if (orig_file) {
 					Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [orig_file, item.id, outFile.path, dir.leafName]);					
@@ -1126,12 +1180,14 @@ Zotero.PaperMachines = {
 			var progTextFile = Zotero.PaperMachines._getLocalFile(processResult["progressfile"].replace(".html",".txt"));
 			var prog_str = Zotero.File.getContents(progTextFile);
 			var iterString = prog_str.match(/(?:<)\d+/g);
-			iterations = parseInt(iterString.slice(-1)[0].substring(1));
+			if (iterString) {
+				iterations = parseInt(iterString.slice(-1)[0].substring(1));				
+			}
 		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 
 		var collectionName = thisGroup.name || thisGroup.getName();
-		var progbar_str = '<html><head><meta http-equiv="refresh" content="2;URL=' + 
+		var progbar_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="2;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
 			try {
 				progbar_str += '<div>' + Zotero.PaperMachines.processNames[processResult["processor"]] + ': ' + collectionName + '</div>';
@@ -1159,7 +1215,7 @@ Zotero.PaperMachines = {
 		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 		var collectionName = thisGroup.name || thisGroup.getName();
-		var logpage_str = '<html><head><meta http-equiv="refresh" content="20;URL=' + 
+		var logpage_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="20;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
 			try {
 				logpage_str += '<div>' + Zotero.PaperMachines.processNames[processResult["processor"]] + ': ' + collectionName + '</div>';
@@ -1202,6 +1258,39 @@ Zotero.PaperMachines = {
 		// 	}
 		// });
 	},
+	getProcessesForCollection: function (thisID) {
+		var query = "SELECT processor, process_path, outfile, timeStamp FROM processed_collections " +
+			"WHERE status = 'done' AND processor != 'extract' AND collection = ?;";
+		var processes = this.DB.query(query, [thisID]);
+		var options = [];
+		for (var i in processes) {
+			var processResult = processes[i],
+				process = processResult["processor"],
+				outfile = processResult["outfile"],
+				process_path = processResult["process_path"],
+				timestamp = processResult["timeStamp"],
+				path_parts = process_path.split("/"),
+				label = ": " + path_parts.slice(2).map(function(d) { return decodeURIComponent(d); }).join(", "),
+				shortened_label = label.length > 50 ? label.substring(0,50) + "..." : label;
+			options.push({"name": this.processNames[process] + (path_parts.length > 2 ? shortened_label : ""), "label": timestamp, "value": outfile, "url": "zotero://papermachines/" + process_path});
+		}
+		return options;
+	},
+	viewOutput: function () {
+		var thisGroup = ZoteroPane.getItemGroup();
+		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
+		var collectionName = thisGroup.name || thisGroup.getName();
+
+		var options = Zotero.PaperMachines.getProcessesForCollection(thisID);
+		for (var i in options) {
+			options[i].value = options[i].url;
+		}
+
+		var url = Zotero.PaperMachines.selectFromOptions("view_process", options);
+		if (url) {
+			Zotero.PaperMachines.openWindowOrTab(url);
+		}
+	},
 	exportOutput: function () {
 		var thisGroup = ZoteroPane.getItemGroup();
 		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
@@ -1209,20 +1298,7 @@ Zotero.PaperMachines = {
 
 		var export_dir = this.filePrompt("export_dir", "getfolder");
 		if (export_dir) {
-			var query = "SELECT processor, process_path, outfile FROM processed_collections " +
-				"WHERE status = 'done' AND processor != 'extract' AND collection = ?;";
-			var processes = this.DB.query(query, [thisID]);
-			var options = [];
-			for (var i in processes) {
-				var processResult = processes[i],
-					process = processResult["processor"],
-					outfile = processResult["outfile"],
-					process_path = processResult["process_path"],
-					path_parts = process_path.split("/"),
-					label = ": " + path_parts.slice(2).map(function(d) { return decodeURIComponent(d); }).join(", "),
-					shortened_label = label.length > 50 ? label.substring(0,50) + "..." : label;
-				options.push({"name": this.processNames[process] + (path_parts.length > 2 ? shortened_label : ""), "label": " ", "value": outfile});
-			}
+			var options = Zotero.PaperMachines.getProcessesForCollection(thisID);
 			var export_processes = Zotero.PaperMachines.selectFromOptions("export_processes", options, "multiplecheck");
 			if (export_processes && export_processes.length > 0) {
 				var new_dir = this._getOrCreateDir(collectionName + " visualizations", export_dir);
@@ -1231,25 +1307,28 @@ Zotero.PaperMachines = {
 				for (var i in export_processes) {
 					var file = Zotero.PaperMachines._getLocalFile(export_processes[i]);
 					file.copyTo(new_dir, file.leafName);
+					var file2 = Zotero.PaperMachines._getLocalFile(export_processes[i].replace('.html', '.js'));
+					if (file2.exists()) file2.copyTo(new_dir, file2.leafName);
 				}
 			}
 		}
 	},
 	resetOutput: function () {
-		if (Zotero.PaperMachines.yesNoPrompt("resetOutput")) {
-			var thisID = this.getThisGroupID();
-			var files = this.out_dir.directoryEntries;
-			while (files.hasMoreElements()) {
-				var f = files.getNext().QueryInterface(Components.interfaces.nsIFile);
-				var mallet = f.leafName.indexOf("mallet_lda"); 
-				if (mallet != -1 && f.leafName.indexOf(thisID) > mallet) {
-					f.remove(true);
-				} else if (f.leafName.indexOf(thisID + "-") != -1 || f.leafName.indexOf(thisID + "progress.") != -1 || f.leafName.indexOf(thisID + ".csv") != -1) {
-					f.remove(false);
-				}
+		var thisGroup = ZoteroPane.getItemGroup();
+		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
+		var collectionName = thisGroup.name || thisGroup.getName();
 
+		var options = Zotero.PaperMachines.getProcessesForCollection(thisID);
+		var reset_processes = Zotero.PaperMachines.selectFromOptions("reset_processes", options, "multiplecheck");
+		if (reset_processes && reset_processes.length > 0) {
+			for (var i in reset_processes) {
+				var file = Zotero.PaperMachines._getLocalFile(reset_processes[i]);
+				if (file.exists()) file.remove(false);
+				var file2 = Zotero.PaperMachines._getLocalFile(reset_processes[i].replace('.html', '.js'));
+				if (file2.exists()) file2.remove(false);
+
+				Zotero.PaperMachines.DB.query("DELETE FROM processed_collections WHERE collection=? AND outfile=?;", [thisID, reset_processes[i]]);
 			}
-			Zotero.PaperMachines.DB.query("DELETE FROM processed_collections WHERE collection=?;", [thisID]);
 		}
 	},
 	search: function (str) { 
@@ -1329,8 +1408,16 @@ Zotero.PaperMachines = {
 		return Zotero.PaperMachines._promptUser(params);
 	},
 	selectStoplist: function (lang) {
-		var stopfile = Zotero.PaperMachines._getOrCreateFile("stopwords_" + lang + ".txt", Zotero.PaperMachines.processors_dir);
-		stopfile.copyTo(Zotero.PaperMachines.processors_dir, "stopwords.txt");
+		var orig_stopfile = Zotero.PaperMachines._getOrCreateFile("stopwords_" + lang + ".txt", Zotero.PaperMachines.processors_dir);
+		var stopwords = Zotero.File.getContents(orig_stopfile) + '\n';
+		var stopfile = Zotero.PaperMachines._getOrCreateFile("stopwords.txt", Zotero.PaperMachines.processors_dir);
+		var custom_stopwords = Preferences.get("extensions.papermachines.stopwords");
+
+		if (custom_stopwords) {
+			stopwords += custom_stopwords;
+		}
+
+		Zotero.File.putContents(stopfile, stopwords);
 	},
 	textPrompt: function(prompt, default_text) {
 		if (!default_text) var default_text = "";
@@ -1363,6 +1450,7 @@ Zotero.PaperMachines = {
 		"mallet_lda": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations", "advanced": true},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
+			{"name": "segmentation", "type": "check", "pref": "extensions.papermachines.lda.segmentation", "advanced": true},
 			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
 			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true},
 			{"name": "alpha", "type": "text", "pref": "extensions.papermachines.lda.alpha", "advanced": true},
@@ -1386,6 +1474,15 @@ Zotero.PaperMachines = {
 			{"name": "guessissue", "type": "check", "pref": "extensions.papermachines.import.guessissue"},
 			{"name": "issueregex", "type": "text", "pref": "extensions.papermachines.import.issueregex"},
 			{"name": "startingoffset", "type": "text", "pref": "extensions.papermachines.import.startingoffset"},
+		],
+		"ngrams":  [{"name": "n", "type": "text", "value": "1"},
+			{"name": "top_ngrams", "type": "text", "value": "100"},
+			{"name": "min_df", "type": "text", "value": "3"},
+			{"name": "interval", "type": "text", "value": "1", "advanced": true}
+		],
+		"wordcloud_translate":  [{"name": "lang_from", "type": "text", "value": "Hebrew"},
+			{"name": "lang_to", "type": "text", "value": "English"},
+			{"name": "tfidf", "type": "check", "value": true}
 		],
 		"change_field":  [{"name": "field", "type": "text", "value": ""},
 			{"name": "value", "type": "text", "value": ""},
@@ -1720,40 +1817,55 @@ Zotero.PaperMachines = {
 	 
 	  this._preferencesWindow.focus();
 	},
-	findPythonExecutable: function () { 
-		var python_exe = Preferences.get("extensions.papermachines.general.python_exe");
-		if (!python_exe) {
+	createLogPropertiesFile: function(hash, progress_file_path) {
+		var logging_properties_file = this._getOrCreateFile("log_" + hash + ".properties", this.props_dir);
+		var logging_properties_file_path = logging_properties_file.path;
+
+		var log_str = "handlers=java.util.logging.FileHandler\n" +
+			".level=INFO\n" +
+			"java.util.logging.FileHandler.formatter=java.util.logging.SimpleFormatter\n" +
+			"java.util.logging.FileHandler.pattern=" + progress_file_path;
+		Zotero.File.putContents(logging_properties_file, log_str);
+		return logging_properties_file_path;
+	},
+	findJavaExecutable: function () { 
+		var java_exe = Preferences.get("extensions.papermachines.general.java_exe");
+		if (!java_exe) {
 			var environment = Components.classes["@mozilla.org/process/environment;1"]
 	                            .getService(Components.interfaces.nsIEnvironment);
 			var path = environment.get("PATH"),
-				python_name = "pythonw",
-				directories = [];
+				java_name = "java",
+				directories = []
 
 			if (Zotero.platform == "Win32") {
-				python_name += ".exe";
-				directories = ["C:\\Python27\\", "C:\\Python26\\"];
+				java_name += "w.exe";
+
+				directories = path.split(";");
 			} else {
-				// python_name += "2.7";
-				directories = ["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"];
+				directories = path.split(":");
+				directories = directories.concat(["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"]);
 			}
 
 			for (var i = 0, n = directories.length; i < n; i++) {
 				var executable = Zotero.PaperMachines._getLocalFile(directories[i]);
-				executable.append(python_name);
+				executable.append(java_name);
 				if (executable.exists()) {
-					python_exe = executable.path;
+					java_exe = executable.path;
 					break;
 				}
 			}
 
-			if (python_exe) {
-				Preferences.set("extensions.papermachines.general.python_exe", python_exe);
+			if (java_exe) {
+				Preferences.set("extensions.papermachines.general.java_exe", java_exe);
 			} else {
-				alert(Zotero.PaperMachines.prompts["no_python"]);
-				Zotero.PaperMachines.ERROR(Zotero.PaperMachines.prompts["no_python"]);
+				var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                        .getService(Components.interfaces.nsIPromptService);
+ 
+				prompts.alert(null, "No Java executable found", Zotero.PaperMachines.prompts["no_java"]);
+				Zotero.PaperMachines.ERROR(Zotero.PaperMachines.prompts["no_java"]);
 			}
 		}
-		return python_exe;
+		return java_exe;
 
 	},
 	evtListener: function (evt) {

@@ -3,6 +3,7 @@ pref("extensions.papermachines.general.lang", "en");
 pref("extensions.papermachines.general.extract_txt", true);
 pref("extensions.papermachines.general.extract_pdf", true);
 pref("extensions.papermachines.general.extract_html", true);
+pref("extensions.papermachines.general.extract_word", true);
 pref("extensions.papermachines.general.extract_notes", true);
 pref("extensions.papermachines.general.extract_tags", true);
 pref("extensions.papermachines.general.extract_livepages", false);
@@ -28,9 +29,12 @@ pref("extensions.papermachines.lda.alpha", "50.0");
 pref("extensions.papermachines.lda.beta", "0.01");
 pref("extensions.papermachines.lda.burn_in", 200);
 
-pref("extensions.papermachines.lda.optimize_interval", 0);
+pref("extensions.papermachines.lda.optimize_interval", 10);
 pref("extensions.papermachines.lda.symmetric_alpha", false);
 
 pref("extensions.papermachines.lda.stemming", true);
+pref("extensions.papermachines.lda.segmentation", false);
 pref("extensions.papermachines.lda.tfidf", true);
 pref("extensions.papermachines.lda.min_df", 3);
+
+pref("extensions.papermachines.stopwords", "");

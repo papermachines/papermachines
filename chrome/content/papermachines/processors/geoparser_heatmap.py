@@ -39,7 +39,7 @@ class GeoparserHeatmap(geoparser.Geoparser):
 			lat, lng = coords.split(',')
 			data.append({"lat": lat, "lng": lng, "count": count})
 		intensity = {"max": max_count, "data": data}
-		params = {"INTENSITY": json.dumps(intensity)}
+		params = {"INTENSITY": intensity}
 		self.write_html(params)
 
 if __name__ == "__main__":

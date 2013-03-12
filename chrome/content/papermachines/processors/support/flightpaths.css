@@ -1,89 +1,63 @@
-body {
-  overflow: hidden;
-  margin: 0;
-  font-size: 14px;
-  font-family: "Helvetica Neue", Helvetica;
+body, html {
+        margin:0;
+        padding:0;
+        font-family:Arial;
+      }
+h1 {
+  margin-bottom:10px;
+  display: inline;
 }
-
-#chart, #header, #footer {
-  position: absolute;
-  top: 0;
-}
-
-rect {
-  fill: none;
-  pointer-events: all;
-}
-
-pre {
-  font-size: 18px;
-}
-
-line {
-  stroke: #000;
-  stroke-width: 1.5px;
-}
-
-.string, .regexp {
-  color: #f39;
-}
-
-.keyword {
-  color: #00c;
-}
-
-.comment {
-  color: #777;
-  font-style: oblique;
-}
-
-.number {
-  color: #369;
-}
-
-.class, .special {
-  color: #1181B8;
-}
-
-a:link, a:visited {
-  color: #000;
-  text-decoration: none;
-}
-
-a:hover {
-  color: #666;
-}
-
-.hint {
-  position: absolute;
-  right: 0;
-  width: 1280px;
-  font-size: 12px;
-  color: #999;
-}
-svg {
-  width: 1280px;
-  height: 800px;
-  pointer-events: all;
-}
-
-path {
-  fill: #fff;
-  stroke: #fff;
-}
-
-path.arc {
-  pointer-events: none;
-  fill: none;
-  stroke-width: 0.5;
-  display: block; 
-  stroke: url(#fade);
-}
-.site {
-fill-opacity: 0.7;
-}
-
 #searches {
-  width:250px;
-  height: 2em;
+  float: right;
+}
+#main {
+  position:relative;
+  width:1020px;
+  padding:20px;
+  margin:auto;
+}
+#popup {
+  background: white;
+  border: 1px solid black;
+  padding: 15px;
+  width: 240px;
+  height: 300px;
+  -moz-border-radius:15px;
+  -o-border-radius:15px;
+  -webkit-border-radius:15px;
+  border-radius:15px;
+  overflow: scroll;
+}
+.popupclose {
+  float: right;
+  margin-right: 15px;
+}
+#heatmapArea {
+  position:relative;
+  float:left;
+  margin-left: 20px;
+  width:960px;
+  height:600px;
+  border:1px dashed black;
+}
+#configArea {
+  position:relative;
+  float:left;
+  float:left;
+  width:200px;
+  padding:15px;
+  padding-top:0;
+  padding-right:0;
+}
+.btn {
+  margin-top:25px;
+  padding:10px 20px 10px 20px;
+  -moz-border-radius:15px;
+  -o-border-radius:15px;
+  -webkit-border-radius:15px;
+  border-radius:15px;
+  border:2px solid black;
+  cursor:pointer;
+  color:white;
+  background-color:black;
 }

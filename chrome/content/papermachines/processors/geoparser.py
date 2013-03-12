@@ -1,50 +1,88 @@
 #!/usr/bin/env python2.7
 import sys, os, json, logging, traceback, base64, time, codecs, urllib, urllib2
-import cPickle as pickle
-from xml.etree import ElementTree as ET
-import textprocessor
+from collections import defaultdict
+from lib.classpath import classPathHacker
 
+import textprocessor
 
 class Geoparser(textprocessor.TextProcessor):
 	"""
-	Geoparsing using Europeana service (experimental)
+	Geoparsing using Pete Warden's geodict
 	"""
 
-	def _basic_params(self):
-		self.name = "geoparser"
-		self.dry_run = False
-		self.require_stopwords = False
+	def get_containing_paragraph(self, text, match):
+		start = match[0]
+		end = match[1]
+		chars_added = 0
+		c = text[start]
+		while c != '\n' and chars_added < 50 and start > 0:
+			start -= 1
+			chars_added += 1
+			c = text[start]
 
-	def annotate(self, text):
-		values = {'freeText': text[0:10000].encode('utf-8', 'ignore')}
-		data = urllib.urlencode(values)
-		req = urllib2.Request("http://europeana-geo.isti.cnr.it/geoparser/geoparsing/freeText", data)
-		response = urllib2.urlopen(req)
-		annotation = response.read()
-		return annotation
-	
-	def get_places(self, xml_string):
-		xml_string = xml_string.replace("\n", " ")
-		elem = ET.fromstring(xml_string, parser=ET.XMLParser(encoding="utf-8"))
-		annotated = elem.find('annotatedText')
+		chars_added = 0
+		end = min(len(text) - 1, end)
+		c = text[end]
 
-		current_length = 0
-		for entity in annotated.iter():
-			if entity.tag == 'PLACE':
-				place = {"name": entity.text, "entityURI": entity.get("entityURI"), "latitude": entity.get("latitude"), "longitude": entity.get("longitude")}
-				if entity.text is not None:
-					reference = [current_length, current_length + len(entity.text)]
-					current_length += len(entity.text)
-					if entity.tail is not None:
-						current_length += len(entity.tail)
-					yield place, reference
-			else:
-				if entity.text is not None:
-					current_length += len(entity.text)
-					if entity.tail is not None:
-						current_length += len(entity.tail)
+		while c != '\n' and chars_added < 50 and end < len(text):
+			c = text[end]
+			end += 1
+			chars_added += 1
+
+		return text[start:end]
+
+	def contexts_from_geoparse_obj(self, geoparse_obj, filename):
+		contexts_obj = defaultdict(list)
+		with codecs.open(filename, 'rU', encoding='utf-8') as f:
+			text = f.read()
+
+		for entityURI, matchlist in geoparse_obj.get("references", {}).iteritems():
+			for match in matchlist:
+				paragraph = self.get_containing_paragraph(text, match)
+				geonameid = entityURI.split('/')[-1]
+				contexts_obj[geonameid].append(paragraph)
+
+		contexts_json = filename.replace(".txt", "_contexts.json")
+		contexts_obj = dict(contexts_obj)
+		with file(contexts_json, 'w') as f:
+			json.dump(contexts_obj, f)
+		return contexts_obj
+
+	def get_places(self, string, find_func):
+		try:
+			geodict_locations = find_func(string)
+			for location in geodict_locations:
+				found_tokens = location['found_tokens']
+				start_index = found_tokens[0]['start_index']
+				end_index = found_tokens[len(found_tokens)-1]['end_index']
+				name = string[start_index:(end_index+1)]
+				geonameid = found_tokens[0].get('geonameid', None)
+				entityURI = "http://sws.geonames.org/" + str(geonameid) if geonameid else None
+				geotype = found_tokens[0]['type'].lower()
+				lat = found_tokens[0]['lat']
+				lon = found_tokens[0]['lon']
+
+				if entityURI is None:
+					continue
+
+				place = {"name": name, "entityURI": entityURI, "latitude": lat, "longitude": lon, "type": geotype}
+				reference = [start_index, end_index]
+				yield place, reference
+		except:
+			logging.error(traceback.format_exc())
 
 	def run_geoparser(self):
+		import __builtin__
+		jarLoad = classPathHacker()
+		sqlitePath = os.path.join(self.cwd, "lib", "geodict", "sqlite-jdbc-3.7.2.jar")
+		jarLoad.addFile(sqlitePath)
+
+		import lib.geodict.geodict_config
+
+		self.database_path = os.path.join(self.cwd, "lib", "geodict", "geodict.db")
+
+		from lib.geodict.geodict_lib import GeodictParser
+
 		geo_parsed = {}
 		places_by_entityURI = {}
 
@@ -59,11 +97,14 @@ class Geoparser(textprocessor.TextProcessor):
 			self.update_progress()
 
 			file_geoparsed = filename.replace(".txt", "_geoparse.json")
+			contexts_json = filename.replace(".txt", "_contexts.json")
 
 			if os.path.exists(file_geoparsed):
 				try:
 					geoparse_obj = json.load(file(file_geoparsed))
 					if "places_by_entityURI" in geoparse_obj:
+						if not os.path.exists(contexts_json):
+							self.contexts_from_geoparse_obj(geoparse_obj, filename)
 						continue
 					else:
 						os.remove(file_geoparsed)
@@ -77,24 +118,25 @@ class Geoparser(textprocessor.TextProcessor):
 					id = self.metadata[filename]['itemID']
 					str_to_parse = self.metadata[filename]['place']
 					last_index = len(str_to_parse)
-					str_to_parse += codecs.open(filename, 'r', encoding='utf8').read()[0:(48000 - last_index)] #50k characters, shortened by initial place string
+					str_to_parse += codecs.open(filename, 'rU', encoding='utf8').read()
 
 					city = None
 					places = set()
 					
-					xml_filename = filename.replace('.txt', '_geoparse.xml')
+					json_filename = filename.replace('.txt', '_geodict.json')
 
-					if not os.path.exists(xml_filename):
-						annotation = self.annotate(str_to_parse)
-						with codecs.open(xml_filename, 'w', encoding='utf8') as xml_file:
-							xml_file.write(annotation.decode('utf-8'))
+					if not os.path.exists(json_filename):
+						parser = GeodictParser(self.database_path)
+						places_found = list(self.get_places(str_to_parse, parser.find_locations_in_text))
+						with codecs.open(json_filename, 'w', encoding='utf8') as json_file:
+							json.dump(places_found, json_file)
 					else:
-						with codecs.open(xml_filename, 'r', encoding='utf8') as xml_file:
-							annotation = xml_file.read()
+						with codecs.open(json_filename, 'r', encoding='utf8') as json_file:
+							places_found = json.load(json_file)
 
-					for place, reference in self.get_places(annotation):
+					for (place, reference) in places_found:
 						entityURI = place["entityURI"]
-						geoparse_obj['places_by_entityURI'][entityURI] = {'name': place["name"], 'type': 'unknown', 'coordinates': [place["longitude"], place["latitude"]]}
+						geoparse_obj['places_by_entityURI'][entityURI] = {'name': place["name"], 'type': place["type"], 'coordinates': [place["longitude"], place["latitude"]]}
 
 						if reference[0] < last_index:
 							city = entityURI
@@ -135,7 +177,10 @@ class Geoparser(textprocessor.TextProcessor):
 
 					geoparse_obj['places'] = list(places)
 					geoparse_obj['city'] = city
-					json.dump(geoparse_obj, file(file_geoparsed, 'w'))
+					with file(file_geoparsed, 'w') as f:
+						json.dump(geoparse_obj, f)
+					if not os.path.exists(contexts_json):
+						self.contexts_from_geoparse_obj(geoparse_obj, filename)
 					time.sleep(0.2)
 				except (KeyboardInterrupt, SystemExit):
 					raise

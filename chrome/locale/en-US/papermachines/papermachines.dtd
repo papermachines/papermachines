@@ -7,9 +7,15 @@
 <!ENTITY papermachines.collectionmenu.wordcloud				"Word Cloud">
 <!ENTITY papermachines.collectionmenu.wordcloud_large		"Word Cloud">
 <!ENTITY papermachines.collectionmenu.wordcloud_large_tfidf	"Word Cloud (tf*idf filtered)">
+<!ENTITY papermachines.collectionmenu.wordcloud_translate	"Word Cloud Translation...">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple_menu	"Multiple Word Clouds">
 <!ENTITY papermachines.collectionmenu.wordcloud_chronological	"Word Clouds by Time Interval...">
 <!ENTITY papermachines.collectionmenu.wordcloud_multiple	"Word Clouds by Subcollection...">
+<!ENTITY papermachines.collectionmenu.wordcloud_translate_multiple	"Translated Word Clouds by Subcollection...">
+
+<!ENTITY papermachines.collectionmenu.ngrams_menu			"N-grams">
+<!ENTITY papermachines.collectionmenu.ngrams				"Top N-grams...">
+<!ENTITY papermachines.collectionmenu.ngrams_specific		"Specific N-grams...">
 
 <!ENTITY papermachines.collectionmenu.phrasenet				"Phrase Net">
 
@@ -36,9 +42,9 @@
 <!ENTITY papermachines.collectionmenu.mallet_classify-file		"Test MaxEnt Classification...">
 
 <!ENTITY papermachines.collectionmenu.bulk_import			"Periodical PDF Import...">
+<!ENTITY papermachines.collectionmenu.view_output			"View Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines...">
-
 
 <!ENTITY papermachines.collectionmenu.preferences		"Paper Machines Preferences...">
 
@@ -52,6 +58,8 @@
 <!ENTITY papermachines.dialog.disclosure					"Advanced Options">
 <!ENTITY papermachines.dialog.cancel						"Cancel">
 <!ENTITY papermachines.dialog.accept						"OK">
+<!ENTITY papermachines.dialog.selectall						"Select All">
+<!ENTITY papermachines.dialog.deselectall						"Deselect All">
 
 <!ENTITY papermachines.prefs.advanced					"Advanced Options">
 <!ENTITY papermachines.prefs.reset						"Reset to Defaults">
@@ -72,16 +80,18 @@
 <!ENTITY papermachines.prefs.general.extract			"Data to Extract">
 <!ENTITY papermachines.prefs.general.extract_txt		"Plain Text">
 <!ENTITY papermachines.prefs.general.extract_html		"Web Snapshots (HTML)">
+<!ENTITY papermachines.prefs.general.extract_word		"MS Word Documents">
 <!ENTITY papermachines.prefs.general.extract_pdf		"PDFs with OCR text">
 <!ENTITY papermachines.prefs.general.extract_notes		"Notes">
 <!ENTITY papermachines.prefs.general.extract_tags		"Tags">
 <!ENTITY papermachines.prefs.general.extract_standalone	"Extract files without metadata (standalone)">
 <!ENTITY papermachines.prefs.general.download_snapshots	"Download live pages and remote links (can be slow!)">
-<!ENTITY papermachines.prefs.general.python_exe 		"Path to Python executable: ">
+<!ENTITY papermachines.prefs.general.java_exe 		"Path to Java executable: ">
 
 <!ENTITY papermachines.prefs.general.experimental		"Enable Experimental Features">
 
-
+<!ENTITY papermachines.prefs.stopwords					"Stop Words">
+<!ENTITY papermachines.prefs.stopwords.label			"A list of words (one per line) that should be excluded from analysis:">
 <!ENTITY papermachines.prefs.lda.topics					"Number of topics: ">
 <!ENTITY papermachines.prefs.lda.iterations				"Number of iterations: ">
 <!ENTITY papermachines.prefs.lda.burn_in				"Burn-in (iterations before estimating hyperparameters): ">
@@ -94,5 +104,5 @@
 <!ENTITY papermachines.prefs.lda.stemming				"Porter stemming">
 <!ENTITY papermachines.prefs.lda.tfidf					"tf*idf filtering">
 <!ENTITY papermachines.prefs.lda.min_df					"min doc frequency for tf*idf">
-
+<!ENTITY papermachines.prefs.lda.segmentation			"Segment by paragraph">
 

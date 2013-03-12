@@ -7,9 +7,9 @@ class LargeWordCloud(wordcloud.WordCloud):
 	Generate large word cloud
 	"""
 	def _basic_params(self):
-		self.width = "960"
-		self.height = "500"
-		self.fontsize = "[10,72]"
+		self.width = 960
+		self.height = 500
+		self.fontsize = [10, 72]
 		self.name = "wordcloud_large"
 		self.n = 150
 		self.tfidf_scoring = len(self.extra_args) > 0

@@ -17,9 +17,11 @@ class WordCloudChronological(wordcloud_multiple.MultipleWordClouds):
 		self.tfidf_scoring = False
 		self.MWW = False
 		self.dunning = False
+		self.comparison_type = "plain"
 		if len(self.extra_args) == 1:
 			self.interval = self.extra_args[0]
 		elif len(self.extra_args) > 1:
+			self.comparison_type = self.extra_args[0]
 			if self.extra_args[0] == "tfidf":
 				self.tfidf_scoring = True
 			elif self.extra_args[0] == "mww":

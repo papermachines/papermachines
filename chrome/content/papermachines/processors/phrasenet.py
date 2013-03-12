@@ -40,7 +40,7 @@ class PhraseNet(textprocessor.TextProcessor):
 
 		stopfile = os.path.join(self.cwd, "stopwords.txt")
 		logging.info("reading stopwords from " + stopfile)
-		self.stopwords = [line.strip() for line in file(stopfile)]
+		self.stopwords = [line.strip() for line in codecs.open(stopfile, 'r', encoding='utf-8')]
 
 		self.edgesep = ','
 
@@ -59,7 +59,7 @@ class PhraseNet(textprocessor.TextProcessor):
 
 		logging.info("extracting phrases according to pattern "+ repr(pattern))
 
-		self._findPhrases(re.compile(pattern))
+		self._findPhrases(re.compile(pattern, flags=re.UNICODE))
 
 		logging.info("generating JSON")
 
@@ -86,7 +86,7 @@ class PhraseNet(textprocessor.TextProcessor):
 		for node in used_nodes:
 			jsondata['nodes'].append({'index': nodeindex[node], 'name': node, 'freq': self.nodes[node]})
 
-		params = {"DATA": json.dumps(jsondata), "PATTERN": json.dumps(pattern_str)}
+		params = {"DATA": jsondata, "PATTERN": pattern_str}
 		self.write_html(params)
 
 if __name__ == "__main__":
