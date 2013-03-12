@@ -42,7 +42,7 @@ class GeoparserExport(geoparser.Geoparser):
 					title = os.path.basename(filename)
 					itemID = self.metadata[filename]['itemID']
 					year = self.metadata[filename]['year']
-					text = codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read()
+					text = codecs.open(filename, 'rU', encoding='utf-8', errors='replace').read()
 					maximum_length = len(text)
 
 					for entityURI, ranges in geoparse_obj["references"].iteritems():
@@ -65,7 +65,6 @@ class GeoparserExport(geoparser.Geoparser):
 					logging.info(traceback.format_exc())
 
 		params = {"CSVPATH": csv_output_filename}
-#			"CSVFILEURL": "file://" + urllib.pathname2url(os.path.dirname(csv_output_filename))}
 		self.write_html(params)
 
 		logging.info("finished")

@@ -164,3 +164,43 @@ HeatmapOverlay.prototype.addDataPoint = function(lat, lng, count){
 HeatmapOverlay.prototype.toggle = function(){
     this.heatmap.toggleDisplay();
 }
+
+var map;
+var heatmap; 
+
+window.onload = function(){
+
+    var myLatlng = new google.maps.LatLng(-15.6778, -47.4384);
+    var myOptions = {
+      zoom: 2,
+      minZoom: 2,
+      center: myLatlng,
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+      disableDefaultUI: false,
+      scrollwheel: true,
+      draggable: true,
+      navigationControl: true,
+      mapTypeControl: false,
+      scaleControl: true,
+      disableDoubleClickZoom: false
+    };
+    map = new google.maps.Map(document.getElementById("heatmapArea"), myOptions);
+    
+    heatmap = new HeatmapOverlay(map, {"radius":15, "visible":true, "opacity":60, "legend": {
+                            "title": "Mentions in Corpus",
+                            "position": "br",
+                            "offset": 30
+                        }});
+    
+    document.getElementById("togLegend").onclick = function(){
+        var legend = heatmap.heatmap.get("legend").get("element");
+        legend.hidden = !legend.hidden;
+    };
+
+    var myData = data["INTENSITY"];
+    
+    // this is important, because if you set the data set too early, the latlng/pixel projection doesn't work
+    google.maps.event.addListenerOnce(map, "idle", function(){
+        heatmap.setDataSet(myData);
+    });
+};

@@ -18,7 +18,20 @@ var legend_m = [30, 30, 30, 30], // margins
     legend_w = 240 - legend_m[1] - legend_m[3], // width
     legend_h = 340 - legend_m[0] - legend_m[2]; // height
 
+var yearTaper = d3.scale.linear().domain([0, 20]).range([0,1]);
 var link_polylines = {};
+
+function geoid(uri) {
+  return uri.split('/').slice(-1)[0];
+}
+function yearStillShowing(year){
+  return endDate == year;
+  // return endDate - year >= 0 && endDate - year < 20;
+}
+
+function fadeWithTime(d) {
+  return 0.8; //* yearTaper(endDate - d.year);
+}
 
 var playPause = function () {
   if (animating) {
@@ -67,7 +80,7 @@ var timeAction = function () {
           entityURIs[d.edge[1]].sources[d.edge[0]] += 1;
         }
       });
-    })(year == endDate);
+    })(yearStillShowing(year)); //(year == endDate);
     // })(year >= startDate && ((startDate == endDate && year == endDate) || year < endDate));
   }
   circleOverlay.draw(true);
@@ -84,8 +97,10 @@ var updateCircleData = function () {
         max = d.counts[year];
       }
       // if (year >= startDate && ((startDate == endDate && year == endDate) || year < endDate)) {
-      if (year == endDate) {
+      // if (year == endDate) {
+      if (yearStillShowing(year)) {
         sum = d.counts[year];
+        entityURIs[uri].year = year;
       }
     }
     // if (sum > max) { max = sum; }
@@ -301,7 +316,7 @@ ArcOverlay.prototype.draw = function(force) {
       .attr("fill", "none")      
       // .attr("stroke", "url(#fade)")
       .attr("stroke", colorArcsByOrigin)
-      .attr("stroke-opacity", 0.1)
+      .attr("stroke-opacity", 0.5)
     .enter().append("path")
       .attr("d", pathFromArc)
       .attr("fill", "none")
@@ -310,7 +325,7 @@ ArcOverlay.prototype.draw = function(force) {
       .attr("id", function (d) { return "arc" + d.value.id; })
       // .attr("stroke","url(#fade)")
       .attr("stroke", colorArcsByOrigin)
-      .attr("stroke-opacity", 0.1);
+      .attr("stroke-opacity", 0.5);
 };
 
 function sanitize(key) {
@@ -419,7 +434,7 @@ CircleOverlay.prototype.draw = function(force) {
       .attr("cy", circleY)
       .attr("r", circleRadius)
       .attr("fill", colorBySources)
-      .attr("fill-opacity", "0.3")
+      .attr("fill-opacity", fadeWithTime)
       .attr("stroke", "#fff").attr("stroke-opacity", "0.3")
       .attr("display", function (d) { return entityURIs[d.key].sum ? "block" : "none";})
     .enter().append("circle")
@@ -427,17 +442,17 @@ CircleOverlay.prototype.draw = function(force) {
       .attr("cy", circleY)
       .attr("r", circleRadius)
       .attr("fill", colorBySources)
-      .attr("fill-opacity", "0.3")
+      .attr("fill-opacity", fadeWithTime)
       .attr("stroke", "#fff").attr("stroke-opacity", "0.3")
       .attr("class", "circle")
-      .attr("id", function (d) { return "site" + sanitize(d.key); })
+      .attr("id", function (d) { return "circle" + geoid(d.key); })
       .attr("display", function (d) { return entityURIs[d.key].sum ? "block" : "none";})
       .style("cursor", "pointer")
       .on("mouseover", function (d) {
-        d3.select("#site" + sanitize(d.key)).attr("fill-opacity", "1");
+        d3.select("#circle" + geoid(d.key)).attr("fill-opacity", "1");
       })
       .on("mouseout", function (d) {
-        d3.select("#site" + sanitize(d.key)).attr("fill-opacity", "0.3");
+        d3.select("#circle" + geoid(d.key)).attr("fill-opacity", "0.8");
       })
       .on("click", displayCircleInfo);
 };
@@ -449,9 +464,30 @@ CircleOverlay.prototype.draw = function(force) {
 
 function displayCircleInfo(d) {
   // console.log(entityURIs[d.value.id]);
-  d3.json("contexts/" + d.value.id.split('/').slice(-1)[0] + ".json", function (json) {
-    console.log(json);
-  });
+  var bbox = d3.select("#circle" + geoid(d.key))[0][0].getBBox(),
+      popup_x = bbox.x + bbox.width,
+      popup_y = Math.max(bbox.y + bbox.height, 300);
+  var entity = entityURIs[d.key],
+      name = entity.name,
+      population = entity.population || "?",
+      entity_str = "<b>" + name + "</b><hr/><span class='popupinfo'>loading...</span>";
+      // entity_str = "<b>" + name + "</b><br/><i>pop.</i> " + population.toString() + "<hr/><span class='popupinfo'>loading...</span>";
+  var popup = new Popup(entity_str, popup_x, popup_y);
+  var json = data["CONTEXTS"][geoid(d.key)];
+  var contexts_str = "";
+  for (var text in json) {
+    var text_obj = doc_metadata[text];
+    if (!text_obj || !text_obj.date || !yearStillShowing(text_obj.date.substring(0,4))) continue;
+    contexts_str += "<div>"
+    var title = text_obj.label + ": <a href='zotero://select/" + text + "'>" + text_obj.title + "</a>",
+        date = text_obj.date.split(' ')[0];
+    contexts_str += title + "\n<br/>\n" + date;
+    for (var i in json[text]) {
+      contexts_str += "<blockquote>" + json[text][i] + "</blockquote>";
+    }
+    contexts_str += "</div>";        
+  }
+  d3.select(".popupinfo").html(contexts_str);
 }
 
 function buildLegend() {
@@ -474,19 +510,21 @@ function buildLegend() {
 
   var origin_box = labels.append("svg:g")
     .attr("id", "origin_labels")
-    .attr("transform", "translate(120, 50)");
+    .attr("transform", "translate(120, 40)");
 
   origin_box.append("svg:text")
     .text("Origin")
-    .style("fill", "#000");    
+    .style("fill", "#000")
+    .style("font-size", "1em");    
 
   origin_labels = origin_box.append("svg:g").selectAll(".originlabel").data(originColors.domain())
     .enter().append("svg:g")
       .attr("class", "originlabel")
-      .attr("transform", function (d, i) { return "translate(0," + ((i+1)*30) +")"});
+      .attr("transform", function (d, i) { return "translate(0," + ((i+1)*20 + 5) +")"});
 
   origin_labels.append("svg:text")
     .text(function (d) { return entityURIs[d].name;})
+    .style("font-size", "0.8em")
     .attr("fill", function (d) { return originColors(d); });
 
     updateLegend();
@@ -531,31 +569,28 @@ function setGradient(svg) {
       .style("stop-color", function (d) { return d; });
 }
 
-function Popup (text, d, i) {
+function closePopup() {
+  d3.select("#popup").remove();
+}
+
+function Popup(text, x, y) {
+  d3.select("#popup").remove();
   this.div = d3.select("body").append("div")
-    .attr("class", "popup")
-    .attr("data-node", i)
-    .html("<span class='popupclose' onclick='closePopup(" + i + ")'>x</span>");
-  this.node = d;
-  this.index = i;
+    .attr("id", "popup")
+    .html("<span class='popupclose' onclick='closePopup()'>x</span>");
   this.inner = this.div.append("span").attr("class", "popupText");
-  this.showing = false;
-  this.display = function(d) {
+  this.display = function() {
     this.inner.html(text);
     this.div.style("display", "block")
-        .style("z-index", popupStack);
-
-    this.update(d);
-    this.showing = true;
+      .style("position", "absolute")
+      .style("z-index", "999");
     return this;
   };
-  this.update = function (d) {
-    this.div.style("left", Math.floor(d.y + 10 ) + "px");
-    this.div.style("top", Math.floor(d.x + 10)  + "px");
+  this.update = function (x, y) {
+    this.div.style("left", Math.floor(x) + "px");
+    this.div.style("top", Math.floor(y)  + "px");
   };
-  this.hide = function(d) {
-    this.update(d);
-    this.div.style("display", "none");
-    this.showing = false;
-  };
+
+  if (x && y) this.update(x, y);
+  this.display();
 };

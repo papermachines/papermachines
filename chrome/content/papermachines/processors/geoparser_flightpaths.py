@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 import sys, os, json, logging, traceback, base64, time, codecs
+from collections import defaultdict
 import cPickle as pickle
 import geoparser
 
@@ -29,12 +30,23 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 		linksByYear = {}
 		itemIDToYear = {}
 		places = {}
+		contexts = defaultdict(dict)
 
-		for rowdict in self.parse_csv(csv_input):
-			validEntityURIs.add(rowdict["entityURI"])
+		try:
+			for rowdict in self.parse_csv(csv_input):
+				validEntityURIs.add(rowdict["entityURI"])
+		except:
+			logging.error(traceback.format_exc())
+			sys.exit(1)
+
+		if len(validEntityURIs) == 0: #empty csv file
+			os.remove(csv_input)
+			logging.error("Geoparser output file was empty!")
+			sys.exit(1)
 
 		for filename in self.files:
 			file_geoparsed = filename.replace(".txt", "_geoparse.json")
+			contexts_json = filename.replace(".txt", "_contexts.json")
 			if os.path.exists(file_geoparsed):
 				try:
 					geoparse_obj = json.load(file(file_geoparsed))
@@ -71,6 +83,13 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 						if itemID not in linksByYear[year][edge]:
 							linksByYear[year][edge][itemID] = 0
 						linksByYear[year][edge][itemID] += 1
+				if os.path.exists(contexts_json):
+					with file(contexts_json) as f:
+						contexts_obj = json.load(f)
+				else:
+					contexts_obj = self.contexts_from_geoparse_obj(geoparse_obj, filename)
+				for geonameid, paragraphs in contexts_obj.iteritems():
+					contexts[geonameid].update({itemID: paragraphs})
 			except:
 				logging.info(traceback.format_exc())
 
@@ -104,7 +123,8 @@ class GeoparserFlightPaths(geoparser.Geoparser):
 			"ENDDATE": max(linksByYear.keys()),
 			"ENTITYURIS": places,
 			"YEARS": years,
-			"LINKS_BY_YEAR": groupedLinksByYear
+			"LINKS_BY_YEAR": groupedLinksByYear,
+			"CONTEXTS": dict(contexts)
 		}
 		self.write_html(params)
 
