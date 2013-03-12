@@ -53,7 +53,7 @@ The topic model can be supplemented with datasets from [JSTOR Data For Research]
 
 ### Preferences
 
-Currently, the language stoplist in use, types of data to extract, and default parameters for topic modeling may be adjusted in the preference pane. Any custom stopwords may be added to the "Stop Words" pane, one per line, to help clarify the data.
+Currently, the language stoplist in use, types of data to extract, and default parameters for topic modeling may be adjusted in the preference pane. Any custom stopwords may be added to the "Stop Words" pane, one per line, to help eliminate irrelevant terms from your data.
 
 ## Acknowledgements
 Special thanks to [Matthew Battles](http://metalab.harvard.edu/people/) for providing space, guidance, and support for me at metaLAB. My gratitude also to the creators of all the open-source projects and services upon which this project relies:
