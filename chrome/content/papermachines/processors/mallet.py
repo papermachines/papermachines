@@ -19,7 +19,7 @@ class Mallet(textprocessor.TextProcessor):
 		for rowdict in self.parse_csv(citation_file):
 			doi = rowdict.pop("id")
 			citations[doi] = rowdict
-			self.metadata[doi] = {'title': citations[doi].get("title", ""), 'year': citations[doi].get('pubdate','')[0:4], 'label': "jstor", 'itemID': doi}
+			self.metadata[doi] = {'title': citations[doi].get("title", ""), 'date': citations[doi].get('pubdate',''), 'year': citations[doi].get('pubdate','')[0:4], 'label': "jstor", 'itemID': doi}
 		return citations
 
 	def _import_dfr(self, dfr_dir):
@@ -48,16 +48,44 @@ class Mallet(textprocessor.TextProcessor):
 				logging.error(doi)
 				logging.error(traceback.format_exc())
 
+	def _output_text(self, text, f, filename):
+		text = re.sub(r"[^\w ]+", u' ', text.lower(), flags=re.UNICODE)
+		if self.stemming:
+			newtext = u''
+			for word in text.split():
+				if word not in self.stemmed:
+					self.stemmed[word] = stem(self, word)
+				if len(self.stemmed[word]) < 4 or word in self.stopwords:
+					continue
+
+				# if word not in self.index:
+				# 	self.index[word] = set()
+				if self.stemmed[word] not in self.index:
+					self.index[self.stemmed[word]] = set()
+				# self.index[word].add(self.metadata[filename]["itemID"].split('.')[0])
+				self.index[self.stemmed[word]].add(self.metadata[filename]["itemID"].split('.')[0])
+
+				newtext += self.stemmed[word] + u' '
+			text = newtext
+		f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
+		self.docs.append(filename)
+
 	def _import_files(self):
 		if self.stemming:
 			self.stemmed = {}
+<<<<<<< HEAD
 		if not getattr(self, "tfidf", False):
+=======
+>>>>>>> jstopics
 			self.index = {}
 		self.docs = []
+		self.segmentation = getattr(self, "segmentation", False)
+
 		with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
 			for filename in self.files:
 				with codecs.open(filename, 'r', encoding='utf-8') as input_file:
 					text = input_file.read()
+<<<<<<< HEAD
 					text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
 					if self.stemming:
 						newtext = u''
@@ -73,6 +101,17 @@ class Mallet(textprocessor.TextProcessor):
 							self.index[word].append(self.metadata[filename]["itemID"])
 					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
 					self.docs.append(filename)
+=======
+					if self.segmentation:
+						segments = filter(lambda x: x.count(' ') > 5, text.split("\n\n"))
+						for i, text_seg in enumerate(segments):
+							seg_filename = filename + "#" + str(i)
+							self.metadata[seg_filename] = copy.deepcopy(self.metadata[filename])
+							self.metadata[seg_filename]["itemID"] += '.' + str(i)
+							self._output_text(text_seg, f, seg_filename)
+					else:
+						self._output_text(text, f, filename)
+>>>>>>> jstopics
 			if self.dfr:
 				for doi, text in self._import_dfr(self.dfr_dir):
 					f.write(u'\t'.join([doi, self.metadata[doi]["label"], text]) + u'\n')
@@ -168,17 +207,13 @@ class Mallet(textprocessor.TextProcessor):
 
 	def _setup_mallet_command(self):
 		self.mallet_cp_dir = os.path.join(self.cwd, "lib", "mallet-2.0.7", "dist")
-		if self.sys == "Windows":
-			classpath_sep = u';'
-		else:
-			classpath_sep = u':'
 
-		self.mallet_classpath = os.path.join(self.mallet_cp_dir, "mallet.jar") + classpath_sep + os.path.join(self.mallet_cp_dir, "mallet-deps.jar")
+		self.mallet_classpath = [os.path.join(self.mallet_cp_dir, "mallet.jar"), os.path.join(self.mallet_cp_dir, "mallet-deps.jar")]
+		for jar in self.mallet_classpath:
+			if jar not in sys.path:
+				sys.path.append(jar)
 
-		self.mallet = "java -Xmx1g -ea -Djava.awt.headless=true -Dfile.encoding=UTF-8".split(' ')
-		self.mallet += ["-classpath", self.mallet_classpath]
-
-		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection)
+		self.mallet_out_dir = os.path.join(self.out_dir, self.name + self.collection + "-" + self.args_basename)
 
 		if not self.dry_run:
 			if os.path.exists(self.mallet_out_dir):
@@ -189,7 +224,6 @@ class Mallet(textprocessor.TextProcessor):
 		self.progress_file = file(self.progress_filename, 'w+')
 
 	def _import_texts(self):
-
 		logging.info("copying texts into single file")
 		self.texts_file = os.path.join(self.mallet_out_dir, self.collection + ".txt")
 
@@ -231,18 +265,19 @@ class Mallet(textprocessor.TextProcessor):
 		with codecs.open(os.path.join(self.mallet_out_dir, "metadata.json"), 'w', encoding='utf-8') as meta_file:
 			json.dump(self.metadata, meta_file)
 
-		import_args = self.mallet + ["cc.mallet.classify.tui.Csv2Vectors", 
-			"--remove-stopwords",
-			"--stoplist-file", self.stoplist, 
-			"--input", self.texts_file,
-			"--line-regex", "^([^\\t]*)[\\t]([^\\t]*)[\\t](.*)$",
-			"--token-regex", '[\p{L}\p{M}]+',
+		import_args = ["--encoding", "UTF-8", "--input", self.texts_file,
+			"--line-regex", "^([^\t]*)[\t]([^\t]*)[\t](.*)$",
+			"--token-regex", "\S+" if tfidf else "[\p{L}\p{M}]+",
 			"--output", self.instance_file]
+		if not tfidf:
+			import_args = ["--remove-stopwords", "--stoplist-file", self.stoplist] + import_args
+
 		if sequence:
 			import_args.append("--keep-sequence")
 
 		if not self.dry_run and not os.path.exists(self.instance_file):
-			import_return = subprocess.call(import_args, stdout=self.progress_file)
+			from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
+			Csv2Vectors(import_args)
 	
 	def process(self):
 		"""
