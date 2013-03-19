@@ -734,14 +734,15 @@ function refreshAxes() {
     .attr("transform", "");    
   }
 
-  if (streaming) {
+  if (streaming && !stacked) {
     axesGroup.selectAll("g.y.axis").transition().duration(500).style("fill-opacity", 0);
     axesGroup.selectAll(".y.axis line").style("stroke-opacity", 0);
   } 
   if (categorical) {
     axesGroup.selectAll("g.y.axis").remove();
   }
-  if (!streaming && !categorical) {
+  if ((!streaming || (streaming && stacked)) && !categorical) {
+    axesGroup.selectAll("g.y.axis").remove();
     for (var i in graph) {
       if (axesGroup.selectAll("g.y.axis graph" +i.toString()).empty()) {
         axesGroup.append("svg:g")
