@@ -526,7 +526,7 @@ Zotero.PaperMachines = {
 		if (Zotero.PaperMachines.memoryIntensive(processor)) {
 			procArgs = ["-Xmx1g"].concat(procArgs);
 		} else {
-			procArgs = ["-Xmx256m"].concat(procArgs);			
+			procArgs = ["-Xmx512m"].concat(procArgs);			
 		}
 		Zotero.PaperMachines.LOG(java_exe_file.path + " " + procArgs.map(function(d) { return d.indexOf(" ") != -1 ? '"' + d + '"' : d; }).join(" "));
 

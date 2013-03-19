@@ -73,10 +73,6 @@ class Mallet(textprocessor.TextProcessor):
 	def _import_files(self):
 		if self.stemming:
 			self.stemmed = {}
-<<<<<<< HEAD
-		if not getattr(self, "tfidf", False):
-=======
->>>>>>> jstopics
 			self.index = {}
 		self.docs = []
 		self.segmentation = getattr(self, "segmentation", False)
@@ -85,23 +81,7 @@ class Mallet(textprocessor.TextProcessor):
 			for filename in self.files:
 				with codecs.open(filename, 'r', encoding='utf-8') as input_file:
 					text = input_file.read()
-<<<<<<< HEAD
-					text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
-					if self.stemming:
-						newtext = u''
-						for word in text.split():
-							if word not in self.stemmed:
-								self.stemmed[word] = stem(self, word)
-							newtext += self.stemmed[word] + u' '
-						text = newtext
-					if not self.tfidf: # need to build index
-						for word in text.split():
-							if not word in self.index:
-								self.index[word] = []
-							self.index[word].append(self.metadata[filename]["itemID"])
-					f.write(u'\t'.join([filename, self.metadata[filename]["label"], text]) + u'\n')
-					self.docs.append(filename)
-=======
+
 					if self.segmentation:
 						segments = filter(lambda x: x.count(' ') > 5, text.split("\n\n"))
 						for i, text_seg in enumerate(segments):
@@ -111,7 +91,6 @@ class Mallet(textprocessor.TextProcessor):
 							self._output_text(text_seg, f, seg_filename)
 					else:
 						self._output_text(text, f, filename)
->>>>>>> jstopics
 			if self.dfr:
 				for doi, text in self._import_dfr(self.dfr_dir):
 					f.write(u'\t'.join([doi, self.metadata[doi]["label"], text]) + u'\n')

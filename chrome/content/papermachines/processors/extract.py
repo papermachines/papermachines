@@ -79,6 +79,7 @@ class Extract(textprocessor.TextProcessor):
                         import_args = [self.pdftotext, '-enc', 'UTF-8', '-nopgbrk', filename, '-']
                         import_proc = subprocess.Popen(import_args, stdout = subprocess.PIPE)
                         text += import_proc.communicate()[0].decode('utf-8')
+                logging.info("processed "+out_file)
                 with codecs.open(out_file, 'w', encoding="utf-8") as f:
                     f.write(text)
                     saved.append({"itemID": itemID, "collection": self.metadata[filename]["collection"], "filename": out_file})

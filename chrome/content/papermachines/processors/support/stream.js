@@ -78,10 +78,6 @@ var origTopicTimeData,
     sortMetric = 0, 
     total = 1;
 
-<<<<<<< HEAD
-var sortMetrics = {0: {"text": "most variable"},
-  1: {"text": "most common"},
-=======
 var intervalsObj = {};
 function binDocsIntoIntervals() {
   var topics_n, timeframe, intervals = [];
@@ -135,7 +131,6 @@ function binDocsIntoIntervals() {
 var sortMetrics = {
   0: {"text": "most common"},
   1: {"text": "most variable"},
->>>>>>> jstopics
   2: {"text": "most coherent"}
 };
 var dateParse = d3.time.format("%Y").parse;
@@ -232,10 +227,7 @@ function selectGraphState(state) {
     }
   }
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> jstopics
 function createMenuOfGraphs () {
   var sel = document.createElement("select");
   sel.id = "graphSelector";
@@ -708,11 +700,8 @@ function highlightTopic(e) {
 }
 
 function unhighlightTopic() {
-//  return;
-<<<<<<< HEAD
-=======
+
   legend.style("fill-opacity", function (d) { return (d.active) ? 1.0 : 0.3;})
->>>>>>> jstopics
   for (i in graph) {
     var series = graphGroup.selectAll("path.line.graph" + i.toString());
     series.transition().style(streaming ? "fill-opacity" : "stroke-opacity", graph[i].defaultOpacity);
@@ -1023,13 +1012,9 @@ function mostVariantTopics(n) {
 }
 
 
-<<<<<<< HEAD
-sortMetrics[0]["func"] = stdevSort;
-sortMetrics[1]["func"] = prevalenceSort;
-=======
+
 sortMetrics[0]["func"] = prevalenceSort;
 sortMetrics[1]["func"] = stdevSort;
->>>>>>> jstopics
 sortMetrics[2]["func"] = topicCoherenceSort;
 
 function topNCorrelatedTopicPairs(n) {

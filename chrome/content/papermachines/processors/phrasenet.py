@@ -20,7 +20,7 @@ class PhraseNet(textprocessor.TextProcessor):
 				logging.info("processing " + filename)
 				for re_match in pattern.finditer(f.read()):
 					match = [w.lower() for w in re_match.groups()]
-					if any([word in self.stopwords for word in match]):
+					if any([word in self.stopwords_set for word in match]):
 						continue
 
 					for word in match:
@@ -38,9 +38,7 @@ class PhraseNet(textprocessor.TextProcessor):
 	def process(self):
 		logging.info("starting to process")
 
-		stopfile = os.path.join(self.cwd, "stopwords.txt")
-		logging.info("reading stopwords from " + stopfile)
-		self.stopwords = [line.strip() for line in codecs.open(stopfile, 'r', encoding='utf-8')]
+		self.stopwords_set = set(self.stopwords)
 
 		self.edgesep = ','
 
