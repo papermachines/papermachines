@@ -33,6 +33,9 @@ class Extract(textprocessor.TextProcessor):
     def _basic_params(self):
         self.name = "extract"
         self.pdftotext = self.extra_args[0]
+        self.force_update = False
+        if len(self.extra_args) > 1:
+            self.force_update = True
         jarLoad = classPathHacker()
         tikaPath = os.path.join(self.cwd, "lib", "tika-app-1.2.jar")
         if os.path.exists(tikaPath):
@@ -59,30 +62,31 @@ class Extract(textprocessor.TextProcessor):
                 if not os.path.exists(out_dir):
                     os.makedirs(out_dir)
                 text = u''
-                for filename in filenames:
-                    if filename.lower().endswith(".txt"):
-                        text += codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read()
-                    elif filename.lower().endswith(".html"):
-                        text += strip_tags(filename)
-                    elif filename.lower().endswith(".doc") or filename.lower().endswith(".docx"):
-                        if getattr(self, "tika", None) is not None:
-                            txtfile = self.java.io.File(filename)
-                            b = self.tika.parse(txtfile)
-                            d = u""
-                            c = b.read()
-                            while c > 0:
-                                d += unichr(c)
+                if not os.path.exists(out_file) or self.force_update:
+                    for filename in filenames:
+                        if filename.lower().endswith(".txt"):
+                            text += codecs.open(filename, 'r', encoding='utf-8', errors='ignore').read()
+                        elif filename.lower().endswith(".html"):
+                            text += strip_tags(filename)
+                        elif filename.lower().endswith(".doc") or filename.lower().endswith(".docx"):
+                            if getattr(self, "tika", None) is not None:
+                                txtfile = self.java.io.File(filename)
+                                b = self.tika.parse(txtfile)
+                                d = u""
                                 c = b.read()
-                            b.close()
-                            text += d
-                    elif filename.lower().endswith(".pdf"):
-                        import_args = [self.pdftotext, '-enc', 'UTF-8', '-nopgbrk', filename, '-']
-                        import_proc = subprocess.Popen(import_args, stdout = subprocess.PIPE)
-                        text += import_proc.communicate()[0].decode('utf-8')
-                logging.info("processed "+out_file)
-                with codecs.open(out_file, 'w', encoding="utf-8") as f:
-                    f.write(text)
-                    saved.append({"itemID": itemID, "collection": self.metadata[filename]["collection"], "filename": out_file})
+                                while c > 0:
+                                    d += unichr(c)
+                                    c = b.read()
+                                b.close()
+                                text += d
+                        elif filename.lower().endswith(".pdf"):
+                            import_args = [self.pdftotext, '-enc', 'UTF-8', '-nopgbrk', filename, '-']
+                            import_proc = subprocess.Popen(import_args, stdout = subprocess.PIPE)
+                            text += import_proc.communicate()[0].decode('utf-8')
+                    logging.info("processed "+out_file)
+                    with codecs.open(out_file, 'w', encoding="utf-8") as f:
+                        f.write(text)
+                saved.append({"itemID": itemID, "collection": self.metadata[filename]["collection"], "filename": out_file})
                 self.update_progress()
             except:
                 logging.error(traceback.format_exc())

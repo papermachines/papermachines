@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 import sys, os, json, cStringIO, tempfile, logging, traceback, codecs, math
 import textprocessor
+from collections import Counter
 from lib.porter2 import stem
 
 class WordCloud(textprocessor.TextProcessor):
@@ -16,38 +17,28 @@ class WordCloud(textprocessor.TextProcessor):
 		self.tfidf_scoring = False
 
 	def _findTfIdfScores(self, scale=True):
-		self.freqs = {}
+		self.freqs = Counter()
 		self.tf_by_doc = {}
 		self.max_tf = {}
-		self.df = {}
+		self.df = Counter()
 		for filename in self.files:
-			with codecs.open(filename, 'r', encoding = 'utf8') as f:
-				logging.info("processing " + filename)
-				flen = 0
-				self.tf_by_doc[filename] = {}
-				for line in f:
-					for stem in self._tokenizeAndStem(line):
-						flen += 1
-						if stem not in self.tf_by_doc[filename]:
-							self.tf_by_doc[filename][stem] = 0
-							if stem not in self.df:
-								self.df[stem] = 0
-							self.df[stem] += 1
-						self.tf_by_doc[filename][stem] += 1
-				# max_tf_d = max(self.tf_by_doc[filename].values())
-				for stem in self.tf_by_doc[filename].keys():
-					if stem not in self.freqs:
-						self.freqs[stem] = 0
-					self.freqs[stem] += self.tf_by_doc[filename][stem]
-					if scale:
-						self.tf_by_doc[filename][stem] /= float(flen) #max_tf_d
-						this_tf = self.tf_by_doc[filename][stem]
-					else:
-						this_tf = self.tf_by_doc[filename][stem] / float(flen)
+			flen = 0
+			self.tf_by_doc[filename] = self.getNgrams(filename, n = 1, stemming = False)
+			flen = sum(self.tf_by_doc[filename].values())
+			self.df.update(self.tf_by_doc[filename].keys())
 
-					if stem not in self.max_tf or self.max_tf[stem] < this_tf:
-						self.max_tf[stem] = this_tf
-				self.update_progress()
+			self.freqs.update(self.tf_by_doc[filename])
+
+			for stem in self.tf_by_doc[filename].keys():
+				if scale:
+					self.tf_by_doc[filename][stem] /= float(flen) #max_tf_d
+					this_tf = self.tf_by_doc[filename][stem]
+				else:
+					this_tf = self.tf_by_doc[filename][stem] / float(flen)
+
+				if stem not in self.max_tf or self.max_tf[stem] < this_tf:
+					self.max_tf[stem] = this_tf
+			self.update_progress()
 		n = float(len(self.files))
 		self.idf = dict((term, math.log10(n/df)) for term, df in self.df.iteritems())
 		self.tfidf = dict((term, self.max_tf[term] * self.idf[term]) for term in self.max_tf.keys())
@@ -70,23 +61,11 @@ class WordCloud(textprocessor.TextProcessor):
 		return final_freqs
 
 	def _findWordFreqs(self, filenames):
-		freqs = {}
+		freqs = Counter()
 		for filename in filenames:
-			with codecs.open(filename, 'r', encoding = 'utf8') as f:
-				logging.info("processing " + filename)
-				for line in f:
-					for stem in self._tokenizeAndStem(line):
-						if stem not in freqs:
-							freqs[stem] = 1
-						else:
-							freqs[stem] += 1
+			freqs.update(self.getNgrams(filename, stemming = False))
 			self.update_progress()
 		return self._topN(freqs)
-
-	def _tokenizeAndStem(self, line):
-		# uncomment for Porter stemming (slower, but groups words with their plurals, etc.)
-		# return [stem(word.strip('.,')) for word in line.split() if word.lower() not in self.stopwords and len(word) > 3]
-		return [word.lower() for word in line.split() if word.lower() not in self.stopwords and word.isalpha() and len(word) >= 3]
 
 	def process(self):
 		logging.info("starting to process")

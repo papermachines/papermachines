@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 import sys, os, json, logging, traceback, codecs, re, math, pickle, copy, itertools
 from datetime import datetime, timedelta
+from collections import Counter, defaultdict
 import textprocessor
 
 class NGrams(textprocessor.TextProcessor):
@@ -56,54 +57,18 @@ class NGrams(textprocessor.TextProcessor):
             self.labels[label].add(filename)
 
     def _findNgramFreqs(self, filenames):
-        freqs = {}
+        freqs = Counter()
         total_for_interval = 0.0
         for filename in filenames:
-            doc_freqs = {}
-            ngram_serialized = filename.replace(".txt", "_" + str(self.n) + "grams.pickle")
-            ngram_json = ngram_serialized.replace(".pickle", ".json")
-            if os.path.exists(ngram_json):
-                os.remove(ngram_json)
-            if os.path.exists(ngram_serialized):
-                with open(ngram_serialized, 'rb') as ngram_serialized_file:
-                    doc_freqs = pickle.load(ngram_serialized_file)
-                # with codecs.open(ngram_serialized, 'r', encoding = 'utf8') as ngram_serialized_file:
-                #     doc_freqs = json.load(ngram_serialized_file)
-            else:
-                with codecs.open(filename, 'r', encoding = 'utf8') as f:
-                    logging.info("processing " + filename)
-                    for ngram in self._ngrams(f.read(), self.n):
-                        if ngram not in doc_freqs:
-                            doc_freqs[ngram] = 0
-                        doc_freqs[ngram] += 1
-                with open(ngram_serialized, 'wb') as ngram_serialized_file:
-                    pickle.dump(doc_freqs, ngram_serialized_file, protocol = pickle.HIGHEST_PROTOCOL)
-                # with codecs.open(ngram_serialized, 'w', encoding = 'utf8') as ngram_serialized_file:
-                #     json.dump(doc_freqs, ngram_serialized_file)
+            doc_freqs = self.getNgrams(filename, n = self.n)
             for ngram, value in doc_freqs.iteritems():
-                if ngram not in self.doc_freqs:
-                    self.doc_freqs[ngram] = []
                 self.doc_freqs[ngram].append(self.metadata[filename]["itemID"])
-
-                if ngram not in freqs:
-                    freqs[ngram] = 0
-                freqs[ngram] += 1
-
+                freqs[ngram] += value
                 total_for_interval += float(value)
             self.update_progress()
         for key in freqs.keys():
             freqs[key] /= total_for_interval
         return freqs
-
-    def _ngrams(self, text, n = 1):
-        text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
-        words = [word for word in text.split()]
-        total_n = len(words)
-        i = 0
-        while i < (total_n - (n - 1)):
-            if not any([word in self.stopwords for word in words[i:i+n]]):
-                yield u' '.join(words[i:i+n])
-            i += 1
 
     def _filter_by_df(self):
         all_ngrams = len(self.doc_freqs.keys())
@@ -143,7 +108,7 @@ class NGrams(textprocessor.TextProcessor):
     def process(self):
         self._split_into_labels()
         self.freqs = {}
-        self.doc_freqs = {}
+        self.doc_freqs = defaultdict(list)
 
         self.occupied_intervals = sorted(self.labels.keys())
 
@@ -173,7 +138,7 @@ class NGrams(textprocessor.TextProcessor):
         params = {"NGRAMS_INTERVALS": self.ngrams_intervals,
             "TIMES": self.interval_names,
             "MAX_FREQ": self.max_freq,
-            "NGRAMS_TO_DOCS": self.doc_freqs
+            "NGRAMS_TO_DOCS": dict(self.doc_freqs)
         }
 
         self.write_html(params)

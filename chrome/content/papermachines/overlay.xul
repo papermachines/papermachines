@@ -34,15 +34,15 @@
 				</menu>
 			</menupopup>
 		</menu>
-<!--		<menu id="ngrams_menu" label="&papermachines.collectionmenu.ngrams_menu;" disabled="true">
+		<menu id="ngrams" label="&papermachines.collectionmenu.ngrams_menu;" disabled="true">
 			<menupopup id="ngrams-menu">
-				<menuitem id="ngrams" label="&papermachines.collectionmenu.ngrams;"
+				<menuitem id="ngrams_top" label="&papermachines.collectionmenu.ngrams;"
 					oncommand="Zotero.PaperMachines.runProcess('ngrams')"/>
 				<menuitem id="ngrams_specific" label="&papermachines.collectionmenu.ngrams_specific;"
 					disabled="true"
 					oncommand="Zotero.PaperMachines.runProcess('ngrams_specific')"/>
 			</menupopup>
-		</menu> -->
+		</menu>
 		<menu id="phrasenet" label="&papermachines.collectionmenu.phrasenet;" disabled="true">
 			<menupopup id="phrasenet-menu">
 				<menuitem id="phrasenet-x_and_y" label="x and y"

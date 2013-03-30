@@ -21,7 +21,7 @@ Zotero.PaperMachines = {
 	processors_dir: null,
 	java_exe: null,
 	jython_path: null,
-	processors: ["wordcloud", "phrasenet", "mallet", "geoparser", "dbpedia", "view-output", "export-output", "reset-output"], //ngrams_menu", "mallet_classify",
+	processors: ["wordcloud", "ngrams", "phrasenet", "mallet", "geoparser", "dbpedia", "view-output", "export-output", "reset-output"], // "mallet_classify",
 	processNames: null, // see locale files
 	prompts: null,
 	paramLabels: null,
@@ -78,10 +78,12 @@ Zotero.PaperMachines = {
 			var filter = Zotero.PaperMachines.selectFromOptions("wordcloud_multiple", Zotero.PaperMachines.wordcloudFilters);
 			if (!filter) return false;
 
-			var interval = Zotero.PaperMachines.textPrompt("wordcloud_chronological", "90");
-			if (!interval) return false;
-
-			return filter.concat(interval);
+			var params = Zotero.PaperMachines.promptForProcessParams("wordcloud_chronological");
+			if (params) {
+				return filter.concat(["json", JSON.stringify(params)]);
+			} else {
+				return false;
+			}
 		},
 		"mallet_lda_jstor": function () {
 			var argArray = Zotero.PaperMachines.filePrompt("mallet_lda_jstor", "multi", [".zip"]);
@@ -521,20 +523,12 @@ Zotero.PaperMachines = {
 			procArgs = ["-Djava.util.logging.config.file="+loggingProperties].concat(procArgs);
 		}
 
-		procArgs = ["-Dfile.encoding=UTF8","-jar", this.jython_path].concat(procArgs);
+		procArgs = ["-Xmx1g", "-Dfile.encoding=UTF8","-jar", this.jython_path].concat(procArgs);
 
-		if (Zotero.PaperMachines.memoryIntensive(processor)) {
-			procArgs = ["-Xmx1g"].concat(procArgs);
-		} else {
-			procArgs = ["-Xmx512m"].concat(procArgs);			
-		}
 		Zotero.PaperMachines.LOG(java_exe_file.path + " " + procArgs.map(function(d) { return d.indexOf(" ") != -1 ? '"' + d + '"' : d; }).join(" "));
 
 		proc.init(java_exe_file);
 		proc.runAsync(procArgs, procArgs.length, observer);
-	},
-	memoryIntensive: function (processor) {
-		return processor.indexOf("mallet") != -1 || processor == "ngrams";
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
 		const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -1483,6 +1477,11 @@ Zotero.PaperMachines = {
 		"wordcloud_translate":  [{"name": "lang_from", "type": "text", "value": "Hebrew"},
 			{"name": "lang_to", "type": "text", "value": "English"},
 			{"name": "tfidf", "type": "check", "value": true}
+		],
+		"wordcloud_chronological": [
+			{"name": "interval", "type": "text", "value": "90"},
+			{"name": "start_date", "type": "text", "value": ""},
+			{"name": "end_date", "type": "text", "value": ""},
 		],
 		"change_field":  [{"name": "field", "type": "text", "value": ""},
 			{"name": "value", "type": "text", "value": ""},

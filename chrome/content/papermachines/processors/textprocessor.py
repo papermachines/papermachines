@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
-import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json, operator, platform
+import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json, operator, platform, pickle, re
 from itertools import izip
+from collections import Counter, defaultdict
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -147,6 +148,32 @@ class TextProcessor:
         # props_file.close()
 
         # System.setProperty("java.util.logging.config.file", filename)
+
+    def _ngrams(self, text, n = 1, stemming = False):
+        text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
+        words = [word for word in text.split()]
+        total_n = len(words)
+        i = 0
+        while i < (total_n - (n - 1)):
+            ngram = words[i:i+n]
+            if not any([word in self.stopwords or not word.isalpha() for word in ngram]):
+                yield u' '.join(ngram)
+            i += 1
+
+    def getNgrams(self, filename, n = 1, stemming = False):
+        ngram_serialized = filename.replace(".txt", "_" + str(n) + "grams.pickle")
+        if os.path.exists(ngram_serialized):
+            with open(ngram_serialized, 'rb') as ngram_serialized_file:
+                freqs = pickle.load(ngram_serialized_file)
+        else:
+            freqs = Counter()
+            with codecs.open(filename, 'r', encoding = 'utf8') as f:
+                logging.info("processing " + filename)
+                freqs.update(self._ngrams(f.read(), n, stemming))
+            freqs = dict(freqs)
+            with open(ngram_serialized, 'wb') as ngram_serialized_file:
+                pickle.dump(freqs, ngram_serialized_file, protocol = pickle.HIGHEST_PROTOCOL)
+        return freqs
 
     def write_html(self, data_params):
         logging.info("writing HTML")
