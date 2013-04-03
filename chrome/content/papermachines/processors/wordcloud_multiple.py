@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 import sys, os, json, cStringIO, tempfile, logging, traceback, codecs, math
+from collections import defaultdict
 import wordcloud
 
 class MultipleWordClouds(wordcloud.WordCloud):
@@ -12,6 +13,7 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		self.height = 150
 		self.fontsize = [10,32]
 		self.n = 50
+		self.ngram = int(self.named_args.get("ngram", 2))
 		self.tfidf_scoring = False
 		self.MWW = False
 		self.dunning = False
@@ -67,10 +69,10 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		t_a_max = (n_a * n_b) + (n_a * (len(A) + 1))/2
 		u_a = t_a_max - t_a
 		s = math.sqrt(float(n_a * n_b * (n_ab + 1))/12)
-		if t_a > mu_a:
-			z_a = (t_a - mu_a - 0.5)/ s
-		else:
-			z_a = (t_a - mu_a + 0.5)/ s
+		# if t_a > mu_a:
+		# 	z_a = (t_a - mu_a - 0.5)/ s
+		# else:
+		# 	z_a = (t_a - mu_a + 0.5)/ s
 		rho = u_a / (n_a*n_b)
 		return rho
 
@@ -90,6 +92,8 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		E1 = c*((a+b)/(c+d))
 		E2 = d*((a+b)/(c+d))
 		G2 = 2.0*((a*math.log(a/E1)) + (b*math.log(b/E2)))
+		if a/c < b/d:
+			G2 = -G2
 		return G2
 
 	def _dunning(self, word, label_set):
@@ -104,6 +108,8 @@ class MultipleWordClouds(wordcloud.WordCloud):
 		E1 = c*((a+b)/(c+d))
 		E2 = d*((a+b)/(c+d))
 		G2 = 2.0*((a*math.log(a/E1)) + (b*math.log(b/E2)))
+		if a/c < b/d:
+			G2 = -G2
 		return G2
 
 	def _held_out(self, word, label_set, other_set):
@@ -126,13 +132,11 @@ class MultipleWordClouds(wordcloud.WordCloud):
 
 	def _split_into_labels(self):
 		for filename, data in self.metadata.iteritems():
-			if data["label"] not in self.labels:
-				self.labels[data["label"]] = set()
 			self.labels[data["label"]].add(filename)
 
 	def process(self):
 		logging.info("splitting into labeled sets")
-		self.labels = {}
+		self.labels = defaultdict(set)
 		self._split_into_labels()
 
 		clouds = {}
@@ -156,19 +160,19 @@ class MultipleWordClouds(wordcloud.WordCloud):
 				word_rho = {}
 				for word in self.top_tfidf_words:
 					word_rho[word] = self._held_out(word, label_set, other_set)
-				clouds[label] = self._topN(word_rho)
+				clouds[label] = self._mostExtremeN(word_rho)
 			elif self.tfidf_scoring and self.dunning:
 				label_set = set(filenames)
 				other_set = all_files - label_set
 				word_G2 = {}
 				self.total_word_count = sum(self.freqs.values())
+				self.totals_by_doc = {}
 				for word in self.top_tfidf_words:
-					G2 = self._dunning_held_out(word, label_set, other_set)
-					# G2 = self._dunning(word, label_set)
-					if G2 > 15.13: # critical value for p < 0.001
+					# G2 = self._dunning_held_out(word, label_set, other_set)
+					G2 = self._dunning(word, label_set)
+					if G2 > 15.13 or G2 < -15.13: # critical value for p < 0.001
 						word_G2[word] = G2
-				clouds[label] = self._topN(word_G2)
-
+				clouds[label] = self._mostExtremeN(word_G2)
 			elif self.tfidf_scoring:
 				tf_maxes = {}
 				for filename in filenames:
@@ -188,17 +192,10 @@ class MultipleWordClouds(wordcloud.WordCloud):
 				"ORDER": self.label_order,
 				"WIDTH": self.width,
 				"HEIGHT": self.height,
-				"FONTSIZE": self.fontsize
+				"FONTSIZE": self.fontsize,
+				"COMPARISON_TYPE": self.comparison_type
 		}
 
-		if self.comparison_type == "tfidf":
-			params["FORMAT"] = u"tf-idf:{0}"
-		elif self.comparison_type == "mww":
-			params["FORMAT"] = u"\u03c1:{0}"
-		elif self.comparison_type == "dunning":
-			params["FORMAT"] = u"G\u00b2: {0}"
-		else:
-			params["FORMAT"] = u'{0} occurrences in subset'
 		self.write_html(params)
 
 

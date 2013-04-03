@@ -1472,7 +1472,9 @@ Zotero.PaperMachines = {
 		"ngrams":  [{"name": "n", "type": "text", "value": "1"},
 			{"name": "top_ngrams", "type": "text", "value": "100"},
 			{"name": "min_df", "type": "text", "value": "3"},
-			{"name": "interval", "type": "text", "value": "1", "advanced": true}
+			{"name": "interval", "type": "text", "value": "1", "advanced": true},
+			{"name": "start_date", "type": "text", "value": "", "advanced": true},
+			{"name": "end_date", "type": "text", "value": "", "advanced": true},
 		],
 		"wordcloud_translate":  [{"name": "lang_from", "type": "text", "value": "Hebrew"},
 			{"name": "lang_to", "type": "text", "value": "English"},

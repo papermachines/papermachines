@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 import sys, os, json, cStringIO, tempfile, logging, traceback, codecs, math
 from datetime import datetime, timedelta
+from collections import defaultdict
 import wordcloud_multiple
 
 class WordCloudChronological(wordcloud_multiple.MultipleWordClouds):
@@ -14,6 +15,7 @@ class WordCloudChronological(wordcloud_multiple.MultipleWordClouds):
 		self.height = 300
 		self.fontsize = [10,32]
 		self.n = 100
+		self.ngram = int(self.named_args.get("ngram", 2))
 		self.tfidf_scoring = False
 		self.MWW = False
 		self.dunning = False
@@ -90,8 +92,6 @@ class WordCloudChronological(wordcloud_multiple.MultipleWordClouds):
 				if interval[0] <= datestr_to_datetime[metadata["date"]] < interval[1]:
 					label = interval_names[i]
 					break
-			if label not in self.labels:
-				self.labels[label] = set()
 			self.labels[label].add(filename)
 
 if __name__ == "__main__":

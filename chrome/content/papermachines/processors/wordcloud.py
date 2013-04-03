@@ -14,6 +14,7 @@ class WordCloud(textprocessor.TextProcessor):
 		self.height = 150
 		self.fontsize = [10, 32]
 		self.n = 50
+		self.ngram = 1
 		self.tfidf_scoring = False
 
 	def _findTfIdfScores(self, scale=True):
@@ -21,9 +22,10 @@ class WordCloud(textprocessor.TextProcessor):
 		self.tf_by_doc = {}
 		self.max_tf = {}
 		self.df = Counter()
+		ngram = 1 if not hasattr(self, "ngram") else self.ngram
 		for filename in self.files:
 			flen = 0
-			self.tf_by_doc[filename] = self.getNgrams(filename, n = 1, stemming = False)
+			self.tf_by_doc[filename] = self.getNgrams(filename, n = ngram, stemming = False)
 			flen = sum(self.tf_by_doc[filename].values())
 			self.df.update(self.tf_by_doc[filename].keys())
 
@@ -57,6 +59,20 @@ class WordCloud(textprocessor.TextProcessor):
 		min_freq = top_freqs[-min(n,len(top_freqs))] # find nth frequency from end, or start of list
 		for word, freq in freqs.iteritems():
 			if freq >= min_freq:
+				final_freqs.append({'text': word, 'value': freq})
+		return final_freqs
+
+	def _mostExtremeN(self, freqs, n = None):
+		if n is None:
+			n = self.n
+		final_freqs = []
+		freqs_sort = sorted(freqs.values())
+		if len(freqs_sort) == 0:
+			return []
+		min_freq_top = freqs_sort[-min(n/2,len(freqs_sort))]
+		max_freq_bottom = freqs_sort[min(n/2, len(freqs_sort) - 1)]
+		for word, freq in freqs.iteritems():
+			if freq >= min_freq_top or freq < max_freq_bottom:
 				final_freqs.append({'text': word, 'value': freq})
 		return final_freqs
 

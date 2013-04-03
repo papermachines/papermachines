@@ -51,7 +51,7 @@ class TextProcessor:
         logging.basicConfig(filename=self.out_filename.replace(".html", ".log"), filemode='w', level=logging.INFO)
 
         fh = logging.FileHandler(os.path.join(self.out_dir, "logs", self.name + ".log"))
-        formatter = logging.Formatter('%(name)s: %(levelname)-8s %(message)s')
+        formatter = logging.Formatter('%(asctime)s: %(levelname)-8s %(message)s')
         fh.setFormatter(formatter)
 
         logging.getLogger('').addHandler(fh)
@@ -121,33 +121,6 @@ class TextProcessor:
 
     def set_java_log(self, log_filename):
         pass
-        # from java.lang import System
-        # from java.io import File, PrintStream, FileOutputStream
-        # from java.util import Properties
-
-        # System.setOut(PrintStream(FileOutputStream(File(log_filename))))
-        # System.setErr(PrintStream(FileOutputStream(log_filename + '.err')))
-
-        # from tempfile import NamedTemporaryFile
-
-        # settings = {"handlers": "java.util.logging.FileHandler",
-        #     ".level": "INFO",
-        #     "java.util.logging.FileHandler.pattern": log_filename,
-        #     "java.util.logging.FileHandler.limit": "50000",
-        #     "java.util.logging.FileHandler.count": "1",
-        #     "java.util.logging.FileHandler.formatter": "cc.mallet.util.PlainLogFormatter"
-        # }
-
-        # props = Properties()
-        # for key, value in settings.iteritems():
-        #     props.setProperty(key, value)
-        # props_file = NamedTemporaryFile(delete = False)
-        # props.store(props_file.file, '')
-        # props_file.flush()
-        # filename = props_file.name
-        # props_file.close()
-
-        # System.setProperty("java.util.logging.config.file", filename)
 
     def _ngrams(self, text, n = 1, stemming = False):
         text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
@@ -165,6 +138,9 @@ class TextProcessor:
         if os.path.exists(ngram_serialized):
             with open(ngram_serialized, 'rb') as ngram_serialized_file:
                 freqs = pickle.load(ngram_serialized_file)
+            for key in freqs.keys():
+                if any([word in self.stopwords or not word.isalpha() for word in key.split()]):
+                    del freqs[key]
         else:
             freqs = Counter()
             with codecs.open(filename, 'r', encoding = 'utf8') as f:

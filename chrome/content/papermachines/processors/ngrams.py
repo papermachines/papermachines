@@ -15,24 +15,48 @@ class NGrams(textprocessor.TextProcessor):
         self.n = int(self.named_args.get("n", 1))
         self.n = min(max(self.n, 1), 5)
         self.top_ngrams = int(self.named_args.get("top_ngrams", 100))
+        self.start_date = None
+        self.end_date = None
+
+        if self.named_args.get("start_date", "") != "":
+            try:
+                self.start_date = datetime.strptime(self.named_args["start_date"], "%Y-%m-%d")
+            except:
+                logging.error("Start date {:} not valid! Must be formatted like 2013-01-05")
+        if self.named_args.get("end_date", "") != "":
+            try:
+                self.end_date = datetime.strptime(self.named_args["end_date"], "%Y-%m-%d")
+            except:
+                logging.error("End date {:} not valid! Must be formatted like 2013-01-05")
 
     def _split_into_labels(self):
-        logging.info("splitting by time interval")
-        self.labels = {}
         datestr_to_datetime = {}
         for filename in self.metadata.keys():
             date_str = self.metadata[filename]["date"]
+            if date_str.strip() == "":
+                logging.error("File {:} has invalid date -- removing...".format(filename))
+                del self.metadata[filename]
+                continue
             cleaned_date = date_str[0:10]
             if "-00" in cleaned_date:
                 cleaned_date = cleaned_date[0:4] + "-01-01"
             try:
-                datestr_to_datetime[date_str] = datetime.strptime(cleaned_date, "%Y-%m-%d")
+                date_for_doc = datetime.strptime(cleaned_date, "%Y-%m-%d")
+                datestr_to_datetime[date_str] = date_for_doc
+                if self.start_date is not None and date_for_doc < self.start_date:
+                    logging.error("File {:} is before date range -- removing...".format(filename))
+                    del self.metadata[filename]
+                    continue
+                if self.end_date is not None and date_for_doc > self.end_date:
+                    logging.error("File {:} is after date range -- removing...".format(filename))
+                    del self.metadata[filename]
+                    continue
             except:
-                logging.error("Failed on date '" + cleaned_date + "'. Removing " + filename)
-                del self.metadata[filename]
+                logging.error(traceback.format_exc())
+                logging.error("Date {:} not recognized".format(cleaned_date))
         datetimes = sorted(datestr_to_datetime.values())
-        start_date = datetimes[0]
-        end_date = datetimes[-1]
+        start_date = datetimes[0] if self.start_date is None else self.start_date
+        end_date = datetimes[-1] if self.end_date is None else self.end_date
 
         interval = timedelta(self.interval)
 
@@ -42,7 +66,7 @@ class NGrams(textprocessor.TextProcessor):
         while end <= end_date:
             end += interval
             intervals.append((start,end))
-            self.interval_names.append(start.isoformat()) #+ ',' + end.isoformat())
+            self.interval_names.append(start.isoformat())
             start = end
 
         for filename, metadata in self.metadata.iteritems():
@@ -52,8 +76,6 @@ class NGrams(textprocessor.TextProcessor):
                 if interval[0] <= datestr_to_datetime[metadata["date"]] < interval[1]:
                     label = self.interval_names[i]
                     break
-            if label not in self.labels:
-                self.labels[label] = set()
             self.labels[label].add(filename)
 
     def _findNgramFreqs(self, filenames):
@@ -106,6 +128,7 @@ class NGrams(textprocessor.TextProcessor):
                 del self.ngrams_intervals[ngram]
     
     def process(self):
+        self.labels = defaultdict(set)
         self._split_into_labels()
         self.freqs = {}
         self.doc_freqs = defaultdict(list)
