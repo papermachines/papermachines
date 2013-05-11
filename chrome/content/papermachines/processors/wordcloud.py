@@ -2,7 +2,7 @@
 import sys, os, json, cStringIO, tempfile, logging, traceback, codecs, math
 import textprocessor
 from collections import Counter
-from lib.porter2 import stem
+from lib.stemutil import stem
 
 class WordCloud(textprocessor.TextProcessor):
 	"""
@@ -23,9 +23,10 @@ class WordCloud(textprocessor.TextProcessor):
 		self.max_tf = {}
 		self.df = Counter()
 		ngram = 1 if not hasattr(self, "ngram") else self.ngram
+		self.stemming = getattr(self, "stemming", False)
 		for filename in self.files:
 			flen = 0
-			self.tf_by_doc[filename] = self.getNgrams(filename, n = ngram, stemming = False)
+			self.tf_by_doc[filename] = self.getNgrams(filename, n = ngram, stemming = self.stemming)
 			flen = sum(self.tf_by_doc[filename].values())
 			self.df.update(self.tf_by_doc[filename].keys())
 
@@ -77,9 +78,10 @@ class WordCloud(textprocessor.TextProcessor):
 		return final_freqs
 
 	def _findWordFreqs(self, filenames):
+		self.stemming = getattr(self, "stemming", False)
 		freqs = Counter()
 		for filename in filenames:
-			freqs.update(self.getNgrams(filename, stemming = False))
+			freqs.update(self.getNgrams(filename, stemming = self.stemming))
 			self.update_progress()
 		return self._topN(freqs)
 

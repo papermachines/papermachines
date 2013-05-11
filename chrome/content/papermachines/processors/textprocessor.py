@@ -2,6 +2,7 @@
 import sys, os, csv, logging, tempfile, traceback, urllib, codecs, json, operator, platform, pickle, re
 from itertools import izip
 from collections import Counter, defaultdict
+from lib.stemutil import stem
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -124,7 +125,10 @@ class TextProcessor:
 
     def _ngrams(self, text, n = 1, stemming = False):
         text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
-        words = [word for word in text.split()]
+        if stemming:
+            words = [stem(self, word) for word in text.split()]
+        else:
+            words = [word for word in text.split()]
         total_n = len(words)
         i = 0
         while i < (total_n - (n - 1)):
@@ -134,7 +138,10 @@ class TextProcessor:
             i += 1
 
     def getNgrams(self, filename, n = 1, stemming = False):
-        ngram_serialized = filename.replace(".txt", "_" + str(n) + "grams.pickle")
+        ext = "_"
+        ext += "stemmed" if stemming else ""
+        ext += str(n) + "grams.pickle"
+        ngram_serialized = filename.replace(".txt", ext)
         if os.path.exists(ngram_serialized):
             with open(ngram_serialized, 'rb') as ngram_serialized_file:
                 freqs = pickle.load(ngram_serialized_file)
