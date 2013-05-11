@@ -52,7 +52,7 @@ class MWUFinder:
             for ngram, freq, pref_freqs, suff_freqs in self.read_ngram_freqs(n):
                 glue = self.glue_fun(freq, pref_freqs, suff_freqs)
                 output.write(u'\t'.join([unicode(x) for x in [' '.join(ngram), glue, 0, 0]]) + u'\n')
-        os.rename(ngram_glues_filename + '.tmp', ngram_glues_filename)   
+        os.rename(ngram_glues_filename + '.tmp', ngram_glues_filename)
 
     def compute_glues_for_all_ngrams(self):
         logging.info('computing glues for all ngrams...')

@@ -33,7 +33,7 @@ class GeodictParser:
     def find_locations_in_text(self, text):
         current_index = len(text)-1
         result = []
-        
+
         # This loop goes through the text string in *reverse* order. Since locations in English are typically
         # described with the broadest category last, preceded by more and more specific designations towards
         # the beginning, it simplifies things to walk the string in that direction too
@@ -43,7 +43,7 @@ class GeodictParser:
             lower_word = current_word.lower()
             could_be_country = lower_word in self.countries_cache
             could_be_region = lower_word in self.regions_cache
-            
+
             if not could_be_country and not could_be_region:
                 current_index = pulled_index
                 continue
@@ -51,25 +51,25 @@ class GeodictParser:
             # This holds the results of the match function for the final element of the sequence. This lets us
             # optimize out repeated calls to see if the end of the current string is a country for example
             match_cache = {}
-        
+
             # These 'token sequences' describe patterns of discrete location elements that we'll look for.
             for token_sequence in self.token_sequences:
-                
+
                 # The sequences are specified in the order they'll occur in the text, but since we're walking
                 # backwards we need to reverse them and go through the sequence in that order too
                 token_sequence = token_sequence[::-1]
-        
+
                 # Now go through the sequence and see if we can match up all the tokens in it with parts of
                 # the string
                 token_result = None
                 token_index = current_index
                 for token_position, token_name in enumerate(token_sequence):
-                
+
                     # The token definition describes how to recognize part of a string as a match. Typical
                     # tokens include country, city and region names
-                    token_definition = self.token_definitions[token_name]  
+                    token_definition = self.token_definitions[token_name]
                     match_function = token_definition['match_function']
-                    
+
                     # This logic optimizes out repeated calls to the same match function
                     if token_position == 0 and token_name in match_cache:
                         token_result = match_cache[token_name]
@@ -79,7 +79,7 @@ class GeodictParser:
                         token_result = match_function(self, text, token_index, token_result)
                         if token_position == 0:
                             match_cache[token_name] = token_result
-                    
+
                     if token_result is None:
                         # The string doesn't match this token, so the sequence as a whole isn't a match
                         break
@@ -87,11 +87,11 @@ class GeodictParser:
                         # The current token did match, so move backwards through the string to the start of
                         # the matched portion, and see if the preceding words match the next required token
                         token_index = token_result['found_tokens'][0]['start_index']-1
-                
+
                 # We got through the whole sequence and all the tokens match, so we have a winner!
                 if token_result is not None:
                     break
-                
+
             if token_result is None:
                 # None of the sequences matched, so back up a word and start over again
                 ignored_word, current_index, end_skipped = self.pull_word_from_end(text, current_index)
@@ -100,17 +100,17 @@ class GeodictParser:
                 result.append(token_result)
                 found_tokens = token_result['found_tokens']
                 current_index = found_tokens[0]['start_index']-1
-        
+
         # Reverse the result so it's in the order that the locations occured in the text
         result = result[::-1]
-        
+
         return result
 
     # Functions that look at a small portion of the text, and try to identify any location identifiers
 
     # Matches the current fragment against our database of countries
     def is_country(self, text, text_starting_index, previous_result):
-            
+
         current_word = ''
         current_index = text_starting_index
         pulled_word_count = 0
@@ -126,14 +126,14 @@ class GeodictParser:
                 current_word = pulled_word
                 # Make a note of the real end of the word, ignoring any trailing whitespace
                 word_end_index = (text_starting_index-end_skipped)
-                
+
                 # We've indexed the locations by the word they end with, so find all of them
                 # that have the current word as a suffix
                 last_word = pulled_word.lower()
                 if last_word not in self.countries_cache:
                     break
                 candidate_dicts = self.countries_cache[last_word]
-                
+
                 name_map = {}
                 for candidate_dict in candidate_dicts:
                     name = candidate_dict['country'].lower()
@@ -162,11 +162,11 @@ class GeodictParser:
             if current_index < 0:
                 # We've walked back to the start of the string
                 break
-        
+
         if found_row is None:
             # We've walked backwards through the current words, and haven't found a good country match
             return None
-        
+
         # Were there any tokens found already in the sequence? Unlikely with countries, but for
         # consistency's sake I'm leaving the logic in
         if previous_result is None:
@@ -175,7 +175,7 @@ class GeodictParser:
             }
         else:
             current_result = previous_result
-                                            
+
         country_code = found_row['country_code']
         lat = found_row['lat']
         lon = found_row['lon']
@@ -191,15 +191,15 @@ class GeodictParser:
             'lon': lon,
             'matched_string': current_word,
             'start_index': (current_index+1),
-            'end_index': word_end_index 
+            'end_index': word_end_index
         })
-        
+
         return current_result
 
     # Looks through our database of towns and cities around the world to locate any that match the
     # words at the end of the current text fragment
     def is_city(self, text, text_starting_index, previous_result):
-        
+
         # If we're part of a sequence, then use any country or region information to narrow down our search
         country_code = None
         region_code = None
@@ -211,7 +211,7 @@ class GeodictParser:
                     country_code = found_token['code']
                 elif type == 'REGION':
                     region_code = found_token['code']
-        
+
         current_word = ''
         current_index = text_starting_index
         pulled_word_count = 0
@@ -219,20 +219,20 @@ class GeodictParser:
         while pulled_word_count < geodict_config.word_max:
             pulled_word, current_index, end_skipped = self.pull_word_from_end(text, current_index)
             pulled_word_count += 1
-            
+
             if current_word == '':
                 current_word = pulled_word
                 word_end_index = (text_starting_index-end_skipped)
 
                 name_map  = self.data.get_cities(pulled_word,current_word,country_code,region_code)
                 if len(name_map) < 1:
-                    break            
+                    break
             else:
                 current_word = pulled_word+' '+current_word
 
             if current_word == '':
                 return None
-            
+
             if current_word[0:1].islower():
                 continue
 
@@ -244,21 +244,21 @@ class GeodictParser:
                 break
             if current_index < 0:
                 break
-        
+
         if found_row is None:
             return None
-        
+
         if previous_result is None:
             current_result = {
                 'found_tokens': [],
             }
         else:
             current_result = previous_result
-                                            
+
         lat = found_row['lat']
         lon = found_row['lon']
         geonameid = found_row['geonameid']
-                    
+
         current_result['found_tokens'].insert(0, {
             'type': 'CITY',
             'lat': lat,
@@ -266,9 +266,9 @@ class GeodictParser:
             'geonameid': geonameid,
             'matched_string': current_word,
             'start_index': (current_index+1),
-            'end_index': word_end_index 
+            'end_index': word_end_index
         })
-        
+
         return current_result
 
     # This looks for sub-regions within countries. At the moment the only values in the database are for US states
@@ -282,7 +282,7 @@ class GeodictParser:
                 type = found_token['type']
                 if type == 'COUNTRY':
                     country_code = found_token['code']
-        
+
         current_word = ''
         current_index = text_starting_index
         pulled_word_count = 0
@@ -293,7 +293,7 @@ class GeodictParser:
             if current_word == '':
                 current_word = pulled_word
                 word_end_index = (text_starting_index-end_skipped)
-                
+
                 last_word = pulled_word.lower()
                 if last_word not in self.regions_cache:
                     break
@@ -306,7 +306,7 @@ class GeodictParser:
                             candidate_dicts.append(possible_dict)
                 else:
                     candidate_dicts = all_candidate_dicts
-                
+
                 name_map = {}
                 for candidate_dict in candidate_dicts:
                     name = candidate_dict['region'].lower()
@@ -323,15 +323,15 @@ class GeodictParser:
             name_key = current_word.lower()
             if name_key in name_map:
                 found_row = name_map[name_key]
-            
+
             if found_row is not None:
                 break
             if current_index < 0:
                 break
-        
+
         if found_row is None:
             return None
-        
+
         if previous_result is None:
             current_result = {
                 'found_tokens': [],
@@ -343,7 +343,7 @@ class GeodictParser:
         lat = found_row['lat']
         lon = found_row['lon']
         geonameid = found_row['geonameid']
-                    
+
         current_result['found_tokens'].insert(0, {
             'type': 'REGION',
             'code': region_code,
@@ -352,9 +352,9 @@ class GeodictParser:
             'lon': lon,
             'matched_string': current_word,
             'start_index': (current_index+1),
-            'end_index': word_end_index 
+            'end_index': word_end_index
         })
-        
+
         return current_result
 
     # A special case - used to look for 'at' or 'in' before a possible location word. This helps me be more certain
@@ -369,7 +369,7 @@ class GeodictParser:
             return None
 
         current_word = current_word.lower()
-        
+
         if current_word not in geodict_config.location_words:
             return None
 
@@ -388,7 +388,7 @@ class GeodictParser:
         while current_index>=0:
             current_char = text[current_index]
             current_index -= 1
-                        
+
             if current_char in self.whitespace:
                 if found_word is '':
                     end_skipped += 1
@@ -396,12 +396,12 @@ class GeodictParser:
                 else:
                     current_index += 1
                     break
-            
+
             found_word += current_char
-        
+
         # reverse the result (since we're appending for efficiency's sake)
         found_word = found_word[::-1]
-        
+
         result = (found_word, current_index, end_skipped)
         self.tokenized_words[index] = result
 

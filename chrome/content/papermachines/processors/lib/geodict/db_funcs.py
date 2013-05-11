@@ -9,7 +9,7 @@ class GeodictDatabase:
         db=jsqlite3.connect(self.database_path)
         cursor=db.cursor()
         return cursor
-        
+
     def get_cities(self, pulled_word,current_word,country_code,region_code):
         cursor = self.get_database_connection()
         select = 'SELECT * FROM cities WHERE last_word=?'
@@ -92,4 +92,3 @@ class GeodictDatabase:
         cursor = self.get_database_connection()
         cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE name = ?;",[name])
         return cursor.fetchone()[0] > 0
-

@@ -12,8 +12,8 @@ from classpath import classPathHacker
 # jar -cvf snowball.jar org
 
 
-iso639_1 = {'ru': 'russian', 'fr': 'french', 'en': 'english', 'pt': 'portuguese', 
-    'no': 'norwegian', 'sv': 'swedish', 'de': 'german', 'tr': 'turkish', 'it': 'italian', 
+iso639_1 = {'ru': 'russian', 'fr': 'french', 'en': 'english', 'pt': 'portuguese',
+    'no': 'norwegian', 'sv': 'swedish', 'de': 'german', 'tr': 'turkish', 'it': 'italian',
     'da': 'danish', 'fi': 'finnish', 'hu': 'hungarian'}
 
 stem_languages = set(iso639_1.values())
@@ -40,4 +40,3 @@ def stem(caller, word):
     stemmers[lang].setCurrent(word)
     stemmers[lang].stem()
     return stemmers[lang].getCurrent()
-

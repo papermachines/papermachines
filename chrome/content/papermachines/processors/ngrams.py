@@ -102,7 +102,7 @@ class NGrams(textprocessor.TextProcessor):
 
         kept = len(self.doc_freqs.keys())
         logging.info("{:} ngrams below threshold".format(len(rejected)))
-        logging.info("{:}/{:} = {:.0%} ngrams occured in {:} or more documents".format(kept, all_ngrams, (1.0*kept)/all_ngrams, self.min_df))        
+        logging.info("{:}/{:} = {:.0%} ngrams occured in {:} or more documents".format(kept, all_ngrams, (1.0*kept)/all_ngrams, self.min_df))
 
         for interval in self.freqs.keys():
             for ngram_text in self.freqs[interval].keys():
@@ -126,7 +126,7 @@ class NGrams(textprocessor.TextProcessor):
         for ngram, value in avg_values.iteritems():
             if value < min_value:
                 del self.ngrams_intervals[ngram]
-    
+
     def process(self):
         self.labels = defaultdict(set)
         self._split_into_labels()

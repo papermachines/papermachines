@@ -13,7 +13,7 @@ class TextProcessor:
 
     def __init__(self, track_progress=True):
         self.sys = platform.system()
-        
+
         # take in command line options
 
         self.args_filename = sys.argv[1]

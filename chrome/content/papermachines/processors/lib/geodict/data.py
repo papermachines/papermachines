@@ -5,7 +5,7 @@ def get_database_connection():
     db=jsqlite3.connect(geodict_config.database+'.db')
     cursor=db.cursor()
     return cursor
-    
+
 def get_cities(pulled_word,current_word,country_code,region_code):
     cursor = get_database_connection()
     select = 'SELECT * FROM cities WHERE last_word=?'
@@ -88,4 +88,3 @@ def is_initialized(name):
     cursor = get_database_connection()
     cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE name = ?;",[name])
     return cursor.fetchone()[0] > 0
-
