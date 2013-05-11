@@ -1838,7 +1838,7 @@ Zotero.PaperMachines = {
 				java_name = "java",
 				directories = []
 
-			if (Zotero.platform == "Win32") {
+			if (Zotero.isWin) {
 				java_name += "w.exe";
 
 				directories = path.split(";");
