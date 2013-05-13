@@ -311,6 +311,9 @@ Zotero.PaperMachines = {
 				Zotero.PaperMachines._updateBundledFilesCallback(addon.getResourceURI("").QueryInterface(Components.interfaces.nsIFileURL).file);
 			});
 
+		// Detect stoplist language changed
+		Preferences.observe("extensions.papermachines.general.lang", Zotero.PaperMachines.selectStoplist);
+
 		this.java_exe = this.findJavaExecutable();
 
 		// Connect to (and create, if necessary) papermachines.sqlite in the Zotero directory
