@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 custom script that calls pylint with a special set of parameters.
 """
@@ -43,6 +43,8 @@ SUPRESSED_MESSAGES = [
 #            # be written as a function.
 #   'R0801', # Indicates that a set of similar lines has been detected among
 #            # multiple file.
+    'C0103',  # lowercase naming convention
+    'W0201', # defined instance variable outside __init__
 ]
 
 PARAMS = [

@@ -10,7 +10,10 @@
  * @version 1.0.1
  */
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 // Include required modules
+var { assert, expect } = require("assertions");
 var modalDialog = require("modal-dialog");
 var utils = require("utils");
 
@@ -63,7 +66,7 @@ preferencesDialog.prototype = {
     // Check if the selector and the pane are consistent
     var selector = this.getElement({type: "selector"});
 
-    this._controller.waitFor(function () {
+    expect.waitFor(function () {
       return selector.getNode().selectedItem.getAttribute('pane') === this.selectedPane.getNode().id;
     }, "Pane has been changed - expected '" + this.selectedPane.getNode().id + "'",
        undefined, undefined, this);
@@ -86,7 +89,7 @@ preferencesDialog.prototype = {
     try {
       var documentElement = this._controller.window.document.documentElement;
 
-      this._controller.waitFor(function () {
+      assert.waitFor(function () {
         return documentElement.lastSelected === id;
       }, "Pane has been changed - expected '" + id + "'");
     }
@@ -200,9 +203,6 @@ preferencesDialog.prototype = {
  * Preferences object to simplify the access to the nsIPrefBranch.
  */
 var preferences = {
-  _prefService : Cc["@mozilla.org/preferences-service;1"].
-                 getService(Ci.nsIPrefService),
-
   /**
    * Use branch to access low level functions of nsIPrefBranch
    *
@@ -210,7 +210,7 @@ var preferences = {
    * @type nsIPrefBranch
    */
   get prefBranch() {
-    return this._prefService.QueryInterface(Ci.nsIPrefBranch);
+    return Services.prefs.QueryInterface(Ci.nsIPrefBranch);
   },
 
   /**
@@ -220,7 +220,7 @@ var preferences = {
    * @type nsIPrefBranch
    */
   get defaultPrefBranch() {
-    return this._prefService.getDefaultBranch("");
+    return Services.prefs.getDefaultBranch("");
   },
 
   /**
@@ -230,7 +230,7 @@ var preferences = {
    * @type nsIPrefService
    */
   get prefService() {
-    return this._prefService;
+    return Services.prefs;
   },
 
   /**
@@ -339,10 +339,8 @@ var preferences = {
  *        (Optional) A callback handler to launch the preference dialog
  */
 function openPreferencesDialog(controller, callback, launcher) {
-  if (!controller)
-    throw new Error("No controller given for Preferences Dialog");
-  if (typeof callback != "function")
-    throw new Error("No callback given for Preferences Dialog");
+  assert.ok(controller, "Controller for Preferences Dialog has been specified");
+  assert.equal(typeof callback, "function", "Callback for Preferences Dialog has been specified");
 
   if (mozmill.isWindows) {
     // Preference dialog is modal on windows, set up our callback

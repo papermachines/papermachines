@@ -9,11 +9,12 @@
  * @version 1.0.0
  */
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 // Include required modules
+var { assert } = require("assertions");
 var utils = require("utils");
 var prefs = require("prefs");
-
-const TIMEOUT = 5000;
 
 const PREF_TABS_ANIMATE = "browser.tabs.animate";
 
@@ -49,13 +50,10 @@ function getTabsWithURL(aUrl) {
 
   var uri = utils.createURI(aUrl, null, null);
 
-  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-  var winEnum = wm.getEnumerator("navigator:browser");
-
   // Iterate through all windows
-  while (winEnum.hasMoreElements()) {
-    var window = winEnum.getNext();
+  var windows = Services.wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements()) {
+    var window = windows.getNext();
 
     // Don't check windows which are about to close or don't have gBrowser set
     if (window.closed || !("gBrowser" in window))
@@ -83,8 +81,7 @@ function getTabsWithURL(aUrl) {
  * @param {MozMillController} controller
  *        MozMill controller of the window to operate on
  */
-function tabBrowser(controller)
-{
+function tabBrowser(controller) {
   this._controller = controller;
   this._tabs = this.getElement({type: "tabs"});
 }
@@ -131,7 +128,7 @@ tabBrowser.prototype = {
    */
   set selectedIndex(index) {
     this._controller.click(this.getTab(index));
-    this._controller.waitFor(function () {
+    assert.waitFor(function () {
       return this.selectedIndex === index;
     }, "The tab with index '" + index + "' has been selected", undefined,
      undefined, this);
@@ -158,13 +155,12 @@ tabBrowser.prototype = {
   /**
    * Close all tabs of the window except the last one and open a blank page.
    */
-  closeAllTabs : function tabBrowser_closeAllTabs()
-  {
+  closeAllTabs : function tabBrowser_closeAllTabs() {
     while (this._controller.tabs.length > 1) {
       this.closeTab();
     }
 
-    this._controller.open(this._controller.window.BROWSER_NEW_TAB_URL);
+    this._controller.open("about:blank");
     this._controller.waitForPageLoad();
   },
 
@@ -220,7 +216,7 @@ tabBrowser.prototype = {
     }
 
     try {
-      this._controller.waitFor(function () {
+      assert.waitFor(function () {
         return self.closed;
       }, "Tab has been closed");
     } finally {
@@ -360,8 +356,7 @@ tabBrowser.prototype = {
    * @return The created child element
    * @type {ElemBase}
    */
-  getTabPanelElement : function tabBrowser_getTabPanelElement(tabIndex, elemString)
-  {
+  getTabPanelElement : function tabBrowser_getTabPanelElement(tabIndex, elemString) {
     var index = tabIndex ? tabIndex : this.selectedIndex;
     var elemStr = elemString ? elemString : "";
 
@@ -370,6 +365,26 @@ tabBrowser.prototype = {
     var elem = new elementslib.Lookup(this._controller.window.document, panel.expression + elemStr);
 
     return elem;
+  },
+
+  /**
+   * Pin the selected Tab
+   *
+   * @param {ElemBase} aTab
+   */
+  pinTab : function tabBrowser_pinTab(aTab) {
+    var contextMenu = this._controller.getMenu("#tabContextMenu");
+    contextMenu.select("#context_pinTab", aTab);
+  },
+
+  /**
+   * Unpin the selected Tab
+   *
+   * @param {ElemBase} aTab
+   */
+  unpinTab : function tabBrowser_unpinTab(aTab) {
+    var contextMenu = this._controller.getMenu("#tabContextMenu");
+    contextMenu.select("#context_unpinTab", aTab);
   },
 
   /**
@@ -411,7 +426,7 @@ tabBrowser.prototype = {
     }
 
     try {
-      this._controller.waitFor(function () {
+      assert.waitFor(function () {
         return self.opened;
       }, "Link has been opened in a new tab");
     } finally {
@@ -479,7 +494,7 @@ tabBrowser.prototype = {
     }
 
     try {
-      this._controller.waitFor(function () {
+      assert.waitFor(function () {
         return self.opened;
       }, "New tab has been opened");
     } finally {
@@ -507,7 +522,7 @@ tabBrowser.prototype = {
     // XXX: A notification bar starts at a negative pixel margin and drops down
     //      to 0px.  This creates a race condition where a test may click
     //      before the notification bar appears at it's anticipated screen location
-    this._controller.waitFor(function () {
+    assert.waitFor(function () {
       return style.marginTop == '0px';
     }, "Expected notification bar to be visible: '" + elemString + "' ");
   }

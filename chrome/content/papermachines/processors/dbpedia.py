@@ -1,55 +1,74 @@
-#!/usr/bin/env python2.7
-import sys, os, json, logging, urllib, urllib2, codecs, traceback
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+import json
+import logging
+import urllib
+import urllib2
+import codecs
+import traceback
 import textprocessor
 
-
 class DBpedia(textprocessor.TextProcessor):
+
     """
     annotates texts using DBpedia Spotlight
     """
 
+    dbpedia_url = 'http://spotlight.dbpedia.org/rest/annotate'
+    dbpedia_headers = {'Accept': 'application/json',
+                       'content-type': 'application/x-www-form-urlencoded'}
+
     def _basic_params(self):
-        self.name = "dbpedia"
+        self.name = 'dbpedia'
         self.dry_run = False
         self.require_stopwords = False
 
-    def _get_annotated(self, text, confidence = 0.2, support = 20):
+    def _get_annotated(
+        self,
+        text,
+        confidence=0.2,
+        support=20,
+        ):
+        """Retrieve an annotated version of text from DBpedia"""
+
         values = {'text': text[0:10000].encode('utf-8'),
-                'confidence': confidence,
-                'support': support}
+                  'confidence': confidence, 'support': support}
         data = urllib.urlencode(values)
-        req = urllib2.Request(self.url, data, self.headers)
+        req = urllib2.Request(self.dbpedia_url, data,
+                              self.dbpedia_headers)
         response = urllib2.urlopen(req)
         annotation = response.read()
-        encoding = req.headers.get('content-type', 'charset=utf8').split('charset=')[-1]
+        encoding = req.headers.get('content-type', 'charset=utf8'
+                                   ).split('charset=')[-1]
 
         return unicode(annotation, encoding)
 
     def process(self):
-        """
-        create JSON files with named entity recognition by DBpedia
-        """
+        """create JSON files with named entity recognition from DBpedia"""
 
-        logging.info("beginning annotation")
-
-        self.url = "http://spotlight.dbpedia.org/rest/annotate"
-        self.headers = {'Accept': 'application/json', 'content-type': 'application/x-www-form-urlencoded'}
+        logging.info('beginning annotation')
 
         annotated = {}
         if not self.dry_run:
             for filename in self.files:
-                logging.info("processing " + filename)
+                logging.info('processing ' + filename)
                 self.update_progress()
                 try:
-                    annotated_filename = filename.replace(".txt", "_dbpedia.json")
+                    annotated_filename = filename.replace('.txt',
+                            '_dbpedia.json')
                     if os.path.exists(annotated_filename):
                         annotated[annotated_filename] = filename
                     else:
-                        with codecs.open(filename, 'r', encoding='utf-8') as f:
+                        with codecs.open(filename, 'r', encoding='utf-8'
+                                ) as f:
                             annotation = self._get_annotated(f.read())
                             if len(annotation) > 0:
                                 annotated[annotated_filename] = filename
-                                with codecs.open(annotated_filename, 'w', encoding='utf-8') as out:
+                                with codecs.open(annotated_filename, 'w'
+                                        , encoding='utf-8') as out:
                                     out.write(annotation)
                 except (KeyboardInterrupt, SystemExit):
                     raise
@@ -57,17 +76,18 @@ class DBpedia(textprocessor.TextProcessor):
                     logging.error(traceback.format_exc())
         else:
             for filename in self.files:
-                annotated_filename = filename.replace(".txt", "_dbpedia.json")
+                annotated_filename = filename.replace('.txt',
+                        '_dbpedia.json')
                 if os.path.exists(annotated_filename):
                     annotated[annotated_filename] = filename
 
         uris_to_docs = {}
-        for json_annotation, filename in annotated.iteritems():
-            itemID = self.metadata[filename]["itemID"]
+        for (json_annotation, filename) in annotated.iteritems():
+            itemID = self.metadata[filename]['itemID']
             notes = json.load(file(json_annotation))
-            entities = notes.get("Resources", [])
+            entities = notes.get('Resources', [])
             for entity in entities:
-                uri = entity.get("@URI", "http://dbpedia.org/resource/")
+                uri = entity.get('@URI', 'http://dbpedia.org/resource/')
                 if not uri in uris_to_docs:
                     uris_to_docs[uri] = {}
                 if not itemID in uris_to_docs[uri]:
@@ -76,23 +96,22 @@ class DBpedia(textprocessor.TextProcessor):
 
         filtered_uris = {}
         weights = []
-        for uri, items in uris_to_docs.iteritems():
+        for (uri, items) in uris_to_docs.iteritems():
             weights.append(sum(items.values()))
         weights.sort()
         min_weight = weights[max(-100, -len(weights))]
 
-        for uri, items in uris_to_docs.iteritems():
+        for (uri, items) in uris_to_docs.iteritems():
             if sum(items.values()) > min_weight:
                 filtered_uris[uri] = items
 
-        # params = {"DATA": json.dumps(uris_to_docs)}
-        params = {"URIS_TO_DOCS": filtered_uris}
+        params = {'URIS_TO_DOCS': filtered_uris}
         self.write_html(params)
 
-        logging.info("finished")
+        logging.info('finished')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         processor = DBpedia(track_progress=True)
         processor.process()

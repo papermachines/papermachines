@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Include required modules
+var { assert } = require("assertions");
 
 const TIMEOUT_MODAL_DIALOG = 5000;
 const DELAY_CHECK = 100;
@@ -123,7 +125,8 @@ mdObserver.prototype = {
     }
     else {
       // otherwise try again in a bit
-      this._timer.init(this, DELAY_CHECK, Ci.nsITimer.TYPE_ONE_SHOT);
+      if (this._timer)
+        this._timer.init(this, DELAY_CHECK, Ci.nsITimer.TYPE_ONE_SHOT);
     }
   },
 
@@ -167,8 +170,7 @@ modalDialog.prototype = {
    *        The callback handler to use to interact with the modal dialog
    */
   start : function modalDialog_start(aCallback) {
-    if (!aCallback)
-      throw new Error(arguments.callee.name + ": Callback not specified.");
+    assert.ok(aCallback, arguments.callee.name + ": Callback has been specified.");
 
     this._observer = new mdObserver(this._window, aCallback);
 
@@ -202,14 +204,12 @@ modalDialog.prototype = {
     }
 
     try {
-      mozmill.utils.waitFor(function () {
+      assert.waitFor(function () {
         return this.finished;
       }, "Modal dialog has been found and processed", timeout, undefined, this);
 
       // Forward the raised exception so we can detect failures in modal dialogs
-      if (this._observer.exception) {
-        throw this._observer.exception;
-      }
+      assert.ok(!this._observer.exception, this._observer.exception);
     }
     finally {
       this.stop();

@@ -8,9 +8,7 @@
  */
 
 var EventUtils = {};
-Components.utils.import('resource://mozmill/stdlib/EventUtils.js', EventUtils);
-
-const gTimeout = 5000;
+Cu.import('resource://mozmill/stdlib/EventUtils.js', EventUtils);
 
 /**
  * Click the specified tree cell
@@ -26,8 +24,7 @@ const gTimeout = 5000;
  * @param {object} eventDetails
  *        Details about the mouse event
  */
-function clickTreeCell(controller, tree, rowIndex, columnIndex, eventDetails)
-{
+function clickTreeCell(controller, tree, rowIndex, columnIndex, eventDetails) {
   tree = tree.getNode();
 
   var selection = tree.view.selection;

@@ -1,15 +1,27 @@
-#!/usr/bin/env python2.7
-import sys, os, json, re, tempfile, cStringIO, logging, traceback, codecs
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+import json
+import re
+import tempfile
+import cStringIO
+import logging
+import traceback
+import codecs
 import textprocessor
 
+
 class PhraseNet(textprocessor.TextProcessor):
+
     """
     Generate phrase net
     cf. http://www-958.ibm.com/software/data/cognos/manyeyes/page/Phrase_Net.html
     """
 
     def _basic_params(self):
-        self.name = "phrasenet"
+        self.name = 'phrasenet'
 
     def _findPhrases(self, pattern):
         self.nodes = {}
@@ -17,10 +29,11 @@ class PhraseNet(textprocessor.TextProcessor):
         for filename in self.files:
             self.update_progress()
             with codecs.open(filename, 'r', encoding='utf8') as f:
-                logging.info("processing " + filename)
+                logging.info('processing ' + filename)
                 for re_match in pattern.finditer(f.read()):
                     match = [w.lower() for w in re_match.groups()]
-                    if any([word in self.stopwords_set for word in match]):
+                    if any([word in self.stopwords_set for word in
+                           match]):
                         continue
 
                     for word in match:
@@ -36,7 +49,7 @@ class PhraseNet(textprocessor.TextProcessor):
                         self.edges[edge] += 1
 
     def process(self):
-        logging.info("starting to process")
+        logging.info('starting to process')
 
         self.stopwords_set = set(self.stopwords)
 
@@ -47,7 +60,7 @@ class PhraseNet(textprocessor.TextProcessor):
         if len(self.extra_args) > 0:
             pattern_str = self.extra_args[0]
         else:
-            pattern_str = "x and y"
+            pattern_str = 'x and y'
 
         if pattern_str.count('x') == 1 and pattern_str.count('y') == 1:
             pattern = pattern_str.replace('x', wordregex)
@@ -55,11 +68,12 @@ class PhraseNet(textprocessor.TextProcessor):
         else:
             pattern = pattern_str
 
-        logging.info("extracting phrases according to pattern "+ repr(pattern))
+        logging.info('extracting phrases according to pattern '
+                     + repr(pattern))
 
         self._findPhrases(re.compile(pattern, flags=re.UNICODE))
 
-        logging.info("generating JSON")
+        logging.info('generating JSON')
 
         used_nodes = set()
 
@@ -79,15 +93,18 @@ class PhraseNet(textprocessor.TextProcessor):
         for edge in top_edges:
             weight = self.edges[edge]
             words = edge.split(',')
-            jsondata['edges'].append({'source': nodeindex[words[0]], 'target': nodeindex[words[1]], 'weight': weight})
+            jsondata['edges'].append({'source': nodeindex[words[0]],
+                    'target': nodeindex[words[1]], 'weight': weight})
 
         for node in used_nodes:
-            jsondata['nodes'].append({'index': nodeindex[node], 'name': node, 'freq': self.nodes[node]})
+            jsondata['nodes'].append({'index': nodeindex[node],
+                    'name': node, 'freq': self.nodes[node]})
 
-        params = {"DATA": jsondata, "PATTERN": pattern_str}
+        params = {'DATA': jsondata, 'PATTERN': pattern_str}
         self.write_html(params)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     try:
         processor = PhraseNet(track_progress=True)
         processor.process()

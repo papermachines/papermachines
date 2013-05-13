@@ -7,12 +7,12 @@ var setupModule = function(module) {
 	module.controller = mozmill.getBrowserController();
 	tabBrowser = new tabs.tabBrowser(controller);
 	pm.pm_Setup_Module(module, controller);
-};
+}
 
 var setupTest = function() {
 	pm.pm_Setup_Test(controller);
 };
 
-var testMalletLDA = function() {
-	pm.svgExpectedTester(controller, tabBrowser, "mallet_lda", pm.acceptAdvancedDialog); 
+var testDBPedia = function(){
+	pm.svgExpectedTester(controller, tabBrowser, "dbpedia");
 };

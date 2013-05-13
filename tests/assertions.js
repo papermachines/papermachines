@@ -408,6 +408,100 @@ Expect.prototype.notContain = function Expect_notContain(aString, aPattern, aMes
 };
 
 /**
+* Test if a code block throws an exception.
+*
+* @param {string} aBlock Function to call to test for exception
+* @param {RegEx} aError The expected error class
+* @param {string} aMessage Message to present if assertion fails
+* @returns {Boolean} Result of the test.
+*/
+
+Expect.prototype.throws = function Expect_throws(aBlock, aError, aMessage) {
+  return this._throws.apply(this, [true].concat(Array.prototype.slice.call(arguments)));
+};
+
+/**
+* Test if a code block does not throw an exception.
+*
+* @param {string} aBlock Function to call to test for exception
+* @param {RegEx} aError The expected error class
+* @param {string} aMessage Message to present if assertion fails
+* @returns {Boolean} Result of the test.
+*/
+
+Expect.prototype.doesNotThrow = function Expect_doesNotThrow(aBlock, aError, aMessage) {
+  return this._throws.apply(this, [false].concat(Array.prototype.slice.call(arguments)));
+};
+
+/* Tests whether a code block throws the expected exception
+ * class. helper for throws() and doesNotThrow()
+ * adapted from node.js's assert._throws()
+ * https://github.com/joyent/node/blob/master/lib/assert.js
+ *
+ * @param {Boolean} shouldThrow True/False if error should be thrown
+ * @param {string} aBlock Function to call to test for exception
+ * @param {RegEx} aExpected The expected error class
+ * @param {string} aMessage Message to present if assertion fails
+ * @returns {Boolean} Result of the test.
+*/
+
+Expect.prototype._throws = function Expect__throws(shouldThrow, aBlock, aExpected, aMessage) {
+  var actual;
+
+  if (typeof aExpected === 'string') {
+    aMessage = expected;
+    aExpected = null;
+  }
+
+  try {
+    aBlock();
+  } catch (e) {
+    actual = e;
+  }
+
+  message = (aExpected && aExpected.name ? ' (' + aExpected.name + ').' : '.') +
+            (aMessage ? ' ' + aMessage : '.');
+
+  if (shouldThrow && !actual) {
+    return this._test(false, aMessage, 'Missing expected exception');
+  }
+
+  if (!shouldThrow && this._expectedException(actual, aExpected)) {
+    return this._test(false, aMessage, 'Got unwanted exception');
+  }
+
+  if ((shouldThrow && actual && aExpected &&
+       !this._expectedException(actual, aExpected)) || (!shouldThrow && actual)) {
+    throw actual;
+  }
+
+  return this._test(true, aMessage);
+};
+
+/* Tests whether an actual and an expected error are the same
+ *
+ * @param {RegEx} aActual The actual error class
+ * @param {RegEx} aExpected The expected error class
+ * @returns {Boolean} Result of the test.
+*/
+
+Expect.prototype._expectedException = function Expect__expectedException(aActual, aExpected) {
+  if (!aActual || !aExpected) {
+    return false;
+  }
+
+  if (aExpected instanceof RegExp) {
+    return aExpected.test(aActual);
+  } else if (aActual instanceof aExpected) {
+    return true;
+  } else if (aExpected.call({}, aActual) === true) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
  * Waits for the callback evaluates to true
  *
  * @param {Function} aCallback Callback for evaluation

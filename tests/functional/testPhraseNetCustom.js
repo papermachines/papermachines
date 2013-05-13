@@ -14,11 +14,5 @@ var setupTest = function() {
 };
 
 var testPhrasenetCustom = function(){
-	pm.svgExpectedTester(controller, tabBrowser, "phrasenet-custom", function () {
-		var myController = new mozmill.controller.MozMillController(mozmill.utils.getWindowByTitle("Paper Machines"));
-		// var okButton = new elementslib.Lookup(myController.window.document,
-		// 	'/id("zotero-papermachines-container")/anon({"anonid":"buttons"})/{"dlgtype":"accept"}');
-		var okButton = new elementslib.XPath(myController.window.document, "/*[name()='dialog']/*[name()='vbox'][1]/*[name()='hbox'][1]/*[name()='button'][2]");
-		myController.click(okButton);		
-	});
+	pm.svgExpectedTester(controller, tabBrowser, "phrasenet-custom", pm.acceptDialog);
 };

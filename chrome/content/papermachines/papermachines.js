@@ -282,14 +282,10 @@ Zotero.PaperMachines = {
 		}
 	},
 	init: function () {
-		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-
 		var protocol = Components.classes["@mozilla.org/network/protocol;1?name=zotero"]
 								 .getService(Components.interfaces.nsIProtocolHandler)
 								 .wrappedJSObject;
 		protocol._extensions[this.SCHEME] = this.channel;
-
 		this.pm_dir = this._getOrCreateDir("papermachines", Zotero.getZoteroDirectory());
 		this.csv_dir = this._getOrCreateDir("csv");
 		this.extract_csv_dir = this._getOrCreateDir("extractcsv");
@@ -297,7 +293,7 @@ Zotero.PaperMachines = {
 		this.processors_dir = this._getOrCreateDir("processors");
 		this.log_dir = this._getOrCreateDir("logs", this.out_dir);
 		this.props_dir = this._getOrCreateDir("props", this.log_dir);
-		this.args_dir = this._getOrCreateDir("args");
+		this.args_dir = this._getOrCreateDir("args");			
 
 		var jython = this.processors_dir.clone();
 		jython.append("jython.jar");
@@ -312,14 +308,6 @@ Zotero.PaperMachines = {
 		this.selectStoplist(stoplist_lang);
 
 		this.getStringsFromBundle();
-
-		try {
-			var tagSelector = ZoteroPane.document.getElementById("zotero-tag-selector");
-			if (tagSelector && "id" in tagSelector && tagSelector.id("no-tags-box") && tagSelector.id("no-tags-box").firstChild) {
-				Zotero.PaperMachines.noTagsString = tagSelector.id("no-tags-box").firstChild.value;			
-			}
-		} catch (e) {}
-
 
 		Components.utils.import("resource://gre/modules/AddonManager.jsm");
 		AddonManager.getAddonByID("papermachines@chrisjr.org",
@@ -340,14 +328,41 @@ Zotero.PaperMachines = {
 
 		this.DB.query("UPDATE processed_collections SET status = 'failed' WHERE status = 'running';");
 		this.DB.query("DELETE from files_to_extract;");
+	},
+	getZoteroPane: function () {
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
 
-		win.setTimeout(Zotero.PaperMachines.replaceOnCollectionSelected, 5000);
+		return win.ZoteroPane;
+	},
+	createUI: function (retries) {
+		retries = (retries !== undefined) ? retries : 3;
+		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
+
+		try {
+			var tagSelector = ZoteroPane.document.getElementById("zotero-tag-selector");
+			if (tagSelector && "id" in tagSelector && tagSelector.id("no-tags-box") && tagSelector.id("no-tags-box").firstChild) {
+				Zotero.PaperMachines.noTagsString = tagSelector.id("no-tags-box").firstChild.value;			
+			}
+			win.setTimeout(Zotero.PaperMachines.replaceOnCollectionSelected, 2000);
+		} catch (e) {
+			Zotero.PaperMachines.ERROR("Tag selector not found - will retry");
+			Zotero.PaperMachines.ERROR(e);
+			if (retries > 0)
+				win.setTimeout(function () { Zotero.PaperMachines.createUI(retries - 1);}, 2000);
+		}
 
 		// ZoteroPane.addReloadListener(function () {
-		// 	setTimeout(Zotero.PaperMachines.replaceOnCollectionSelected, 5000);		
+		// 	var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+		// 		.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+		// 	win.setTimeout(Zotero.PaperMachines.createUI, 2000);		
 		// });
 	},
 	extractText: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var itemGroup = ZoteroPane.getItemGroup();
 		var id = this.getItemGroupID(itemGroup);
 
@@ -381,6 +396,7 @@ Zotero.PaperMachines = {
 		queue.next();
 	},
 	countText: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var itemGroup = ZoteroPane.getItemGroup();
 		var id = this.getItemGroupID(itemGroup);
 		var docs = this.DB.valueQuery("SELECT COUNT(*) FROM collection_docs WHERE collection = ? OR collection IN (SELECT child FROM collections WHERE parent = ?);", [id, id]);
@@ -409,20 +425,31 @@ Zotero.PaperMachines = {
 	_getLocalFile: function (path) {
 		var file = Components.classes["@mozilla.org/file/local;1"]
 			.createInstance(Components.interfaces.nsILocalFile);
-		file.initWithPath(path);
+		try {
+			file.initWithPath(path);
+		} catch (e) {
+			Zotero.PaperMachines.ERROR(path);
+			Zotero.PaperMachines.ERROR(e);
+		}
 		return file;
 	},
 	_getOrCreateNode: function (node, parent, dir_or_file) {
-		parent = parent || this.pm_dir;
-		newNode = parent.clone();	
-		newNode.append(node);
+		try {
+			parent = parent || this.pm_dir;
+			newNode = parent.clone();	
+			newNode.append(node);
 
-		if (!newNode.exists()) {
-			if (dir_or_file) {
-				newNode.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
-			} else {
-				newNode.create(Components.interfaces.nsIFile.FILE_TYPE, 0644);
-			}
+			if (!newNode.exists()) {
+				if (dir_or_file) {
+					newNode.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+				} else {
+					newNode.create(Components.interfaces.nsIFile.FILE_TYPE, 0644);
+				}
+			}			
+		} catch (e) { 
+			Zotero.PaperMachines.ERROR(node + " could not be created.");
+			Zotero.PaperMachines.ERROR(e);
+			newNode = null;
 		}
 		return newNode;	
 	},
@@ -464,7 +491,7 @@ Zotero.PaperMachines = {
 
 		var processName = processor + thisID;
 		var thisGroup = Zotero.PaperMachines.getGroupByID(thisID);
-		var collectionName = thisGroup.name || thisGroup.getName();
+		var collectionName = Zotero.PaperMachines.getGroupName();
 
 		if (Zotero.PaperMachines._checkIfRunning(processPath)) {
 			return;
@@ -531,6 +558,7 @@ Zotero.PaperMachines = {
 		proc.runAsync(procArgs, procArgs.length, observer);
 	},
 	replaceTagsBoxWithWordCloud: function (uri) {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 		var iframe = document.createElementNS(XUL_NS, "iframe");
 		iframe.setAttribute("src", uri);
@@ -548,6 +576,7 @@ Zotero.PaperMachines = {
 		tagSelector.id("tags-toggle").collapsed = true;
 	},
 	restoreTagsBox: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var tagSelector = ZoteroPane.document.getElementById("zotero-tag-selector");
 		var tagSelectorGroup = ZoteroPane.document.getAnonymousNodes(tagSelector)[0];
 		const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -584,6 +613,7 @@ Zotero.PaperMachines = {
 		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
 			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
 
+		var ZoteroPane = win.ZoteroPane;
 		if (ZoteroPane && ZoteroPane.loaded && ZoteroPane.collectionsView && ZoteroPane.collectionsView.selection && !ZoteroPane.onCollectionSelected_) {
 			if (Zotero.PaperMachines.tagCloudReplace) {
 				ZoteroPane.document.getElementById("zotero-tag-selector").uninit();				
@@ -604,6 +634,7 @@ Zotero.PaperMachines = {
 		}
 	},
 	displayWordCloud: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var thisID = Zotero.PaperMachines.getItemGroupID(ZoteroPane.getItemGroup());
 
 		var wordCloudURI = "zotero://papermachines/wordcloud/" + thisID;
@@ -893,7 +924,7 @@ Zotero.PaperMachines = {
 		return this.DB.query(sql, [itemGroupID, processor]);
 	},
 	getItemGroupID: function (itemGroup) {
-		if (itemGroup == null) return null;
+		if (itemGroup === null || itemGroup === undefined) return null;
 		if ("isCollection" in itemGroup && itemGroup.isCollection()) {
 			if (itemGroup.hasOwnProperty("ref")) {
 				return (itemGroup.ref.libraryID != null ? itemGroup.ref.libraryID.toString() : "") + "C" + itemGroup.ref.id.toString();				
@@ -907,6 +938,7 @@ Zotero.PaperMachines = {
 		}
 	},
 	getGroupByID: function (id) {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		if (typeof(id.indexOf) == "function" && id.indexOf("C") != -1) {
 			return Zotero.Collections.get(id.split("C")[1]);
 		} else if (id == "L") {
@@ -915,6 +947,13 @@ Zotero.PaperMachines = {
 			try {
 				return ZoteroPane.collectionsView._dataItems.filter(function (d) { return d[0].ref.libraryID == id;})[0][0];
 			} catch (e) {  return false; }
+		}
+	},
+	getGroupName: function(thisGroup) {
+		if (thisGroup) {
+			return thisGroup.name || (typeof thisGroup.getName === "function" ? thisGroup.getName() : "");
+		} else {
+			return "";
 		}
 	},
 	getNameOfGroup: function (id) {
@@ -962,6 +1001,7 @@ Zotero.PaperMachines = {
 		}
 	},
 	changeField: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var items = ZoteroPane.getSelectedItems();
 		var params = Zotero.PaperMachines.promptForProcessParams("change_field");
 		if (params) {
@@ -1180,15 +1220,15 @@ Zotero.PaperMachines = {
 		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
 
-		var collectionName = thisGroup.name || thisGroup.getName();
-		var progbar_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="2;URL=' + 
+		var collectionName = Zotero.PaperMachines.getGroupName(thisGroup);
+		var progbar_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="5;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
 			try {
 				progbar_str += '<div>' + Zotero.PaperMachines.processNames[processResult["processor"]] + ': ' + collectionName + '</div>';
 			} catch (e) {
 				progbar_str += '<div>' + collectionName + '</div>';
 			}
-			if (iterations) {
+			if (typeof iterations === "number") {
 				progbar_str += '<progress id="progressBar" max="1000" value="';
 				progbar_str += iterations.toString();
 				progbar_str += '"/>';
@@ -1208,7 +1248,7 @@ Zotero.PaperMachines = {
 			var log_str = Zotero.File.getContents(logTextFile);
 		} catch (e) { Zotero.PaperMachines.ERROR(e); }
 
-		var collectionName = thisGroup.name || thisGroup.getName();
+		var collectionName = Zotero.PaperMachines.getGroupName(thisGroup);
 		var logpage_str = '<html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="20;URL=' + 
 			"'zotero://papermachines/" + processResult["process_path"] + "'" + '"/></head><body>';
 			try {
@@ -1226,9 +1266,11 @@ Zotero.PaperMachines = {
 		return logpage_str;
 	},
 	getThisGroupID: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		return Zotero.PaperMachines.getItemGroupID(ZoteroPane.getItemGroup());
 	},
 	activateMenuItems: function (thisID) {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var active = this.hasBeenExtracted(thisID);
 		var ids = Zotero.PaperMachines.processors.concat(["reset-output"]);
 		ids.forEach(function (d) {
@@ -1271,9 +1313,10 @@ Zotero.PaperMachines = {
 		return options;
 	},
 	viewOutput: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var thisGroup = ZoteroPane.getItemGroup();
 		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
-		var collectionName = thisGroup.name || thisGroup.getName();
+		var collectionName = Zotero.PaperMachines.getGroupName(thisGroup);
 
 		var options = Zotero.PaperMachines.getProcessesForCollection(thisID);
 		for (var i in options) {
@@ -1286,9 +1329,10 @@ Zotero.PaperMachines = {
 		}
 	},
 	exportOutput: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var thisGroup = ZoteroPane.getItemGroup();
 		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
-		var collectionName = thisGroup.name || thisGroup.getName();
+		var collectionName = Zotero.PaperMachines.getGroupName(thisGroup);
 
 		var export_dir = this.filePrompt("export_dir", "getfolder");
 		if (export_dir) {
@@ -1308,9 +1352,10 @@ Zotero.PaperMachines = {
 		}
 	},
 	resetOutput: function () {
+		var ZoteroPane = Zotero.PaperMachines.getZoteroPane();
 		var thisGroup = ZoteroPane.getItemGroup();
 		var thisID = Zotero.PaperMachines.getItemGroupID(thisGroup);
-		var collectionName = thisGroup.name || thisGroup.getName();
+		var collectionName = Zotero.PaperMachines.getGroupName(thisGroup);
 
 		var options = Zotero.PaperMachines.getProcessesForCollection(thisID);
 		var reset_processes = Zotero.PaperMachines.selectFromOptions("reset_processes", options, "multiplecheck");
@@ -1831,7 +1876,7 @@ Zotero.PaperMachines = {
 	},
 	findJavaExecutable: function () { 
 		var java_exe = Preferences.get("extensions.papermachines.general.java_exe");
-		if (!java_exe) {
+		if (!java_exe || java_exe == "") {
 			var environment = Components.classes["@mozilla.org/process/environment;1"]
 	                            .getService(Components.interfaces.nsIEnvironment);
 			var path = environment.get("PATH"),
@@ -1843,7 +1888,7 @@ Zotero.PaperMachines = {
 
 				directories = path.split(";");
 			} else {
-				directories = path.split(":");
+				// directories = path.split(":");
 				directories = directories.concat(["/usr/bin", "/usr/local/bin", "/sw/bin", "/opt/local/bin"]);
 			}
 
@@ -1929,8 +1974,7 @@ Zotero.PaperMachines.processObserver.prototype = {
 	observerService.removeObserver(this, "process-failed");
 	observerService.removeObserver(this, "process-finished");
   }
-}
-
+};
 
 Zotero.PaperMachines._Sequence = function (onDone) {
 	this.list = [];
@@ -1975,5 +2019,5 @@ Zotero.PaperMachines._Sequence.prototype = {
 	}
 };
 
-window.addEventListener('load', function(e) { Zotero.PaperMachines.init(); }, false);
+// window.addEventListener('load', function(e) { Zotero.PaperMachines.createUI(); }, false);
 window.addEventListener("papermachines-request", function (e) { Zotero.PaperMachines.evtListener(e); }, false, true);

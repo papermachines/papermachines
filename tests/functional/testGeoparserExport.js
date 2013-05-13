@@ -14,6 +14,6 @@ var setupTest = function() {
 };
 
 var testGeoparserExport = function() {
-	var menuitem = new elementslib.ID(controller.window.document, "geoparser_export");
+	var menuitem = findElement.ID(controller.window.document, "geoparser_export");
 	controller.click(menuitem);
 };

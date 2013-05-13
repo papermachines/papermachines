@@ -10,31 +10,24 @@
  * @version 1.0.3
  */
 
-// Include required modules
-var {assert} = require("assertions");
-var prefs = require("prefs");
+Cu.import("resource://gre/modules/Services.jsm");
 
-const gTimeout = 5000;
+// Include required modules
+var { assert } = require("assertions");
+var prefs = require("prefs");
 
 /**
  * Get application specific informations
  * @see http://mxr.mozilla.org/mozilla-central/source/xpcom/system/nsIXULAppInfo.idl
  */
 var appInfo = {
-  _service: null,
-
   /**
    * Get the application info service
    * @returns XUL runtime object
    * @type nsiXULRuntime
    */
   get appInfo() {
-    if (!this._appInfo) {
-      this._service = Cc["@mozilla.org/xre/app-info;1"]
-                        .getService(Ci.nsIXULAppInfo)
-                        .QueryInterface(Ci.nsIXULRuntime);
-    }
-    return this._service;
+    return Services.appinfo;
   },
 
   /**
@@ -142,7 +135,7 @@ function assertLoadedUrlEqual(controller, targetUrl) {
   controller.waitForPageLoad();
 
   // Check the same web page has been opened
-  controller.waitFor(function () {
+  assert.waitFor(function () {
     return locationBar.getNode().value === currentURL;
   }, "Current URL should be identical to the target URL - got " +
      locationBar.getNode().value + ", expected " + currentURL);
@@ -197,12 +190,8 @@ function checkSearchField(controller, searchField,
  * @return A URI object
  * @type nsIURI
  */
-function createURI(spec, originCharset, baseURI)
-{
-  let iosvc = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-
-  return iosvc.newURI(spec, originCharset, baseURI);
+function createURI(spec, originCharset, baseURI) {
+  return Services.io.newURI(spec, originCharset, baseURI);
 }
 
 
@@ -223,10 +212,7 @@ function emptyClipboard() {
  * @returns {String} The formatted URL
  */
 function formatUrl(aURL) {
-  var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                  getService(Ci.nsIURLFormatter);
-
-  return formatter.formatURL(aURL);
+  return Services.urlFormatter.formatURL(aURL);
 }
 
 /**
@@ -237,10 +223,7 @@ function formatUrl(aURL) {
  * @returns {String} The formatted URL
  */
 function formatUrlPref(prefName) {
-  var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                     .getService(Ci.nsIURLFormatter);
-
-  return formatter.formatURLPref(prefName);
+  return Services.urlFormatter.formatURLPref(prefName);
 }
 
 /**
@@ -286,8 +269,7 @@ function getEntity(urls, entityId) {
   var doc = parser.parseFromString(header + elem, 'text/xml');
   var elemNode = doc.querySelector('elem[id="elementID"]');
 
-  if (elemNode == null)
-    throw new Error(arguments.callee.name + ": Unknown entity - " + entityId);
+  assert.ok(elemNode, arguments.callee.name + ": Entity - " + entityId + " has been found");
 
   return elemNode.textContent;
 }
@@ -304,15 +286,24 @@ function getEntity(urls, entityId) {
  * @type string
  */
 function getProperty(url, prefName) {
-  var sbs = Cc["@mozilla.org/intl/stringbundle;1"]
-            .getService(Ci.nsIStringBundleService);
-  var bundle = sbs.createBundle(url);
+  var bundle = Services.strings.createBundle(url);
 
   try {
     return bundle.GetStringFromName(prefName);
   } catch (ex) {
     throw new Error(arguments.callee.name + ": Unknown property - " + prefName);
   }
+}
+
+/**
+ * Get the profile folder and create a subfolder "downloads"
+ * @return {string} path to the newly created folder
+ */
+function getProfileDownloadLocation() {
+  var downloadDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  downloadDir.append("downloads");
+
+  return downloadDir.path;
 }
 
 /**
@@ -346,7 +337,7 @@ function handleWindow(type, text, callback, close) {
 
   try {
     // Wait until the window has been opened
-    mozmill.utils.waitFor(function () {
+    assert.waitFor(function () {
       window = func_ptr(text);
       return !!window;
     }, "Window has been found.");
@@ -369,7 +360,7 @@ function handleWindow(type, text, callback, close) {
 
       try {
         window.close();
-        mozmill.utils.waitFor(function () {
+        assert.waitFor(function () {
           return !mozmill.controller.windowMap.contains(windowId);
         }, "Window has been closed.");
       } catch (e if e instanceof TypeError) {
@@ -431,10 +422,7 @@ function isDisplayed(controller, elem) {
  *        The type of permission to be removed
  */
 function removePermission(aHost, aType) {
-  var pm = Cc["@mozilla.org/permissionmanager;1"]
-              .getService(Ci.nsIPermissionManager);
-
-  pm.remove(aHost, aType);
+  Services.perms.remove(aHost, aType);
 }
 
 /**
@@ -449,10 +437,7 @@ function removePermission(aHost, aType) {
  */
 function getElementStyle(aElement, aProperty) {
   var element = aElement.getNode();
-
-  if (!element) {
-    throw new Error(arguments.callee.name + " Element " + aElement.getInfo() + " is null");
-  }
+  assert.ok(element, arguments.callee.name + " Element " + aElement.getInfo() + " has been found");
 
   var elementStyle = element.ownerDocument.defaultView.getComputedStyle(element);
   return elementStyle.getPropertyValue(aProperty);
@@ -482,6 +467,7 @@ exports.getDefaultHomepage = getDefaultHomepage;
 exports.getElementStyle = getElementStyle;
 exports.getEntity = getEntity;
 exports.getProperty = getProperty;
+exports.getProfileDownloadLocation = getProfileDownloadLocation;
 exports.handleWindow = handleWindow;
 exports.isDisplayed = isDisplayed;
 exports.removePermission = removePermission;

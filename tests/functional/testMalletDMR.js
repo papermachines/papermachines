@@ -14,10 +14,5 @@ var setupTest = function() {
 };
 
 var testMalletDMR = function() {
-	pm.svgExpectedTester(controller, tabBrowser, "mallet_dmr", function () {
-		var myController = new mozmill.controller.MozMillController(mozmill.utils.getWindowByTitle("Paper Machines"));
-		var okButton = new elementslib.Lookup(myController.window.document,
-			'/id("zotero-papermachines-advanced")/anon({"anonid":"buttons"})/{"dlgtype":"accept"}');
-		myController.click(okButton);		
-	});
+	pm.svgExpectedTester(controller, tabBrowser, "mallet_dmr", pm.acceptAdvancedDialog);
 };
