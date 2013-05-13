@@ -29,8 +29,20 @@
         <label control="lang" value="&papermachines.prefs.general.lang;"/>
         <menulist id="lang" preference="pref_lang">
           <menupopup>
+            <menuitem label="Danish" value="da"/>
+            <menuitem label="Dutch" value="nl"/>
             <menuitem label="English" value="en"/>
+            <menuitem label="Finnish" value="fi"/>
+            <menuitem label="French" value="fr"/>
+            <menuitem label="German" value="de"/>
+            <menuitem label="Hungarian" value="hu"/>
+            <menuitem label="Italian" value="it"/>
+            <menuitem label="Norwegian" value="no"/>
             <menuitem label="Portuguese" value="pt"/>
+            <menuitem label="Russian" value="ru"/>
+            <menuitem label="Spanish" value="es"/>
+            <menuitem label="Swedish" value="sv"/>
+            <menuitem label="Turkish" value="tr"/>
           </menupopup>
         </menulist>
     </groupbox>

@@ -36,7 +36,8 @@ class MalletLDA(mallet.Mallet):
             self.iterations = int(self.named_args["iterations"])
             self.alpha = self.named_args["alpha"]
             self.beta = self.named_args["beta"]
-            self.symmetric_alpha = self.named_args["symmetric_alpha"].lower()
+            self.symmetric_alpha = str(self.named_args["symmetric_alpha"])
+            self.symmetric_alpha = self.symmetric_alpha.lower()
             self.optimize_interval = self.named_args["optimize_interval"]
             self.burn_in = int(self.named_args["burn_in"])
             self.lang = self.named_args["lang"]

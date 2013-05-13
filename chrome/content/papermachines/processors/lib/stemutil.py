@@ -11,10 +11,22 @@ from classpath import classPathHacker
 # javac org/tartarus/snowball/*.java org/tartarus/snowball/ext/*.java
 # jar -cvf snowball.jar org
 
-
-iso639_1 = {'ru': 'russian', 'fr': 'french', 'en': 'english', 'pt': 'portuguese',
-    'no': 'norwegian', 'sv': 'swedish', 'de': 'german', 'tr': 'turkish', 'it': 'italian',
-    'da': 'danish', 'fi': 'finnish', 'hu': 'hungarian'}
+iso639_1 = {
+    'ru': 'russian',
+    'fr': 'french',
+    'en': 'english',
+    'pt': 'portuguese',
+    'no': 'norwegian',
+    'sv': 'swedish',
+    'de': 'german',
+    'tr': 'turkish',
+    'it': 'italian',
+    'da': 'danish',
+    'fi': 'finnish',
+    'hu': 'hungarian',
+    'es': 'spanish',
+    'nl': 'dutch',
+}
 
 stem_languages = set(iso639_1.values())
 

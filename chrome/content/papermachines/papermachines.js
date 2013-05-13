@@ -303,10 +303,6 @@ Zotero.PaperMachines = {
 		Components.utils.import("chrome://papermachines/content/Preferences.js");
 		Components.utils.import("chrome://papermachines/content/strptime.js");
 
-		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
-
-		this.selectStoplist(stoplist_lang);
-
 		this.getStringsFromBundle();
 
 		Components.utils.import("resource://gre/modules/AddonManager.jsm");
@@ -330,10 +326,14 @@ Zotero.PaperMachines = {
 		this.DB.query("DELETE from files_to_extract;");
 	},
 	getZoteroPane: function () {
-		var win = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-
-		return win.ZoteroPane;
+		var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+					.getService(Components.interfaces.nsIWindowMediator);
+		var enumerator = wm.getEnumerator("navigator:browser");
+		while (enumerator.hasMoreElements()) {
+			var win = enumerator.getNext();
+			if (!win.ZoteroPane) continue;
+			return win.ZoteroPane;
+		}
 	},
 	createUI: function (retries) {
 		retries = (retries !== undefined) ? retries : 3;
@@ -925,13 +925,13 @@ Zotero.PaperMachines = {
 	},
 	getItemGroupID: function (itemGroup) {
 		if (itemGroup === null || itemGroup === undefined) return null;
-		if ("isCollection" in itemGroup && itemGroup.isCollection()) {
+		if (typeof itemGroup.isCollection === "function" && itemGroup.isCollection()) {
 			if (itemGroup.hasOwnProperty("ref")) {
 				return (itemGroup.ref.libraryID != null ? itemGroup.ref.libraryID.toString() : "") + "C" + itemGroup.ref.id.toString();				
 			} else {
 				return (itemGroup.libraryID != null ? itemGroup.libraryID.toString() : "") + "C" + itemGroup.id.toString();								
 			}
-		} else if ("isGroup" in itemGroup && itemGroup.isGroup()) {
+		} else if (typeof itemGroup.isGroup === "function" && itemGroup.isGroup()) {
 			return itemGroup.ref.libraryID;
 		} else {
 			return itemGroup.id;
@@ -1170,6 +1170,11 @@ Zotero.PaperMachines = {
 
 			this._copyAllFiles(procs_dir, Zotero.PaperMachines.processors_dir);
 		}
+
+		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
+		this.selectStoplist(stoplist_lang);
+
+		// copy the supporting javascript, css, etc. to the output dir
 		Zotero.PaperMachines.aux_dir = Zotero.PaperMachines._getOrCreateDir("support", Zotero.PaperMachines.processors_dir);
 
 		var new_aux = Zotero.PaperMachines._getOrCreateDir("support", Zotero.PaperMachines.out_dir);
@@ -1447,7 +1452,9 @@ Zotero.PaperMachines = {
 		return Zotero.PaperMachines._promptUser(params);
 	},
 	selectStoplist: function (lang) {
-		var orig_stopfile = Zotero.PaperMachines._getOrCreateFile("stopwords_" + lang + ".txt", Zotero.PaperMachines.processors_dir);
+		var stopwords_dir = Zotero.PaperMachines.processors_dir.clone();
+		stopwords_dir.append("stopwords");
+		var orig_stopfile = Zotero.PaperMachines._getOrCreateFile("stopwords_" + lang + ".txt", stopwords_dir);
 		var stopwords = Zotero.File.getContents(orig_stopfile) + '\n';
 		var stopfile = Zotero.PaperMachines._getOrCreateFile("stopwords.txt", Zotero.PaperMachines.processors_dir);
 		var custom_stopwords = Preferences.get("extensions.papermachines.stopwords");
