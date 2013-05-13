@@ -81,6 +81,7 @@ class Mallet(textprocessor.TextProcessor):
         f,
         filename,
         ):
+
         text = re.sub(r"[^\w ]+", u' ', text.lower(), flags=re.UNICODE)
         if self.stemming:
             newtext = u''
@@ -123,9 +124,7 @@ class Mallet(textprocessor.TextProcessor):
 
                     if self.segmentation:
                         segments = filter(lambda x: x.count(' ') > 5,
-                                text.split('''
-
-'''))
+                                text.split('\n\n'))
                         for (i, text_seg) in enumerate(segments):
                             seg_filename = filename + '#' + str(i)
                             self.metadata[seg_filename] = \
@@ -298,6 +297,7 @@ class Mallet(textprocessor.TextProcessor):
         tfidf=False,
         stemming=True,
         ):
+
         self.stemming = stemming
 
         self._setup_mallet_command()
@@ -328,9 +328,9 @@ class Mallet(textprocessor.TextProcessor):
             '--output',
             self.instance_file,
             ]
-        if not tfidf:
-            import_args = ['--remove-stopwords', '--stoplist-file',
-                           self.stoplist] + import_args
+        # if not tfidf:
+        import_args = ['--remove-stopwords', '--stoplist-file',
+                       self.stoplist] + import_args
 
         if sequence:
             import_args.append('--keep-sequence')
