@@ -98,6 +98,9 @@ class Mallet(textprocessor.TextProcessor):
 
                 newtext += self.stemmed[word] + u' '
             text = newtext
+        else:
+            for word in set(text.split()):
+                self.index[word].add(itemid)
         f.write(u'\t'.join([filename, self.metadata[filename]['label'],
                 text]) + u'\n')
         self.docs.append(filename)
@@ -105,7 +108,7 @@ class Mallet(textprocessor.TextProcessor):
     def _import_files(self):
         if self.stemming:
             self.stemmed = {}
-            self.index = defaultdict(set)
+        self.index = defaultdict(set)
         self.docs = []
         self.segmentation = getattr(self, 'segmentation', False)
 
@@ -272,8 +275,8 @@ class Mallet(textprocessor.TextProcessor):
                     filename = fields[0]
                     self.docs.append(filename)
                     itemid = self.metadata[filename]['itemID']
-                    # for word in set(fields[2].split()):
-                    #     self.index[word].add(itemid)
+                    for word in set(fields[2].split()):
+                        self.index[word].add(itemid)
             self.doc_count = len(self.docs)
 
     def _setup_mallet_instances(

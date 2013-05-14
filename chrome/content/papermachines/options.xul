@@ -20,6 +20,7 @@
     <preference id="pref_extract_standalone" name="extensions.papermachines.general.extract_standalone" type="bool"/>
     <preference id="pref_download_snapshots" name="extensions.papermachines.general.download_snapshots" type="bool"/>
     <preference id="pref_experimental" name="extensions.papermachines.general.experimental" type="bool"/>
+    <preference id="pref_increasemem" name="extensions.papermachines.general.increasemem" type="bool"/>
     <preference id="pref_java_exe" name="extensions.papermachines.general.java_exe" type="unichar"/>
   </preferences>
  
@@ -65,7 +66,9 @@
     <hbox align="center">
       <checkbox preference="pref_experimental" label="&papermachines.prefs.general.experimental;" id="experimental"/>
     </hbox>
-
+    <hbox align="center">
+      <checkbox preference="pref_increasemem" label="&papermachines.prefs.general.increasemem;" id="increasemem"/>
+    </hbox>
     <hbox align="center">
       <label control="java_exe" value="&papermachines.prefs.general.java_exe;"/>
       <textbox preference="pref_java_exe" id="java_exe" maxlength="100"/>

@@ -552,8 +552,9 @@ Zotero.PaperMachines = {
 		if (processor.indexOf("mallet") != -1) {
 			procArgs = ["-Djava.util.logging.config.file="+loggingProperties].concat(procArgs);
 		}
-
-		procArgs = ["-Xmx1g", "-Dfile.encoding=UTF8","-jar", this.jython_path].concat(procArgs);
+		var mem_alloc = Preferences.get("extensions.papermachines.general.increasemem") ?
+			"-Xmx4g" : "-Xmx1g";
+		procArgs = [mem_alloc, "-Dfile.encoding=UTF8","-jar", this.jython_path].concat(procArgs);
 
 		Zotero.PaperMachines.LOG(java_exe_file.path + " " + procArgs.map(function(d) { return d.indexOf(" ") != -1 ? '"' + d + '"' : d; }).join(" "));
 

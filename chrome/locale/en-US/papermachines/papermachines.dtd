@@ -84,11 +84,12 @@
 <!ENTITY papermachines.prefs.general.extract_pdf		"PDFs with OCR text">
 <!ENTITY papermachines.prefs.general.extract_notes		"Notes">
 <!ENTITY papermachines.prefs.general.extract_tags		"Tags">
-<!ENTITY papermachines.prefs.general.extract_standalone	"Extract files without metadata (standalone)">
+<!ENTITY papermachines.prefs.general.extract_standalone	"Extract files without metadata">
 <!ENTITY papermachines.prefs.general.download_snapshots	"Download live pages and remote links (can be slow!)">
-<!ENTITY papermachines.prefs.general.java_exe 		"Path to Java executable: ">
+<!ENTITY papermachines.prefs.general.java_exe 			"Path to Java executable: ">
 
-<!ENTITY papermachines.prefs.general.experimental		"Enable Experimental Features">
+<!ENTITY papermachines.prefs.general.experimental		"Enable experimental features">
+<!ENTITY papermachines.prefs.general.increasemem		"Increase memory allocation (64-bit machines only)">
 
 <!ENTITY papermachines.prefs.stopwords					"Stop Words">
 <!ENTITY papermachines.prefs.stopwords.label			"A list of words (one per line) that should be excluded from analysis:">
