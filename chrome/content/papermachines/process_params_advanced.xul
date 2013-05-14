@@ -6,7 +6,7 @@
 
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="&papermachines.dialog.title;" width="400" height="330"
+	title="&papermachines.dialog.title;" width="400" height="440"
 	persist="width height screenX screenY"
 	buttons="disclosure,accept,cancel"
 	ondialogdisclosure="return Zotero_PaperMachines_ProcessParams_Advanced.disclose();"
