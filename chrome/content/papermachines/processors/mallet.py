@@ -18,6 +18,7 @@ import traceback
 import platform
 import xml.etree.ElementTree as et
 from lib.stemutil import stem
+from collections import defaultdict
 import copy
 import textprocessor
 
@@ -92,16 +93,8 @@ class Mallet(textprocessor.TextProcessor):
                     in self.stopwords:
                     continue
 
-                # if word not in self.index:
-                #       self.index[word] = set()
-
-                if self.stemmed[word] not in self.index:
-                    self.index[self.stemmed[word]] = set()
-
-                # self.index[word].add(self.metadata[filename]["itemID"].split('.')[0])
-
-                self.index[self.stemmed[word]].add(self.metadata[filename]['itemID'
-                        ].split('.')[0])
+                itemid = self.metadata[filename]['itemID'].split('.')[0]
+                self.index[self.stemmed[word]].add(itemid)
 
                 newtext += self.stemmed[word] + u' '
             text = newtext
@@ -112,7 +105,7 @@ class Mallet(textprocessor.TextProcessor):
     def _import_files(self):
         if self.stemming:
             self.stemmed = {}
-            self.index = {}
+            self.index = defaultdict(set)
         self.docs = []
         self.segmentation = getattr(self, 'segmentation', False)
 
@@ -152,7 +145,7 @@ class Mallet(textprocessor.TextProcessor):
         tf = {}
         tf_all_docs = {}
         tfidf = {}
-        self.index = {}
+        self.index = defaultdict(set)
 
         i = 0
         with codecs.open(self.texts_file, 'r', encoding='utf-8') as f:
@@ -227,10 +220,7 @@ class Mallet(textprocessor.TextProcessor):
                             self.metadata[filename]['label'], text])
                             + u'\n')
                     for word in thisfile_vocab:
-                        if word not in self.index:
-                            self.index[word] = []
-                        self.index[word].append(self.metadata[filename]['itemID'
-                                ])
+                        self.index[word].add(self.metadata[filename]['itemID'])
                 else:
                     self.docs.remove(filename)
         with codecs.open(os.path.join(self.mallet_out_dir, 'dmap'), 'w'
@@ -275,28 +265,25 @@ class Mallet(textprocessor.TextProcessor):
             if len(self.extra_args) > 0 and self.dfr:
                 self._import_dfr_metadata(self.dfr_dir)
             self.docs = []
-            self.index = {}
+            self.index = defaultdict(set)
             with codecs.open(self.texts_file, 'r', 'utf-8') as f:
                 for line in f:
                     fields = line.split(u'\t')
                     filename = fields[0]
                     self.docs.append(filename)
-                    this_vocab = set()
-                    for word in fields[2].split():
-                        this_vocab.add(word)
-                    for word in this_vocab:
-                        if word not in self.index:
-                            self.index[word] = []
-                        self.index[word].append(self.metadata[filename]['itemID'
-                                ])
+                    itemid = self.metadata[filename]['itemID']
+                    # for word in set(fields[2].split()):
+                    #     self.index[word].add(itemid)
             self.doc_count = len(self.docs)
 
     def _setup_mallet_instances(
         self,
         sequence=True,
         tfidf=False,
-        stemming=True,
+        stemming=True
         ):
+
+        self.use_bulkloader = getattr(self, "use_bulkloader", False)
 
         self.stemming = stemming
 
@@ -308,36 +295,51 @@ class Mallet(textprocessor.TextProcessor):
 
         logging.info('beginning text import')
 
-        if tfidf and not self.dry_run:
+        if tfidf and not self.dry_run and not self.use_bulkloader:
             self._tfidf_filter()
 
-        with codecs.open(os.path.join(self.mallet_out_dir,
-                         'metadata.json'), 'w', encoding='utf-8') as \
-            meta_file:
+        with codecs.open(os.path.join(self.mallet_out_dir, 'metadata.json'),
+                         'w', encoding='utf-8') as meta_file:
             json.dump(self.metadata, meta_file)
 
         import_args = [
-            '--encoding',
-            'UTF-8',
             '--input',
             self.texts_file,
-            '--line-regex',
-            '^([^\t]*)[\t]([^\t]*)[\t](.*)$',
-            '--token-regex',
-            ("\S+" if tfidf else "[\p{L}\p{M}]+"),
             '--output',
             self.instance_file,
-            ]
-        # if not tfidf:
-        import_args = ['--remove-stopwords', '--stoplist-file',
-                       self.stoplist] + import_args
-
+            '--line-regex',
+            '^([^\t]*)[\t]([^\t]*)[\t](.*)$'
+        ]
         if sequence:
             import_args.append('--keep-sequence')
 
-        if not self.dry_run and not os.path.exists(self.instance_file):
-            from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
-            Csv2Vectors(import_args)
+        if not self.use_bulkloader:
+            import_args += [
+                '--encoding',
+                'UTF-8',
+                '--token-regex',
+                ("\S+" if tfidf else "[\p{L}\p{M}]+"),
+            ]
+            if not tfidf:
+                import_args = ['--remove-stopwords', '--stoplist-file',
+                               self.stoplist] + import_args
+
+            if not self.dry_run and not os.path.exists(self.instance_file):
+                from cc.mallet.classify.tui.Csv2Vectors import main as \
+                    Csv2Vectors
+                Csv2Vectors(import_args)
+        else:
+            from cc.mallet.util.BulkLoader import main as BulkLoader
+            import_args += [
+                '--remove-stopwords',
+                '--stoplist',
+                self.stoplist,
+                '--prune-doc-frequency',
+                '0.3',
+                '--prune-count',
+                '3'
+            ]
+            BulkLoader(import_args)
 
     def process(self):
         """

@@ -3,12 +3,13 @@
 
 import sys
 import os
+import json
+import codecs
 import logging
 import traceback
 from zipfile import ZipFile
 from lib.merge_jstor import merge_dfr_dirs
 import mallet_lda
-
 
 class MalletJSTOR(mallet_lda.MalletLDA):
 
@@ -28,6 +29,7 @@ class MalletJSTOR(mallet_lda.MalletLDA):
         self.dry_run = False
         self.topics = 50
         self.dfr = True
+        self.use_bulkloader = True
         dfr_dirs = []
         for dfr_path in self.extra_args:
             if dfr_path.lower().endswith('.zip'):
@@ -39,7 +41,6 @@ class MalletJSTOR(mallet_lda.MalletLDA):
             self.dfr_dir = merge_dfr_dirs(dfr_dirs)
         else:
             self.dfr_dir = dfr_dirs[0]
-
 
 if __name__ == '__main__':
     try:

@@ -308,6 +308,7 @@ class MalletDMR(mallet_lda.MalletLDA):
             for term in self.index:
                 if isinstance(self.index[term], set):
                     self.index[term] = list(self.index[term])
+            self.index = dict(self.index)
 
         params = {"CATEGORICAL": self.categorical,
                         "TOPIC_LABELS": labels,

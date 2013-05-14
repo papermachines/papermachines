@@ -18,6 +18,8 @@ import re
 from itertools import izip
 from collections import Counter, defaultdict
 from lib.stemutil import stem
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 class TextProcessor:
 

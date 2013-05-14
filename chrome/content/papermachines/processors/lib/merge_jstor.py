@@ -12,7 +12,7 @@ def merge_dfr_dirs(dirlist):
         if not os.path.exists(path):
             os.makedirs(path)
 
-    dois = {}
+    dois = set()
 
     with file(os.path.join(merged_dir, "citations.CSV"), 'wb') as f:
         for dirname in dirlist:
@@ -28,7 +28,7 @@ def merge_dfr_dirs(dirlist):
                     lines.next() #skip header if already written
                 for line in lines:
                     doi = line.split(',')[0]
-                    if doi not in dois:
+                    if doi not in dois: #prevent repeats
                         f.write(line)
-                        dois[doi] = True  #prevent repeats
+                        dois.add(doi)
     return merged_dir

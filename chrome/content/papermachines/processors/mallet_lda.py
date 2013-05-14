@@ -1,4 +1,6 @@
 #!/usr/bin/env python2.7
+# -*- coding: utf-8 -*-
+
 import sys
 import os
 import logging
@@ -74,9 +76,9 @@ class MalletLDA(mallet.Mallet):
                 "--num-iterations", str(self.iterations),
                 "--optimize-interval", str(self.optimize_interval),
                 "--optimize-burn-in", str(self.burn_in),
-                "--use-symmetric-alpha", self.symmetric_alpha,
-                "--alpha", self.alpha,
-                "--beta", self.beta,
+                "--use-symmetric-alpha", str(self.symmetric_alpha),
+                "--alpha", str(self.alpha),
+                "--beta", str(self.beta),
                 "--output-state", self.mallet_files['state'],
                 "--output-doc-topics", self.mallet_files['doc-topics'],
                 "--output-topic-keys", self.mallet_files['topic-keys'],
@@ -87,7 +89,6 @@ class MalletLDA(mallet.Mallet):
 
         start_time = time.time()
         if not self.dry_run:
-            self.set_java_log(self.progress_filename)
             TopicTrainer(process_args)
 
         logging.info("LDA complete in " + str(time.time() - start_time) +
@@ -160,8 +161,8 @@ class MalletLDA(mallet.Mallet):
             except:
                 logging.error(traceback.format_exc())
 
-        for filename in self.metadata:
-            if "segments" in self.metadata[filename]:
+        if self.segmentation:
+            for filename in self.metadata:
                 total_topics = sum(self.metadata[filename]["topics"].values())
                 normalized = dict((k, 1.0 * v / total_topics) 
                                   for k, v in 
@@ -170,8 +171,6 @@ class MalletLDA(mallet.Mallet):
                 self.metadata[filename]["topics"] = [normalized[x] 
                                                      for x in
                                                      sorted(normalized.keys())]
-            else:
-                pass
         # self.metadata[filename]["main_topic"] = \
         #   self.argmax(self.metadata[filename]["topics"])
         # self.metadata[filename]["topics"] = \
@@ -185,6 +184,7 @@ class MalletLDA(mallet.Mallet):
             for term in self.index:
                 if isinstance(self.index[term], set):
                     self.index[term] = list(self.index[term])
+            self.index = dict(self.index)
 
         params = {"CATEGORICAL": self.categorical,
                         "TOPIC_LABELS": labels,

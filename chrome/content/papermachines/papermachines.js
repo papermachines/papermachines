@@ -494,7 +494,7 @@ Zotero.PaperMachines = {
 
 		var processName = processor + thisID;
 		var thisGroup = Zotero.PaperMachines.getGroupByID(thisID);
-		var collectionName = Zotero.PaperMachines.getGroupName();
+		var collectionName = Zotero.PaperMachines.getGroupName(thisGroup);
 
 		if (Zotero.PaperMachines._checkIfRunning(processPath)) {
 			return;
