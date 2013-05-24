@@ -35,10 +35,7 @@ class MalletDMR(mallet_lda.MalletLDA):
         self.dfr = len(self.extra_args) > 0
         if self.dfr:
             self.dfr_dir = self.extra_args[0]
-        if 'features' in self.named_args:
-            self.features = self.named_args['features']
-        else:
-            self.features = 'decade'
+        self.features = self.named_args.get('features', 'decade')
 
     def metadata_to_feature_string(self, doc):
         my_features = []
@@ -115,18 +112,11 @@ class MalletDMR(mallet_lda.MalletLDA):
         run DMR, creating an output file divided by time
         """
 
-        if self.named_args is not None:
-            self.tfidf = self.named_args['tfidf']
-            self.min_df = int(self.named_args['min_df'])
-            self.stemming = self.named_args['stemming']
-            self.topics = int(self.named_args['topics'])
-            self.lang = self.named_args['lang']
-        else:
-            self.tfidf = True
-            self.min_df = 5
-            self.topics = 50
-            self.stemming = True
-            self.lang = 'en'
+        self.tfidf = self.named_args.get('tfidf', True)
+        self.min_df = int(self.named_args.get('min_df', 5))
+        self.stemming = self.named_args.get('stemming', True)
+        self.topics = int(self.named_args.get('topics', 50))
+        self.lang = self.named_args.get('lang', 'en')
 
         self._setup_mallet_instances(tfidf=self.tfidf,
                 stemming=self.stemming)

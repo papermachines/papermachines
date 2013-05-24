@@ -53,7 +53,7 @@ class TextProcessor:
                     + 1])
             self.extra_args = self.extra_args[:json_starts_at]
         else:
-            self.named_args = None
+            self.named_args = {}
 
         self.collection = os.path.basename(csv_file).replace('.csv', '')
 

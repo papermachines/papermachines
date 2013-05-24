@@ -30,8 +30,6 @@ class MalletLDA(mallet.Mallet):
         run LDA, creating an output file divided by time
         """
 
-        if self.named_args is None:
-            self.named_args = {}
         self.tfidf = self.named_args.get("tfidf", True)
         self.min_df = int(self.named_args.get("min_df", 5))
         self.stemming = self.named_args.get("stemming", True)
