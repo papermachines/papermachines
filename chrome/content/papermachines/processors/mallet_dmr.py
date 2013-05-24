@@ -219,7 +219,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 
         top_N = 20
         top_topic_words = dict((x, dict((word, y[word]) for word in
-                               self.argsort(y, reverse=True)[:top_N]))
+                               argsort(y, reverse=True)[:top_N]))
                                for (x, y) in
                                self.topic_words.iteritems())
         wordProbs = [[{'text': word, 'prob': prob} for (word, prob) in
@@ -255,7 +255,7 @@ class MalletDMR(mallet_lda.MalletLDA):
                                 numDocumentsAtProportions.iteritems()
                                 if proportions[0.02] > 0.0)
 
-        labels = dict((topic, {'label': self.argsort(words,
+        labels = dict((topic, {'label': argsort(words,
                       reverse=True)[:3], 'fulltopic': wordProbs[topic],
                       'allocation_ratio': allocationRatios.get(topic,0)})
                       for (topic, words) in top_topic_words.iteritems())

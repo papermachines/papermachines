@@ -26,7 +26,7 @@ class MultipleWordClouds(wordcloud.WordCloud):
         self.height = 150
         self.fontsize = [10, 32]
         self.n = 50
-        self.ngram = int(self.named_args.get('ngram', 2))
+        self.ngram = int(self.named_args.get('ngram', 1))
         self.tfidf_scoring = False
         self.MWW = False
         self.dunning = False

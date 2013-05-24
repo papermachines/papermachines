@@ -10,12 +10,11 @@ import traceback
 import urllib
 import codecs
 import json
-import operator
 import platform
 import pickle
 from datetime import datetime, timedelta
+from utils import *
 import re
-from itertools import izip
 from collections import Counter, defaultdict
 from lib.stemutil import stem
 reload(sys)
@@ -144,28 +143,6 @@ class TextProcessor:
             self.progress_file.write('<' + str(int(self.count * 1000.0
                     / float(self.total))) + '>\n')
             self.progress_file.flush()
-
-    def xpartition(self, seq, n=2):
-        return izip(*(iter(seq), ) * n)
-
-    def argmax(self, obj):
-        if hasattr(obj, 'index'):
-            return obj.index(max(obj))
-        elif hasattr(obj, 'iteritems'):
-            return max(obj.iteritems(), key=operator.itemgetter(1))[0]
-
-    def argsort(self, seq, reverse=False):
-        '''sorted indexes/keys from least to greatest'''
-
-        if hasattr(seq, 'index'):
-            return sorted(range(len(seq)), key=seq.__getitem__,
-                          reverse=reverse)
-        elif hasattr(seq, 'iteritems'):
-            return sorted(seq.keys(), key=seq.__getitem__,
-                          reverse=reverse)
-
-    def set_java_log(self, log_filename):
-        pass
 
     def get_mtime(self, filename):
         t = os.path.getmtime(filename)

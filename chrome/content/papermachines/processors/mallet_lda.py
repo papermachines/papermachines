@@ -129,7 +129,7 @@ class MalletLDA(mallet.Mallet):
 
                 freqs = dict((int(y[0]), 
                               float(y[1])) 
-                            for y in self.xpartition(values))
+                            for y in xpartition(values))
                 if itemid.count('.') > 0 and self.segmentation:
                     orig_item = self.metadata[filename.split('#')[0]]
                     if not "segments" in orig_item:
@@ -155,12 +155,12 @@ class MalletLDA(mallet.Mallet):
                 normalized = dict((k, 1.0 * v / total_topics) 
                                   for k, v in 
                                   self.metadata[filename]["topics"].iteritems())
-                self.metadata[filename]["main_topic"] = self.argmax(normalized)
+                self.metadata[filename]["main_topic"] = argmax(normalized)
                 self.metadata[filename]["topics"] = [normalized[x] 
                                                      for x in
                                                      sorted(normalized.keys())]
         # self.metadata[filename]["main_topic"] = \
-        #   self.argmax(self.metadata[filename]["topics"])
+        #   argmax(self.metadata[filename]["topics"])
         # self.metadata[filename]["topics"] = \
         #   [self.metadata[filename]["topics"][x] for x in \
         #   sorted(self.metadata[filename]["topics"].keys())]

@@ -41,8 +41,8 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
 
             # what is being most discussed in each group?
 
-            x = self.argmax(x_topic_vals)
-            y = self.argmax(y_topic_vals)
+            x = argmax(x_topic_vals)
+            y = argmax(y_topic_vals)
 
             if not x in marginal_x:
                 marginal_x[x] = 0
@@ -124,7 +124,7 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
                 label = self.metadata[filename]['label']
 
                 freqs = dict((int(y[0]), float(y[1])) for y in
-                             self.xpartition(values))
+                             xpartition(values))
                 main_topic = None
                 topic_max = 0.0
                 for i in freqs.keys():
