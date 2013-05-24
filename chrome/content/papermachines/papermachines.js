@@ -1500,7 +1500,7 @@ Zotero.PaperMachines = {
 		"mallet_lda": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "iterations", "type": "text", "pref": "extensions.papermachines.lda.iterations", "advanced": true},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},
-			{"name": "segmentation", "type": "check", "pref": "extensions.papermachines.lda.segmentation", "advanced": true},
+			// {"name": "segmentation", "type": "check", "pref": "extensions.papermachines.lda.segmentation", "advanced": true},
 			{"name": "tfidf", "type": "check", "pref": "extensions.papermachines.lda.tfidf"},
 			{"name": "min_df", "type": "text", "pref": "extensions.papermachines.lda.min_df", "advanced": true},
 			{"name": "alpha", "type": "text", "pref": "extensions.papermachines.lda.alpha", "advanced": true},
@@ -1508,7 +1508,8 @@ Zotero.PaperMachines = {
 			{"name": "burn_in", "type": "text", "pref": "extensions.papermachines.lda.burn_in", "advanced": true},
 			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval", "advanced": true},
 			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha", "advanced": true},
-			{"name": "lang", "type": "text", "pref": "extensions.papermachines.general.lang", "advanced": true}
+			{"name": "lang", "type": "text", "pref": "extensions.papermachines.general.lang", "advanced": true},
+			{"name": "year_range", "type": "text", "value": "", "advanced": true},
 		],
 		"mallet_dmr": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},

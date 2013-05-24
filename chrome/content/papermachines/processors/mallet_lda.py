@@ -30,33 +30,23 @@ class MalletLDA(mallet.Mallet):
         run LDA, creating an output file divided by time
         """
 
-        if self.named_args is not None:
-            self.tfidf = self.named_args["tfidf"]
-            self.min_df = int(self.named_args["min_df"])
-            self.stemming = self.named_args["stemming"]
-            self.topics = int(self.named_args["topics"])
-            self.iterations = int(self.named_args["iterations"])
-            self.alpha = self.named_args["alpha"]
-            self.beta = self.named_args["beta"]
-            self.symmetric_alpha = str(self.named_args["symmetric_alpha"])
-            self.symmetric_alpha = self.symmetric_alpha.lower()
-            self.optimize_interval = self.named_args["optimize_interval"]
-            self.burn_in = int(self.named_args["burn_in"])
-            self.lang = self.named_args["lang"]
-            self.segmentation = self.named_args["segmentation"]
-        else:
-            self.tfidf = True
-            self.min_df = 5
-            self.topics = 50
-            self.stemming = True
-            self.iterations = 1000
-            self.alpha = "50.0"
-            self.beta = "0.01"
-            self.burn_in = 200
-            self.symmetric_alpha = "false"
-            self.optimize_interval = 0
-            self.segmentation = False
-            self.lang = "en"
+        if self.named_args is None:
+            self.named_args = {}
+        self.tfidf = self.named_args.get("tfidf", True)
+        self.min_df = int(self.named_args.get("min_df", 5))
+        self.stemming = self.named_args.get("stemming", True)
+        self.topics = int(self.named_args.get("topics", 50))
+        self.iterations = int(self.named_args.get("iterations", 1000))
+        self.alpha = self.named_args.get("alpha", 50.0)
+        self.beta = self.named_args.get("beta", 0.01)
+        self.symmetric_alpha = str(self.named_args.get("symmetric_alpha", 
+                                                       False)).lower()
+        self.optimize_interval = int(self.named_args.get("optimize_interval", 
+                                                         10))
+        self.burn_in = int(self.named_args.get("burn_in", 200))
+        self.lang = self.named_args.get("lang", "en")
+        self.segmentation = self.named_args.get("segmentation", False)
+        self.year_range = self.named_args.get("year_range")
 
         self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, 
                                      stemming=self.stemming)
