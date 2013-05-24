@@ -99,6 +99,7 @@ class Mallet(textprocessor.TextProcessor):
                 newtext += self.stemmed[word] + u' '
             text = newtext
         else:
+            itemid = self.metadata[filename]['itemID']
             for word in set(text.split()):
                 self.index[word].add(itemid)
         f.write(u'\t'.join([filename, self.metadata[filename]['label'],
