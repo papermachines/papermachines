@@ -14,7 +14,7 @@ import codecs
 import csv
 import traceback
 import xml.etree.ElementTree as et
-from itertools import izip
+from utils import *
 import gzip
 from lib.stemutil import stem
 import mallet_lda

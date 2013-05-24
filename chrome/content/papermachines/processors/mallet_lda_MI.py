@@ -9,6 +9,8 @@ import traceback
 import json
 import math
 import mallet_lda
+from utils import *
+
 
 
 class MalletLDAMutualInformation(mallet_lda.MalletLDA):

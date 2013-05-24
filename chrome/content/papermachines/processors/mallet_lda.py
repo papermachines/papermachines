@@ -8,6 +8,8 @@ import time
 import codecs
 import traceback
 import xml.etree.ElementTree as et
+from utils import *
+
 import mallet
 
 class MalletLDA(mallet.Mallet):
@@ -27,7 +29,7 @@ class MalletLDA(mallet.Mallet):
 
     def process(self):
         """
-        run LDA, creating an output file divided by time
+        run LDA, output graph of topic prevalence over time
         """
 
         self.tfidf = self.named_args.get("tfidf", True)
@@ -43,8 +45,7 @@ class MalletLDA(mallet.Mallet):
                                                          10))
         self.burn_in = int(self.named_args.get("burn_in", 200))
         self.lang = self.named_args.get("lang", "en")
-        self.segmentation = self.named_args.get("segmentation", False)
-        self.date_range = self.named_args.get("date_range")
+        self.date_range = self.named_args.get("date_range", '')
 
         self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, 
                                      stemming=self.stemming)
@@ -127,43 +128,16 @@ class MalletLDA(mallet.Mallet):
 
                 itemid = self.metadata[filename]["itemID"]
 
-                freqs = dict((int(y[0]), 
-                              float(y[1])) 
-                            for y in xpartition(values))
-                if itemid.count('.') > 0 and self.segmentation:
-                    orig_item = self.metadata[filename.split('#')[0]]
-                    if not "segments" in orig_item:
-                        orig_item["segments"] = 0
-                    orig_item["segments"] += 1
-                    if not "topics" in orig_item:
-                        orig_item["topics"] = {}
-                    for topic, value in freqs.iteritems():
-                        if not topic in orig_item["topics"]:
-                            orig_item["topics"][topic] = 0.0
-                        orig_item["topics"][topic] += value
-                    del self.metadata[filename]
-                else:
-                    self.metadata[filename]["topics"] = freqs
-            except KeyboardInterrupt:
+                self.metadata[filename]["topics"] = dict(
+                    (int(y[0]), float(y[1])) 
+                    for y in xpartition(values))
+            except KeyboardInterrupt, SystemExit:
                 sys.exit(1)
             except:
                 logging.error(traceback.format_exc())
 
-        if self.segmentation:
-            for filename in self.metadata:
-                total_topics = sum(self.metadata[filename]["topics"].values())
-                normalized = dict((k, 1.0 * v / total_topics) 
-                                  for k, v in 
-                                  self.metadata[filename]["topics"].iteritems())
-                self.metadata[filename]["main_topic"] = argmax(normalized)
-                self.metadata[filename]["topics"] = [normalized[x] 
-                                                     for x in
-                                                     sorted(normalized.keys())]
         # self.metadata[filename]["main_topic"] = \
         #   argmax(self.metadata[filename]["topics"])
-        # self.metadata[filename]["topics"] = \
-        #   [self.metadata[filename]["topics"][x] for x in \
-        #   sorted(self.metadata[filename]["topics"].keys())]
 
         self.template_filename = os.path.join(self.cwd, "templates", 
                                               self.template_name + ".html")

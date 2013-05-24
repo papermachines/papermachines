@@ -10,7 +10,7 @@ import subprocess
 import codecs
 import json
 import mallet
-
+from utils import *
 
 class MalletClassifierTest(mallet.Mallet):
 
