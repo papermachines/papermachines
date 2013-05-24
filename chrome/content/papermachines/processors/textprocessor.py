@@ -167,6 +167,13 @@ class TextProcessor:
     def set_java_log(self, log_filename):
         pass
 
+    def get_mtime(self, filename):
+        t = os.path.getmtime(filename)
+        return datetime.fromtimestamp(t)
+
+    def older(self, old_file, new_file):
+        return self.get_mtime(old_file) > self.get_mtime(new_file)
+
     def _ngrams(
         self,
         text,
@@ -197,7 +204,8 @@ class TextProcessor:
         ext += ('stemmed' if stemming else '')
         ext += str(n) + 'grams.pickle'
         ngram_serialized = filename.replace('.txt', ext)
-        if os.path.exists(ngram_serialized):
+        if os.path.exists(ngram_serialized) and not self.older(ngram_serialized,
+                                                               filename):
             with open(ngram_serialized, 'rb') as ngram_serialized_file:
                 freqs = pickle.load(ngram_serialized_file)
             for key in freqs.keys():
