@@ -182,7 +182,9 @@ class TextProcessor:
         ):
         text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
         if stemming:
-            words = [stem(self, word) for word in text.split()]
+            words = [stem(self, 
+                          word) for word in text.split() if (word not in
+                                                             self.stopwords)]
         else:
             words = [word for word in text.split()]
         total_n = len(words)
@@ -241,29 +243,26 @@ class TextProcessor:
         self.end_date = getattr(self, "end_date", None)
         datestr_to_datetime = {}
         for filename in self.metadata.keys():
-            try:
-                date_for_doc = self.get_doc_date(filename)
-                if date_for_doc is None:
-                    logging.error(("File {:} has invalid date" +
-                                  "-- removing...").format(filename))
-                    del self.metadata[filename]
-                    continue
-                datestr_to_datetime[date_str] = date_for_doc
-                if (self.start_date is not None and 
-                        date_for_doc < self.start_date):
-                    logging.error(("File {:} is before date range" +
-                                   "-- removing...").format(filename))
-                    del self.metadata[filename]
-                    continue
-                if (self.end_date is not None and 
-                        date_for_doc > self.end_date):
-                    logging.error(("File {:} is after date range" +
-                                   "-- removing...").format(filename))
-                    del self.metadata[filename]
-                    continue
-            except:
-                logging.error(traceback.format_exc())
-                logging.error('Date {:} not recognized'.format(cleaned_date))
+            date_str = self.metadata[filename]['date']
+            date_for_doc = self.get_doc_date(filename)
+            if date_for_doc is None:
+                logging.error(("File {:} has invalid date" +
+                              "-- removing...").format(filename))
+                del self.metadata[filename]
+                continue
+            datestr_to_datetime[date_str] = date_for_doc
+            if (self.start_date is not None and 
+                    date_for_doc < self.start_date):
+                logging.error(("File {:} is before date range" +
+                               "-- removing...").format(filename))
+                del self.metadata[filename]
+                continue
+            if (self.end_date is not None and 
+                    date_for_doc > self.end_date):
+                logging.error(("File {:} is after date range" +
+                               "-- removing...").format(filename))
+                del self.metadata[filename]
+                continue
         datetimes = sorted(datestr_to_datetime.values())
         start_date = (datetimes[0] if self.start_date
                       is None else self.start_date)
