@@ -86,14 +86,17 @@ class Mallet(textprocessor.TextProcessor):
             self.stemmed = {}
         self.index = defaultdict(set)
         self.docs = []
-        self.date_range = getattr(self, 'date_range', None)
+        self.date_range = getattr(self, 'date_range', '')
 
-        if self.date_range is not None:
+        if self.date_range.count('-') == 1:
             parts = self.date_range.split('-')
             start = [int(parts[0]), 1, 1]
             end = [int(parts[1]), 12, 31]
             self.date_range = (datetime(*start),
                                datetime(*end))
+        else:
+            self.date_range = None
+
         with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
             for filename in self.files:
                 date_for_doc = self.get_doc_date(filename)

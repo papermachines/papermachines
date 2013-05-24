@@ -8,7 +8,7 @@ This project is a collaboration between historian [Jo Guldi](http://www.joguldi.
 
 **NOTE:** Paper Machines now bundles Jython 2.7b1 to ensure broader compatibility. If you encounter problems using the extension, please create an issue describing what operating system and version of Java you have installed, and the nature of the issue.
 
-Additionally, if you have Paper Machines 0.3.6 installed and wish to upgrade to Zotero 4.0, you will need to manually install the new version from <a href="http://www.papermachines.org/download/papermachines-0.4.7.xpi">here</a>. Paper Machines 0.4.x users will receive updates automatically.
+Additionally, if you have Paper Machines 0.3.6 installed and wish to upgrade to Zotero 4.0, you will need to manually install the new version from <a href="http://www.papermachines.org/download/papermachines-0.4.8.xpi">here</a>. Paper Machines 0.4.x users will receive updates automatically.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ In order to run Paper Machines, you will need the following (Java should be inst
 * Java ([download page](http://java.com/en/download/index.jsp))
 
 ## Installation
-Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="http://www.papermachines.org/download/papermachines-0.4.7.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
+Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="http://www.papermachines.org/download/papermachines-0.4.8.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.
 
 ## Usage
 To begin, right-click (control-click for Mac) on the collection you wish to analyze and select "Extract Texts for Paper Machines." Once the extraction process is complete, this right-click menu will offer several different processes that may be run on a collection, each with an accompanying visualization. Once these processes have been run, selecting "Export Output of Paper Machines..." will allow you to choose which visualizations to export.
