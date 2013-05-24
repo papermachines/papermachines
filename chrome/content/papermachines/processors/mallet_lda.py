@@ -46,7 +46,7 @@ class MalletLDA(mallet.Mallet):
         self.burn_in = int(self.named_args.get("burn_in", 200))
         self.lang = self.named_args.get("lang", "en")
         self.segmentation = self.named_args.get("segmentation", False)
-        self.year_range = self.named_args.get("year_range")
+        self.date_range = self.named_args.get("date_range")
 
         self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, 
                                      stemming=self.stemming)

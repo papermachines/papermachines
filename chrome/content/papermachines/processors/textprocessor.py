@@ -223,23 +223,31 @@ class TextProcessor:
                             protocol=pickle.HIGHEST_PROTOCOL)
         return freqs
 
+    def get_doc_date(self, filename):
+        doc_date = None
+        date_str = self.metadata[filename]['date']
+        if date_str.strip() != '':
+            cleaned_date = date_str[0:10]
+            if '-00' in cleaned_date:
+                cleaned_date = cleaned_date[0:4] + '-01-01'
+            try:
+                doc_date = datetime.strptime(cleaned_date, '%Y-%m-%d')
+            except:
+                pass
+        return doc_date
+
     def split_into_intervals(self, start_and_end_dates=False):
         self.start_date = getattr(self, "start_date", None)
         self.end_date = getattr(self, "end_date", None)
         datestr_to_datetime = {}
         for filename in self.metadata.keys():
-            date_str = self.metadata[filename]['date']
-            if date_str.strip() == '':
-                logging.error(("File {:} has invalid date" +
-                              "-- removing...").format(filename))
-                del self.metadata[filename]
-                continue
-            cleaned_date = date_str[0:10]
-            if '-00' in cleaned_date:
-                cleaned_date = cleaned_date[0:4] + '-01-01'
             try:
-                date_for_doc = datetime.strptime(cleaned_date,
-                        '%Y-%m-%d')
+                date_for_doc = self.get_doc_date(filename)
+                if date_for_doc is None:
+                    logging.error(("File {:} has invalid date" +
+                                  "-- removing...").format(filename))
+                    del self.metadata[filename]
+                    continue
                 datestr_to_datetime[date_str] = date_for_doc
                 if (self.start_date is not None and 
                         date_for_doc < self.start_date):

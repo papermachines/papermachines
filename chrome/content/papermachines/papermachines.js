@@ -1509,7 +1509,7 @@ Zotero.PaperMachines = {
 			{"name": "optimize_interval", "type": "text", "pref": "extensions.papermachines.lda.optimize_interval", "advanced": true},
 			{"name": "symmetric_alpha", "type": "check", "pref": "extensions.papermachines.lda.symmetric_alpha", "advanced": true},
 			{"name": "lang", "type": "text", "pref": "extensions.papermachines.general.lang", "advanced": true},
-			{"name": "year_range", "type": "text", "value": "", "advanced": true},
+			{"name": "date_range", "type": "text", "value": "", "advanced": true},
 		],
 		"mallet_dmr": [{"name": "topics", "type": "text", "pref": "extensions.papermachines.lda.topics"},
 			{"name": "stemming", "type": "check", "pref": "extensions.papermachines.lda.stemming"},

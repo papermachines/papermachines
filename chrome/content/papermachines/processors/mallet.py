@@ -18,7 +18,8 @@ import traceback
 import platform
 import xml.etree.ElementTree as et
 from lib.stemutil import stem
-from collections import defaultdict
+from collections import defaultdict, Counter
+from datetime import datetime
 import copy
 import textprocessor
 
@@ -32,78 +33,52 @@ class Mallet(textprocessor.TextProcessor):
     def _basic_params(self):
         self.name = 'mallet'
 
-    def _import_dfr_metadata(self, dfr_dir):
+    def _import_dfr(self, dfr_dir, metadata_only=False):
         citation_file = os.path.join(dfr_dir, 'citations.CSV')
-        citations = {}
+        wordcounts_dir = os.path.join(dfr_dir, 'wordcounts')
         for rowdict in self.parse_csv(citation_file):
             doi = rowdict.pop('id')
-            citations[doi] = rowdict
             self.metadata[doi] = {
-                'title': citations[doi].get('title', ''),
-                'date': citations[doi].get('pubdate', ''),
-                'year': citations[doi].get('pubdate', '')[0:4],
+                'title': rowdict.get('title', ''),
+                'date': rowdict.get('pubdate', ''),
+                'year': rowdict.get('pubdate', '')[0:4],
                 'label': 'jstor',
                 'itemID': doi,
                 }
-        return citations
+            if metadata_only:
+                continue
+            else:
+                try:
+                    this_text = Counter()
+                    for wordcount_dict in \
+                        self.parse_csv(os.path.join(wordcounts_dir,
+                                       'wordcounts_' + doi.replace('/', '_'
+                                       ) + '.CSV')):
+                        word = wordcount_dict['WORDCOUNTS']
+                        if word in self.stopwords:
+                            continue
+                        if self.stemming:
+                            prestem = word
+                            if word not in self.stemmed:
+                                self.stemmed[prestem] = stem(self, prestem)
+                            word = self.stemmed[prestem]
+                        count = int(wordcount_dict['WEIGHT'])
 
-    def _import_dfr(self, dfr_dir):
-        citations = self._import_dfr_metadata(dfr_dir)
-
-        wordcounts_dir = os.path.join(dfr_dir, 'wordcounts')
-        for doi in citations.keys():
-            try:
-                this_text = ''
-                for rowdict in \
-                    self.parse_csv(os.path.join(wordcounts_dir,
-                                   'wordcounts_' + doi.replace('/', '_'
-                                   ) + '.CSV')):
-                    word = rowdict['WORDCOUNTS']
-                    if word in self.stopwords:
+                        this_text[word] += count
+                    if sum(this_text.values()) < 20:
                         continue
-                    if self.stemming:
-                        prestem = word
-                        if word not in self.stemmed:
-                            self.stemmed[prestem] = stem(self, prestem)
-                        word = self.stemmed[prestem]
-                    count = int(rowdict['WEIGHT'])
+                    yield (doi, this_text)
+                except:
+                    logging.error(doi)
+                    logging.error(traceback.format_exc())
 
-                    this_text += (word + u' ') * count
-                if len(this_text) < 20:
-                    continue
-                yield (doi, this_text)
-            except:
-                logging.error(doi)
-                logging.error(traceback.format_exc())
-
-    def _output_text(
-        self,
-        text,
-        f,
-        filename,
-        ):
-
-        text = re.sub(r"[^\w ]+", u' ', text.lower(), flags=re.UNICODE)
-        if self.stemming:
-            newtext = u''
-            for word in text.split():
-                if word not in self.stemmed:
-                    self.stemmed[word] = stem(self, word)
-                if len(self.stemmed[word]) < 4 or word \
-                    in self.stopwords:
-                    continue
-
-                itemid = self.metadata[filename]['itemID'].split('.')[0]
-                self.index[self.stemmed[word]].add(itemid)
-
-                newtext += self.stemmed[word] + u' '
-            text = newtext
-        else:
-            itemid = self.metadata[filename]['itemID']
-            for word in set(text.split()):
-                self.index[word].add(itemid)
+    def _output_text(self, text_freqs, f, filename):
+        itemid = self.metadata[filename]['itemID']
+        text_freqs = Counter(text_freqs)
+        for word in text_freqs.keys():
+            self.index[word].add(itemid)
         f.write(u'\t'.join([filename, self.metadata[filename]['label'],
-                text]) + u'\n')
+                u' '.join(text_freqs.elements())]) + u'\n')
         self.docs.append(filename)
 
     def _import_files(self):
@@ -111,31 +86,33 @@ class Mallet(textprocessor.TextProcessor):
             self.stemmed = {}
         self.index = defaultdict(set)
         self.docs = []
-        self.segmentation = getattr(self, 'segmentation', False)
+        self.date_range = getattr(self, 'date_range', None)
 
+        if self.date_range is not None:
+            parts = self.date_range.split('-')
+            start = [int(parts[0]), 1, 1]
+            end = [int(parts[1]), 12, 31]
+            self.date_range = (datetime(*start),
+                               datetime(*end))
         with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
             for filename in self.files:
-                with codecs.open(filename, 'r', encoding='utf-8') as \
-                    input_file:
-                    text = input_file.read()
-
-                    if self.segmentation:
-                        segments = filter(lambda x: x.count(' ') > 5,
-                                text.split('\n\n'))
-                        for (i, text_seg) in enumerate(segments):
-                            seg_filename = filename + '#' + str(i)
-                            self.metadata[seg_filename] = \
-                                copy.deepcopy(self.metadata[filename])
-                            self.metadata[seg_filename]['itemID'] += \
-                                '.' + str(i)
-                            self._output_text(text_seg, f, seg_filename)
-                    else:
-                        self._output_text(text, f, filename)
+                date_for_doc = self.get_doc_date(filename)
+                if date_for_doc is None or (self.date_range is not None and
+                        (date_for_doc < self.date_range[0] or 
+                         date_for_doc > self.date_range[1])):
+                    logging.error(("File {:} out of range" +
+                      "-- removing...").format(filename))
+                    del self.metadata[filename]
+                    continue
+                self._output_text(
+                    self.getNgrams(filename, stemming=self.stemming), 
+                    f, 
+                    filename
+                )
             if self.dfr:
-                for (doi, text) in self._import_dfr(self.dfr_dir):
-                    f.write(u'\t'.join([doi, self.metadata[doi]['label'
-                            ], text]) + u'\n')
-                    self.docs.append(doi)
+                for (doi, text_freqs) in self._import_dfr(self.dfr_dir):
+                    self._output_text(text_freqs, f, doi)
+
         with codecs.open(os.path.join(self.mallet_out_dir, 'dmap'), 'w'
                          , encoding='utf-8') as dmap:
             dmap.writelines([x + u'\n' for x in self.docs])
@@ -267,7 +244,7 @@ class Mallet(textprocessor.TextProcessor):
                 self._import_files()
         else:
             if len(self.extra_args) > 0 and self.dfr:
-                self._import_dfr_metadata(self.dfr_dir)
+                self._import_dfr(self.dfr_dir, metadata_only=True)
             self.docs = []
             self.index = defaultdict(set)
             with codecs.open(self.texts_file, 'r', 'utf-8') as f:
