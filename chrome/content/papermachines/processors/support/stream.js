@@ -393,7 +393,6 @@ function transition() {
 
   refreshAxes();
   updateLegend();
-
 }
 function shuffle(array) {
     var tmp, current, top = array.length;
@@ -598,6 +597,7 @@ function createOrUpdateGraph(i) {
     return;
   }
   graphGroup.selectAll("g.layer").remove();
+  graphGroup.selectAll("*").remove();
   var graphSelection = graphGroup.selectAll("path.line.graph" + i.toString())
     .data(streaming ? graph[i].streamData : graph[i].data, function(d) { return d[0].topic;});
 
@@ -610,20 +610,21 @@ function createOrUpdateGraph(i) {
 
   graphSelection.style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; });
   var graphEntering = graphSelection.enter();
-    graphEntering.append("svg:path")
-        .attr("class", function (d) { return "line graph" + i.toString() + " topic"+d[0].topic.toString(); })
-        .attr("stroke", function(d) { return !streaming ? graphColors(d[0].topic) : "#fff"; })
-        .style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; })
-        .style("stroke-width", streaming ? "0.5" : "2")
-        .style("stroke-opacity", "1")
-        .style("stroke-dasharray", graph[i].dasharray)
-        .on("mouseover", function (d) { highlightTopic(d[0]);})
-        .on("mouseout", unhighlightTopic)
-        .attr("d", streaming ? graph[i].area : graph[i].line)
-        .append("svg:title")
-          .text(function (d) { return topicLabels[d[0].topic]["label"]; });
-
   var graphExiting = graphSelection.exit();
+
+  graphEntering.append("svg:path")
+      .attr("class", function (d) { return "line graph" + i.toString() + " topic"+d[0].topic.toString(); })
+      .attr("stroke", function(d) { return !streaming ? graphColors(d[0].topic) : "#fff"; })
+      .style("fill", function(d) { return streaming ? graphColors(d[0].topic) : "none"; })
+      .style("stroke-width", streaming ? "0.5" : "2")
+      .style("stroke-opacity", "1")
+      .style("stroke-dasharray", graph[i].dasharray)
+      .on("mouseover", function (d) { highlightTopic(d[0]);})
+      .on("mouseout", unhighlightTopic)
+      .attr("d", streaming ? graph[i].area : graph[i].line)
+      .append("svg:title")
+        .text(function (d) { return topicLabels[d[0].topic]["label"]; });
+
   graphExiting.transition().duration(500).style("stroke-opacity", "0").remove();
   graph[i].graphCreated = true;
 }
