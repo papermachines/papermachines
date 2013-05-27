@@ -3,6 +3,8 @@
 
 import csv
 import operator
+import collections
+import functools
 from itertools import izip
 
 def group_by_n(seq, n=2):
