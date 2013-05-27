@@ -19,12 +19,13 @@ import platform
 import xml.etree.ElementTree as et
 from lib.stemutil import stem
 from collections import defaultdict, Counter
+from mallet_import import MalletImport
+from mallet_dfr_import import MalletDfrImport
 from datetime import datetime
 import copy
 import textprocessor
 
-
-class Mallet(textprocessor.TextProcessor):
+class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
 
     """
     Base class for MALLET functionality
@@ -32,45 +33,6 @@ class Mallet(textprocessor.TextProcessor):
 
     def _basic_params(self):
         self.name = 'mallet'
-
-    def _import_dfr(self, dfr_dir, metadata_only=False):
-        citation_file = os.path.join(dfr_dir, 'citations.CSV')
-        wordcounts_dir = os.path.join(dfr_dir, 'wordcounts')
-        for rowdict in self.parse_csv(citation_file):
-            doi = rowdict.pop('id')
-            self.metadata[doi] = {
-                'title': rowdict.get('title', ''),
-                'date': rowdict.get('pubdate', ''),
-                'year': rowdict.get('pubdate', '')[0:4],
-                'label': 'jstor',
-                'itemID': doi,
-                }
-            if metadata_only:
-                continue
-            else:
-                try:
-                    this_text = Counter()
-                    for wordcount_dict in \
-                        self.parse_csv(os.path.join(wordcounts_dir,
-                                       'wordcounts_' + doi.replace('/', '_'
-                                       ) + '.CSV')):
-                        word = wordcount_dict['WORDCOUNTS']
-                        if word in self.stopwords:
-                            continue
-                        if self.stemming:
-                            prestem = word
-                            if word not in self.stemmed:
-                                self.stemmed[prestem] = stem(self, prestem)
-                            word = self.stemmed[prestem]
-                        count = int(wordcount_dict['WEIGHT'])
-
-                        this_text[word] += count
-                    if sum(this_text.values()) < 20:
-                        continue
-                    yield (doi, this_text)
-                except:
-                    logging.error(doi)
-                    logging.error(traceback.format_exc())
 
     def _output_text(self, text_freqs, f, filename):
         itemid = self.metadata[filename]['itemID']
@@ -82,8 +44,6 @@ class Mallet(textprocessor.TextProcessor):
         self.docs.append(filename)
 
     def _import_files(self):
-        if self.stemming:
-            self.stemmed = {}
         self.index = defaultdict(set)
         self.docs = []
         self.date_range = getattr(self, 'date_range', '')
@@ -92,28 +52,26 @@ class Mallet(textprocessor.TextProcessor):
             parts = self.date_range.split('-')
             start = [int(parts[0]), 1, 1]
             end = [int(parts[1]), 12, 31]
-            self.date_range = (datetime(*start),
-                               datetime(*end))
+            self.date_range = (datetime(*start), datetime(*end))
         else:
             self.date_range = None
 
         with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
             for filename in self.files:
                 date_for_doc = self.get_doc_date(filename)
-                if date_for_doc is None or (self.date_range is not None and
-                        (date_for_doc < self.date_range[0] or 
+                if date_for_doc is None or (self.date_range is not None and 
+                        (date_for_doc < self.date_range[0] or
                          date_for_doc > self.date_range[1])):
-                    logging.error(("File {:} out of range" +
-                      "-- removing...").format(filename))
+                    logging.error(('File {:} out of range' + 
+                                  '-- removing...').format(filename))
                     del self.metadata[filename]
                     continue
-                self._output_text(
-                    self.getNgrams(filename, stemming=self.stemming), 
-                    f, 
-                    filename
-                )
+                self._output_text(self.getNgrams(filename,
+                                  stemming=self.stemming), f, filename)
             if self.dfr:
-                for (doi, text_freqs) in self._import_dfr(self.dfr_dir):
+                self.dois = self.import_dfr_metadata(self.dfr_dir)
+                for (doi, text_freqs) in self.import_dfr(self.dfr_dir,
+                        self.dois):
                     self._output_text(text_freqs, f, doi)
 
         with codecs.open(os.path.join(self.mallet_out_dir, 'dmap'), 'w'
@@ -204,7 +162,8 @@ class Mallet(textprocessor.TextProcessor):
                             self.metadata[filename]['label'], text])
                             + u'\n')
                     for word in thisfile_vocab:
-                        self.index[word].add(self.metadata[filename]['itemID'])
+                        self.index[word].add(self.metadata[filename]['itemID'
+                                ])
                 else:
                     self.docs.remove(filename)
         with codecs.open(os.path.join(self.mallet_out_dir, 'dmap'), 'w'
@@ -213,20 +172,9 @@ class Mallet(textprocessor.TextProcessor):
         logging.info('tf-idf complete; retained {:} of {:} words; minimum tf-idf score: {:}'.format(len(new_vocab.keys()),
                      len(vocab.keys()), min_score))
 
-    def _setup_mallet_command(self):
-        self.mallet_cp_dir = os.path.join(self.cwd, 'lib',
-                'mallet-2.0.7', 'dist')
-
-        self.mallet_classpath = [os.path.join(self.mallet_cp_dir,
-                                 'mallet.jar'),
-                                 os.path.join(self.mallet_cp_dir,
-                                 'mallet-deps.jar')]
-        for jar in self.mallet_classpath:
-            if jar not in sys.path:
-                sys.path.append(jar)
-
+    def setup_mallet_command(self):
         self.mallet_out_dir = os.path.join(self.out_dir, self.name
-                + self.collection + '-' + self.args_basename)
+                + self.collection + '-' + self.arg_basename)
 
         if not self.dry_run:
             if os.path.exists(self.mallet_out_dir):
@@ -237,7 +185,10 @@ class Mallet(textprocessor.TextProcessor):
                 + self.collection + 'progress.txt')
         self.progress_file = file(self.progress_filename, 'w+')
 
-    def _import_texts(self):
+        self.instance_file = os.path.join(self.mallet_out_dir,
+                self.collection + '.mallet')
+
+    def import_texts(self):
         logging.info('copying texts into single file')
         self.texts_file = os.path.join(self.mallet_out_dir,
                 self.collection + '.txt')
@@ -247,7 +198,7 @@ class Mallet(textprocessor.TextProcessor):
                 self._import_files()
         else:
             if len(self.extra_args) > 0 and self.dfr:
-                self._import_dfr(self.dfr_dir, metadata_only=True)
+                self.import_dfr_metadata(self.dfr_dir)
             self.docs = []
             self.index = defaultdict(set)
             with codecs.open(self.texts_file, 'r', 'utf-8') as f:
@@ -260,31 +211,25 @@ class Mallet(textprocessor.TextProcessor):
                         self.index[word].add(itemid)
             self.doc_count = len(self.docs)
 
-    def _setup_mallet_instances(
-        self,
-        sequence=True,
-        tfidf=False,
-        stemming=True
-        ):
-
-        self.use_bulkloader = getattr(self, "use_bulkloader", False)
+    def setup_mallet_instances(self, sequence=True, tfidf=False, stemming=True):
+        self.use_bulkloader = getattr(self, 'use_bulkloader', False)
 
         self.stemming = stemming
+        self.setup_mallet_command()
+        self.import_texts()
 
-        self._setup_mallet_command()
-        self._import_texts()
-
-        self.instance_file = os.path.join(self.mallet_out_dir,
-                self.collection + '.mallet')
-
-        logging.info('beginning text import')
+        # if self.dfr:
+        #     self.import_dfr_new(self.dfr_dir, self.dois)
+        # self.write_instances()
 
         if tfidf and not self.dry_run and not self.use_bulkloader:
             self._tfidf_filter()
 
-        with codecs.open(os.path.join(self.mallet_out_dir, 'metadata.json'),
+        with codecs.open(os.path.join(self.mallet_out_dir, 'metadata.json'), 
                          'w', encoding='utf-8') as meta_file:
             json.dump(self.metadata, meta_file)
+
+        logging.info('beginning text import')
 
         import_args = [
             '--input',
@@ -292,25 +237,21 @@ class Mallet(textprocessor.TextProcessor):
             '--output',
             self.instance_file,
             '--line-regex',
-            '^([^\t]*)[\t]([^\t]*)[\t](.*)$'
-        ]
+            '^([^\t]*)[\t]([^\t]*)[\t](.*)$',
+            ]
         if sequence:
             import_args.append('--keep-sequence')
 
         if not self.use_bulkloader:
-            import_args += [
-                '--encoding',
-                'UTF-8',
-                '--token-regex',
-                ("\S+" if tfidf else "[\p{L}\p{M}]+"),
-            ]
+            import_args += ['--encoding', 'UTF-8', '--token-regex',
+                            ("\S+" if tfidf else "[\p{L}\p{M}]+")]
             if not tfidf:
                 import_args = ['--remove-stopwords', '--stoplist-file',
                                self.stoplist] + import_args
 
-            if not self.dry_run and not os.path.exists(self.instance_file):
-                from cc.mallet.classify.tui.Csv2Vectors import main as \
-                    Csv2Vectors
+            if not self.dry_run \
+                and not os.path.exists(self.instance_file):
+                from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
                 Csv2Vectors(import_args)
         else:
             from cc.mallet.util.BulkLoader import main as BulkLoader
@@ -321,8 +262,8 @@ class Mallet(textprocessor.TextProcessor):
                 '--prune-doc-frequency',
                 '0.3',
                 '--prune-count',
-                '3'
-            ]
+                '3',
+                ]
             BulkLoader(import_args)
 
     def process(self):

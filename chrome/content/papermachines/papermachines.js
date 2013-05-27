@@ -526,7 +526,7 @@ Zotero.PaperMachines = {
 
 		var loggingProperties = Zotero.PaperMachines.createLogPropertiesFile(args_hash, progressFile.path.replace(".html", ".txt"));
 
-		var procArgs = [processor_file.path, argFile.path];
+		var javaArgs = ["org.python.util.jython"], jythonArgs = [processor_file.path, argFile.path];
 
 		outFile.append(processor + thisID + "-" + args_hash + ".html");
 
@@ -548,15 +548,31 @@ Zotero.PaperMachines = {
 
 		var java_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.java_exe);
 
+		var classpath = [this.jython_path];
 
 		if (processor.indexOf("mallet") != -1) {
-			procArgs = ["-Djava.util.logging.config.file="+loggingProperties].concat(procArgs);
+			var mallet_dir = Zotero.PaperMachines.processors_dir.clone();
+			mallet_dir.append("lib");
+			mallet_dir.append("mallet-2.0.7");
+			mallet_dir.append("dist");
+			var mallet = mallet_dir.clone();
+			mallet.append("mallet.jar");
+			var mallet_deps = mallet_dir.clone();
+			mallet_deps.append("mallet-deps.jar");
+			
+			classpath.unshift(mallet_deps.path, mallet.path);
+			javaArgs.unshift("-Djava.util.logging.config.file="+loggingProperties);
 		}
+
+		var classpath_str = classpath.join(Zotero.isWin ? ';' : ':');
 		var mem_alloc = Preferences.get("extensions.papermachines.general.increasemem") ?
 			"-Xmx4g" : "-Xmx1g";
-		procArgs = [mem_alloc, "-Dfile.encoding=UTF8","-jar", this.jython_path].concat(procArgs);
 
-		Zotero.PaperMachines.LOG(java_exe_file.path + " " + procArgs.map(function(d) { return d.indexOf(" ") != -1 ? '"' + d + '"' : d; }).join(" "));
+		javaArgs.unshift(mem_alloc, "-Dfile.encoding=UTF8", "-cp", classpath_str);
+		
+		procArgs = javaArgs.concat(jythonArgs);
+
+		Zotero.PaperMachines.LOG(java_exe_file.path + " " + procArgs.map(function(d) { return d.indexOf(" ") != -1 && d.indexOf('"') == -1 ? '"' + d + '"' : d; }).join(" "));
 
 		proc.init(java_exe_file);
 		proc.runAsync(procArgs, procArgs.length, observer);

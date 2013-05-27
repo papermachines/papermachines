@@ -8,7 +8,7 @@ import time
 import codecs
 import traceback
 import xml.etree.ElementTree as et
-from utils import *
+from lib.utils import *
 
 import mallet
 
@@ -47,7 +47,7 @@ class MalletLDA(mallet.Mallet):
         self.lang = self.named_args.get("lang", "en")
         self.date_range = self.named_args.get("date_range", '')
 
-        self._setup_mallet_instances(sequence=True, tfidf=self.tfidf, 
+        self.setup_mallet_instances(sequence=True, tfidf=self.tfidf, 
                                      stemming=self.stemming)
 
         self.mallet_files = {
@@ -130,7 +130,7 @@ class MalletLDA(mallet.Mallet):
 
                 self.metadata[filename]["topics"] = dict(
                     (int(y[0]), float(y[1])) 
-                    for y in xpartition(values))
+                    for y in group_by_n(values))
             except KeyboardInterrupt, SystemExit:
                 sys.exit(1)
             except:

@@ -10,7 +10,7 @@ import subprocess
 import codecs
 import json
 import mallet
-from utils import *
+from lib.utils import *
 
 class MalletClassifierTest(mallet.Mallet):
 
@@ -29,8 +29,8 @@ class MalletClassifierTest(mallet.Mallet):
 
     def process(self):
 
-        self._setup_mallet_command()
-        self._import_texts()
+        self.setup_mallet_command()
+        self.import_texts()
 
         self.classified_filename = os.path.join(self.mallet_out_dir,
                 'classified')
@@ -67,7 +67,7 @@ class MalletClassifierTest(mallet.Mallet):
                 line_parts = line.split('\t')
                 filename = line_parts.pop(0)
                 probs = dict((y[0], float(y[1])) for y in
-                             xpartition(line_parts))
+                             group_by_n(line_parts))
                 classifications[filename] = argmax(probs)
             except:
                 logging.error(traceback.format_exc())

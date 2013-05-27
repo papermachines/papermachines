@@ -9,6 +9,7 @@ import codecs
 import subprocess
 import sys
 from lib.classpath import classPathHacker
+from collections import defaultdict
 from HTMLParser import HTMLParser
 import textprocessor
 
@@ -34,11 +35,8 @@ def strip_tags(filename):
         s.feed(html)
         return s.get_data()
     except:
-        err_string = 'Non-fatal HTML error on {:} -- continuing'
+        err_string = 'HTML parse error on {:} -- continuing'
         logging.error(err_string.format(os.path.basename(filename)))
-
-#       logging.error(traceback.format_exc())
-
         return ''
 
 
@@ -70,12 +68,9 @@ class Extract(textprocessor.TextProcessor):
     def process(self):
         logging.info('starting to process')
 
-        itemIDs = {}
+        itemIDs = defaultdict(list)
         for filename in self.files:
-            itemid = self.metadata[filename]['itemID']
-            if itemid not in itemIDs:
-                itemIDs[itemid] = []
-            itemIDs[itemid].append(filename)
+            itemIDs[self.metadata[filename]['itemID']].append(filename)
 
         saved = []
         for (itemID, filenames) in itemIDs.iteritems():
@@ -118,11 +113,9 @@ class Extract(textprocessor.TextProcessor):
                             import_proc = subprocess.Popen(import_args,
                                     stdout=subprocess.PIPE)
                             text += \
-                                import_proc.communicate()[0].decode('utf-8'
-                                    )
+                                unicode(import_proc.communicate()[0], 'utf-8')
                     logging.info('processed ' + out_file)
-                    with codecs.open(out_file, 'w', encoding='utf-8'
-                            ) as f:
+                    with codecs.open(out_file, 'w', encoding='utf-8') as f:
                         f.write(text)
                 saved.append(
                     {'itemID': itemID,
@@ -135,10 +128,11 @@ class Extract(textprocessor.TextProcessor):
                 logging.error(traceback.format_exc())
         if self.progress_initialized:
             self.progress_file.write('<1000>\n')
-        json_out = os.path.join(self.out_dir, self.name
-                                + self.collection + '.json')
+        json_out = os.path.join(self.out_dir, self.name + 
+                                self.collection + '.json')
         with codecs.open(json_out, 'wb', encoding='utf-8') as f:
             json.dump(saved, f)
+
         params = {'SUCCEEDED': str(len(saved)),
                   'TOTAL': str(len(itemIDs.keys()))}
         self.write_html(params)

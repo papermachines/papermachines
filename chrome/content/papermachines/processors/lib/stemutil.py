@@ -2,7 +2,7 @@
 import os
 from java.lang import Class
 from classpath import classPathHacker
-
+from utils import memoize
 
 # This function wraps the snowball stemmer library
 # http://snowball.tartarus.org/dist/libstemmer_java.tgz
@@ -32,10 +32,10 @@ stem_languages = set(iso639_1.values())
 
 stemmers = {lang : None for lang in stem_languages}
 
-def stem(caller, word):
+@memoize
+def stem(lang_code, cwd, word):
     global stemmers
 
-    lang_code = getattr(caller, "lang", "en")
     if lang_code in iso639_1:
         lang = iso639_1[lang_code]
     elif lang_code in stem_languages:
@@ -43,7 +43,7 @@ def stem(caller, word):
 
     if stemmers.get(lang) is None:
         jarLoad = classPathHacker()
-        snowballPath = os.path.join(caller.cwd, "lib", "snowball.jar")
+        snowballPath = os.path.join(cwd, "lib", "snowball.jar")
         jarLoad.addFile(snowballPath)
 
         stemClass = Class.forName("org.tartarus.snowball.ext." + lang + "Stemmer")

@@ -12,7 +12,7 @@ import codecs
 from collections import defaultdict
 import cPickle as pickle
 import geoparser
-
+from lib.utils import *
 
 class GeoparserFlightPaths(geoparser.Geoparser):
 
@@ -46,7 +46,7 @@ class GeoparserFlightPaths(geoparser.Geoparser):
         contexts = defaultdict(dict)
 
         try:
-            for rowdict in self.parse_csv(csv_input):
+            for rowdict in parse_csv(csv_input):
                 validEntityURIs.add(rowdict['entityURI'])
         except:
             logging.error(traceback.format_exc())
@@ -129,7 +129,7 @@ class GeoparserFlightPaths(geoparser.Geoparser):
         # max_count = 0
 
         counts = {}
-        for rowdict in self.parse_csv(csv_input):
+        for rowdict in parse_csv(csv_input):
 
             # coords = ','.join([rowdict["lat"], rowdict["lng"]])
 

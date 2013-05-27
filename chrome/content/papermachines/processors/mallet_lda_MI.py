@@ -9,7 +9,7 @@ import traceback
 import json
 import math
 import mallet_lda
-from utils import *
+from lib.utils import *
 
 
 
@@ -126,7 +126,7 @@ class MalletLDAMutualInformation(mallet_lda.MalletLDA):
                 label = self.metadata[filename]['label']
 
                 freqs = dict((int(y[0]), float(y[1])) for y in
-                             xpartition(values))
+                             group_by_n(values))
                 main_topic = None
                 topic_max = 0.0
                 for i in freqs.keys():

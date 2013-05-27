@@ -14,7 +14,7 @@ import time
 import codecs
 import cPickle as pickle
 import geoparser
-
+from lib.utils import *
 
 class GeoparserHeatmap(geoparser.Geoparser):
 
@@ -43,7 +43,7 @@ class GeoparserHeatmap(geoparser.Geoparser):
             subprocessor = geoparser_export.GeoparserExport()
             subprocessor.process()
 
-        for rowdict in self.parse_csv(csv_input):
+        for rowdict in parse_csv(csv_input):
             coords = ','.join([rowdict['lat'], rowdict['lng']])
             if coords not in counts:
                 counts[coords] = 0

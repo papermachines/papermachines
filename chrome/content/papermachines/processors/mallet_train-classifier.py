@@ -22,7 +22,7 @@ class MalletClassifier(mallet.Mallet):
         self.dfr = False
 
     def process(self):
-        self._setup_mallet_instances(sequence=False)
+        self.setup_mallet_instances(sequence=False)
 
         self.mallet_output = os.path.join(self.mallet_out_dir,
                 'trained.classifier')

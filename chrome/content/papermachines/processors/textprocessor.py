@@ -13,7 +13,7 @@ import json
 import platform
 import pickle
 from datetime import datetime, timedelta
-from utils import *
+from lib.utils import *
 import re
 from collections import Counter, defaultdict
 from lib.stemutil import stem
@@ -31,14 +31,11 @@ class TextProcessor:
 
         # take in command line options
 
-        self.args_filename = sys.argv[1]
-        self.args_basename = \
-            os.path.basename(self.args_filename).replace('.json', '')
+        self.arg_filename = sys.argv[1]
+        self.arg_basename = os.path.basename(sys.argv[1]).replace('.json', '')
 
-        with codecs.open(self.args_filename, 
-                        'r',
-                        encoding='utf-8') as args_file:
-            args = json.load(args_file)
+        with codecs.open(self.arg_filename, 'r', encoding='utf-8') as arg_file:
+            args = json.load(arg_file)
 
         self.cwd = args[0]
         csv_file = args[1]
@@ -70,7 +67,7 @@ class TextProcessor:
                               if x.strip() != '']
 
         self.out_filename = os.path.join(self.out_dir, self.name
-                + self.collection + '-' + self.args_basename + '.html')
+                + self.collection + '-' + self.arg_basename + '.html')
 
         logging.basicConfig(filename=self.out_filename.replace('.html',
                             '.log'), filemode='w', level=logging.INFO)
@@ -89,7 +86,7 @@ class TextProcessor:
 
         self.metadata = {}
 
-        for rowdict in self.parse_csv(csv_file):
+        for rowdict in parse_csv(csv_file):
             filename = rowdict.pop('filename')
             self.metadata[filename] = rowdict
 
@@ -104,31 +101,6 @@ class TextProcessor:
 
     def _basic_params(self):
         self.name = 'textprocessor'
-
-    def parse_csv(
-        self,
-        filename,
-        dialect=csv.excel,
-        **kwargs
-        ):
-        with file(filename, 'rU') as f:
-            csv_rows = self.unicode_csv_reader(f, dialect=dialect,
-                    **kwargs)
-            header = csv_rows.next()
-            for row in csv_rows:
-                if len(row) > 0:
-                    rowdict = dict(zip(header, row))
-                    yield rowdict
-
-    def unicode_csv_reader(
-        self,
-        utf8_data,
-        dialect=csv.excel,
-        **kwargs
-        ):
-        csv_reader = csv.reader(utf8_data, dialect=dialect, **kwargs)
-        for row in csv_reader:
-            yield [unicode(cell, 'utf-8') for cell in row]
 
     def update_progress(self):
         if self.track_progress:
@@ -151,36 +123,26 @@ class TextProcessor:
     def older(self, old_file, new_file):
         return self.get_mtime(old_file) > self.get_mtime(new_file)
 
-    def _ngrams(
-        self,
-        text,
-        n=1,
-        stemming=False,
-        ):
+    def _ngrams(self, text, n=1, stemming=False):
         text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
         if stemming:
-            words = [stem(self, 
-                          word) for word in text.split() if (word not in
-                                                             self.stopwords)]
+            lang = getattr(self, 'lang', 'en')
+            words = [stem(lang, self.cwd, word)
+                     for word in text.split()
+                     if word not in self.stopwords]
         else:
             words = [word for word in text.split()]
         total_n = len(words)
         i = 0
         while i < total_n - (n - 1):
             ngram = words[i:i + n]
-            if not any([word in self.stopwords or not word.isalpha()
-                       for word in ngram]):
+            if all([word not in self.stopwords and word.isalpha()
+                    for word in ngram]):
                 yield u' '.join(ngram)
             i += 1
 
-    def getNgrams(
-        self,
-        filename,
-        n=1,
-        stemming=False,
-        ):
-        ext = '_'
-        ext += ('stemmed' if stemming else '')
+    def getNgrams(self, filename, n=1, stemming=False):
+        ext = '_' + ('stemmed' if stemming else '')
         ext += str(n) + 'grams.pickle'
         ngram_serialized = filename.replace('.txt', ext)
         if os.path.exists(ngram_serialized) and not self.older(ngram_serialized,

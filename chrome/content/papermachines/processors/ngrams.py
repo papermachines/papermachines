@@ -32,22 +32,15 @@ class NGrams(textprocessor.TextProcessor):
         self.start_date = None
         self.end_date = None
 
-        if self.named_args.get('start_date', '') != '':
-            try:
-                self.start_date = \
-                    datetime.strptime(self.named_args['start_date'],
-                        '%Y-%m-%d')
-            except:
-                logging.error('Start date {:} not valid! Must be formatted like 2013-01-05'
-                              )
-        if self.named_args.get('end_date', '') != '':
-            try:
-                self.end_date = \
-                    datetime.strptime(self.named_args['end_date'],
-                        '%Y-%m-%d')
-            except:
-                logging.error('End date {:} not valid! Must be formatted like 2013-01-05'
-                              )
+        for param in ('start_date', 'end_date'):
+            date_str = self.named_args.get(param, '')
+            if date_str != '':
+                try:
+                    this_date = datetime.strptime(date_str, '%Y-%m-%d')
+                    setattr(self, param, this_date)
+                except:
+                    logging.error('Date ' + date_str + ' not valid!' + 
+                        'Must be formatted like: 2013-01-05')
 
     def _findNgramFreqs(self, filenames):
         freqs = Counter()
@@ -74,8 +67,11 @@ class NGrams(textprocessor.TextProcessor):
 
         kept = len(self.doc_freqs.keys())
         logging.info('{:} ngrams below threshold'.format(len(rejected)))
-        logging.info('{:}/{:} = {:.0%} ngrams occured in {:} or more documents'.format(kept,
-                     all_ngrams, 1.0 * kept / all_ngrams, self.min_df))
+        logging.info(('{:}/{:} = {:.0%} ngrams occurred ' +
+                      'in {:} or more documents').format(kept, 
+                                                         all_ngrams,
+                                                         1.0 * kept / all_ngrams,
+                                                         self.min_df))
 
         for interval in self.freqs.keys():
             for ngram_text in self.freqs[interval].keys():
@@ -93,8 +89,8 @@ class NGrams(textprocessor.TextProcessor):
             self.ngrams_intervals.iteritems():
             avg_values[ngram] = sum(values_over_time) / intervals_n
         avg_value_list = sorted(avg_values.values(), reverse=True)
-        logging.info('range of avg frequencies: {:} to {:}'.format(avg_value_list[-1],
-                     avg_value_list[0]))
+        extrema = (avg_value_list[-1], avg_value_list[0])
+        logging.info('range of avg frequencies: {:} to {:}'.format(*extrema))
         min_value = avg_value_list[min(self.top_ngrams - 1,
                                    len(avg_value_list) - 1)]
         logging.info('minimum avg ngram frequency: {:%}'.format(min_value))
@@ -134,7 +130,9 @@ class NGrams(textprocessor.TextProcessor):
         self.max_freq = max([max(l) for l in
                             self.ngrams_intervals.values()])
 
-        # self.ngrams_intervals = dict((self.num_to_ngram[ngram], values) for ngram, values in self.ngrams_intervals.iteritems())
+        # self.ngrams_intervals = dict((self.num_to_ngram[ngram], values) 
+        #                                 for ngram, values 
+        #                                 in self.ngrams_intervals.iteritems())
 
         params = {
             'NGRAMS_INTERVALS': self.ngrams_intervals,

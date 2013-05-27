@@ -14,7 +14,7 @@ import codecs
 import csv
 import traceback
 import xml.etree.ElementTree as et
-from utils import *
+from lib.utils import *
 import gzip
 from lib.stemutil import stem
 import mallet_lda
@@ -56,11 +56,11 @@ class MalletDMR(mallet_lda.MalletLDA):
     def _sanitize_feature(self, text):
         return re.sub('[\W_]+', '', text, re.UNICODE)
 
-    def _setup_mallet_instances(self, tfidf=False, stemming=True):
+    def setup_mallet_instances(self, tfidf=False, stemming=True):
         self.stemming = stemming
 
-        self._setup_mallet_command()
-        self._import_texts()
+        self.setup_mallet_command()
+        self.import_texts()
 
         self.instance_file = os.path.join(self.mallet_out_dir,
                 self.collection + '.mallet')
@@ -118,7 +118,7 @@ class MalletDMR(mallet_lda.MalletLDA):
         self.topics = int(self.named_args.get('topics', 50))
         self.lang = self.named_args.get('lang', 'en')
 
-        self._setup_mallet_instances(tfidf=self.tfidf,
+        self.setup_mallet_instances(tfidf=self.tfidf,
                 stemming=self.stemming)
 
         os.chdir(self.mallet_out_dir)
