@@ -34,7 +34,7 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
     def _basic_params(self):
         self.name = 'mallet'
 
-    def _output_text(self, text_freqs, f, filename):
+    def _output_text_freqs(self, text_freqs, f, filename):
         itemid = self.metadata[filename]['itemID']
         text_freqs = Counter(text_freqs)
         for word in text_freqs.keys():
@@ -66,13 +66,15 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
                                   '-- removing...').format(filename))
                     del self.metadata[filename]
                     continue
-                self._output_text(self.getNgrams(filename,
+                self._output_text_freqs(self.getNgrams(filename,
                                   stemming=self.stemming), f, filename)
             if self.dfr:
                 self.dois = self.import_dfr_metadata(self.dfr_dir)
-                for (doi, text_freqs) in self.import_dfr(self.dfr_dir,
+                for (doi, text) in self.import_dfr(self.dfr_dir,
                         self.dois):
-                    self._output_text(text_freqs, f, doi)
+                    f.write(u'\t'.join([doi, self.metadata[doi]['label'],
+                            text]) + u'\n')
+                    self.docs.append(doi)
 
         with codecs.open(os.path.join(self.mallet_out_dir, 'dmap'), 'w'
                          , encoding='utf-8') as dmap:

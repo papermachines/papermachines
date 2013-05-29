@@ -21,6 +21,8 @@ Zotero.PaperMachines = {
 	processors_dir: null,
 	java_exe: null,
 	jython_path: null,
+	mallet_jars: null,
+	papermachines_jar: null,
 	processors: ["wordcloud", "ngrams", "phrasenet", "mallet", "geoparser", "dbpedia", "view-output", "export-output", "reset-output"], // "mallet_classify",
 	processNames: null, // see locale files
 	prompts: null,
@@ -548,19 +550,10 @@ Zotero.PaperMachines = {
 
 		var java_exe_file = Zotero.PaperMachines._getLocalFile(Zotero.PaperMachines.java_exe);
 
-		var classpath = [this.jython_path];
+		var classpath = [this.papermachines_jar, this.jython_path];
 
 		if (processor.indexOf("mallet") != -1) {
-			var mallet_dir = Zotero.PaperMachines.processors_dir.clone();
-			mallet_dir.append("lib");
-			mallet_dir.append("mallet-2.0.7");
-			mallet_dir.append("dist");
-			var mallet = mallet_dir.clone();
-			mallet.append("mallet.jar");
-			var mallet_deps = mallet_dir.clone();
-			mallet_deps.append("mallet-deps.jar");
-			
-			classpath.unshift(mallet_deps.path, mallet.path);
+			classpath = this.mallet_jars.concat(classpath);
 			javaArgs.unshift("-Djava.util.logging.config.file="+loggingProperties);
 		}
 
@@ -1190,6 +1183,23 @@ Zotero.PaperMachines = {
 
 			this._copyAllFiles(procs_dir, Zotero.PaperMachines.processors_dir);
 		}
+
+		var lib_dir = Zotero.PaperMachines.processors_dir.clone();
+		lib_dir.append("lib");
+
+		var mallet_dir = lib_dir.clone();
+		mallet_dir.append("mallet-2.0.7");
+		mallet_dir.append("dist");
+		var mallet = mallet_dir.clone();
+		mallet.append("mallet.jar");
+		var mallet_deps = mallet_dir.clone();
+		mallet_deps.append("mallet-deps.jar");
+
+		var papermachines_jar = lib_dir.clone();
+		papermachines_jar.append("papermachines-util.jar");
+
+		Zotero.PaperMachines.mallet_jars = [mallet_deps.path, mallet.path];
+		Zotero.PaperMachines.papermachines_jar = papermachines_jar.path;
 
 		var stoplist_lang = Preferences.get("extensions.papermachines.general.lang") || "en";
 		this.selectStoplist(stoplist_lang);

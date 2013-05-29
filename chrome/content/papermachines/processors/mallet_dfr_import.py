@@ -14,6 +14,7 @@ from cc.mallet.pipe.iterator import EmptyInstanceIterator
 from cc.mallet.pipe import Target2Label, TokenSequenceLowercase, \
     TokenSequenceRemoveStopwords, TokenSequence2FeatureSequence, SerialPipes
 from cc.mallet.types import Instance, InstanceList, Token, TokenSequence
+from org.papermachines.util import DfrCsvIterator
 from collections import Counter
 from lib.stemutil import stem
 from lib.utils import *
@@ -74,7 +75,7 @@ class MalletDfrImport(TextProcessor, MalletImport):
             dois.append(doi)
         return dois
 
-    def import_dfr_new(self, dfr_dir, dois):
+    def import_dfr_experimental(self, dfr_dir, dois):
         self.create_instance_list('tokenseq')
         self.instance_list.addThruPipe(DfrIterator(dfr_dir, dois, self.cwd))
         return self.instance_list
@@ -83,25 +84,11 @@ class MalletDfrImport(TextProcessor, MalletImport):
         lang = getattr(self, 'lang', 'en')
         wordcounts_dir = os.path.join(dfr_dir, 'wordcounts')
 
-        for doi in dois:
-            try:
-                this_text = Counter()
-                with file(os.path.join(wordcounts_dir, 'wordcounts_'
-                               + doi.replace('/', '_') + '.CSV'), 'rU') as f:
-                    csv_reader = unicode_csv_reader(f)
-                    # skip header: ['WORDCOUNTS', 'WEIGHT']
-                    csv_reader.next() 
-                    for row in csv_reader:
-                        word = row[0]
-                        if word in self.stopwords:
-                            continue
-                        if self.stemming:
-                            word = stem(lang, self.cwd, word)
+        filenames = [os.path.join(wordcounts_dir, 'wordcounts_' +
+            doi.replace('/', '_') + '.CSV') for doi in dois]
 
-                        this_text[word] += int(row[1])
-                if sum(this_text.values()) < 20:
-                    continue
-                yield (doi, this_text)
-            except:
-                logging.error(doi)
-                logging.error(traceback.format_exc())
+        doi_iter = dois.__iter__()
+        dfr_iter = DfrCsvIterator(filenames)
+
+        while dfr_iter.hasNext():
+            yield doi_iter.next(), dfr_iter.next()
