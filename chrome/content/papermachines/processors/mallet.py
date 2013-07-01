@@ -255,7 +255,7 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
                 and not os.path.exists(self.instance_file):
                 from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
                 Csv2Vectors(import_args)
-        else:
+        elif not self.dry_run:
             from cc.mallet.util.BulkLoader import main as BulkLoader
             import_args += [
                 '--remove-stopwords',

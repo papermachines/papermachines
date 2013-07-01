@@ -13,10 +13,14 @@ import json
 import codecs
 import csv
 import traceback
+import base64
+import struct
 import xml.etree.ElementTree as et
+from collections import defaultdict, Counter
 from lib.utils import *
 import gzip
 from lib.stemutil import stem
+from org.papermachines.util import MalletStateReader
 import mallet_lda
 
 
@@ -144,8 +148,7 @@ class MalletDMR(mallet_lda.MalletLDA):
 
             from cc.mallet.types import InstanceList
             training = InstanceList.load(File(self.instance_file))
-            numTopics = int(self.topics)
-            lda = DMRTopicModel(numTopics)
+            lda = DMRTopicModel(self.topics)
             lda.setOptimizeInterval(100)
             lda.setTopicDisplay(100, 10)
             lda.addInstances(training)
@@ -186,36 +189,13 @@ class MalletDMR(mallet_lda.MalletLDA):
 
         self.alpha_sum = sum(self.alphas.values())
 
-        self.topic_words = {}
-        self.doc_topics = {}
-
-        with gzip.open(self.state_file, 'rb') as state_file:
-            state_file.next()
-            for line in state_file:
-                this_line = line.split(' ')
-                topic = int(this_line[5])
-                word = this_line[4]
-                doc = int(this_line[0])
-                position = int(this_line[2])
-
-                if not doc in self.doc_topics:
-                    self.doc_topics[doc] = {}
-                if not topic in self.doc_topics[doc]:
-                    self.doc_topics[doc][topic] = 0
-                self.doc_topics[doc][topic] += 1
-
-                if not topic in self.topic_words:
-                    self.topic_words[topic] = {}
-                if not word in self.topic_words[topic]:
-                    self.topic_words[topic][word] = 0
-                self.topic_words[topic][word] += 1
-
-        # total_tokens = float(sum([sum(y.values()) for x, y in self.topic_words.iteritems()]))
-
-        for topic in self.topic_words.keys():
-            total = float(sum(self.topic_words[topic].values()))
-            for k in self.topic_words[topic].keys():
-                self.topic_words[topic][k] /= total
+        reader = MalletStateReader(self.state_file)
+        self.vocab = reader.getVocab()
+        self.doc_topics = reader.getDocTopicsDict()
+        self.topic_types = reader.getTopicTypeDict()
+        self.topic_words = dict((topic, 
+                dict((self.vocab[i], x) for i, x in enumerate(typecounts)))
+            for topic, typecounts in self.topic_types.iteritems())
 
         top_N = 20
         top_topic_words = dict((x, dict((word, y[word]) for word in
@@ -238,11 +218,13 @@ class MalletDMR(mallet_lda.MalletLDA):
         numDocumentsAtProportions = dict((topic, dict((k, 0.0) for k in
                 DEFAULT_DOC_PROPORTIONS)) for topic in
                 self.topic_words.keys())
-        for (doc, topics) in self.doc_topics.iteritems():
+        for doc in self.doc_topics.keys():
+            topics = self.doc_topics[doc]
             doc_length = sum(topics.values())
             for (topic, count) in topics.iteritems():
                 proportion = (self.alphas[topic] + count) \
                     / (self.alpha_sum + doc_length)
+                self.doc_topics[doc][topic] = proportion
                 for min_proportion in DEFAULT_DOC_PROPORTIONS:
                     if proportion < min_proportion:
                         break
@@ -255,18 +237,13 @@ class MalletDMR(mallet_lda.MalletLDA):
                                 numDocumentsAtProportions.iteritems()
                                 if proportions[0.02] > 0.0)
 
-        labels = dict((topic, {'label': argsort(words,
-                      reverse=True)[:3], 'fulltopic': wordProbs[topic],
+        labels = dict((topic, {'words': wordProbs[topic],
                       'allocation_ratio': allocationRatios.get(topic,0)})
                       for (topic, words) in top_topic_words.iteritems())
 
         doc_metadata = {}
 
-        for doc in self.doc_topics.keys():
-            total = float(sum(self.doc_topics[doc].values()))
-            for k in self.doc_topics[doc].keys():
-                self.doc_topics[doc][k] /= total
-
+        topics_fmt = '<' + str(self.topics) + 'f'
         for (id, topics) in self.doc_topics.iteritems():
             try:
                 filename = self.docs[int(id)]
@@ -277,15 +254,8 @@ class MalletDMR(mallet_lda.MalletLDA):
                     {'label': self.metadata[filename]['label'],
                      'title': self.metadata[filename]['title']}
 
-                freqs = topics
-                main_topic = None
-                topic_max = 0.0
-                for i in freqs.keys():
-                    if freqs[i] > topic_max:
-                        main_topic = i
-                        topic_max = freqs[i]
-                doc_metadata[itemid]['main_topic'] = main_topic
-                self.metadata[filename]["topics"] = freqs
+                topics_str = base64.b64encode(struct.pack(topics_fmt, *topics))
+                self.metadata[filename]["topics"] = topics_str
             except KeyboardInterrupt:
                 sys.exit(1)
             except:
@@ -294,17 +264,17 @@ class MalletDMR(mallet_lda.MalletLDA):
         self.template_filename = os.path.join(self.cwd, 'templates',
                 self.template_name + '.html')
 
-        if getattr(self, "index", None) is not None:
-            for term in self.index:
-                if isinstance(self.index[term], set):
-                    self.index[term] = list(self.index[term])
-            self.index = dict(self.index)
+        # if getattr(self, "index", None) is not None:
+        #     for term in self.index:
+        #         if isinstance(self.index[term], set):
+        #             self.index[term] = list(self.index[term])
+        #     self.index = dict(self.index)
 
         params = {"CATEGORICAL": self.categorical,
                         "TOPIC_LABELS": labels,
                         "TOPIC_COHERENCE": {},
-                        "TAGS": getattr(self, "tags", {}),
-                        "INDEX": getattr(self, "index", {})
+                        "TAGS": getattr(self, "tags", {})
+                        # "INDEX": getattr(self, "index", {})
         }
 
         self.write_html(params)

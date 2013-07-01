@@ -16,7 +16,7 @@ In order to run Paper Machines, you will need the following (Java should be inst
 
 * [Zotero](http://www.zotero.org/) with PDF indexing tools installed (see the Search pane of Zotero's Preferences)
 * a corpus of documents with full text PDF/HTML and high-quality metadata (recommended: at least 1,000 for topic modeling purposes)
-* Java ([download page](http://java.com/en/download/index.jsp))
+* Java 6 or higher ([download page](http://java.com/en/download/index.jsp))
 
 ## Installation
 Paper Machines should work either in Zotero for Firefox or Zotero Standalone. To install, you must download the <a href="http://www.papermachines.org/download/papermachines-0.4.8.xpi">XPI file</a>. If you wish to use the extension in the Standalone version, right-click on the link and save the XPI file in your Downloads folder. Then, in Zotero Standalone, go to the Tools menu -> Add-Ons. Select the gear icon at the right, then "Install Add-On From File." Navigate to your Downloads folder (or wherever you have saved the XPI file) and open it.

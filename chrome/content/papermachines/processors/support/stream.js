@@ -31,7 +31,7 @@ var gradientExponentScale = 0.3;
 var gradientOpacity = d3.scale.pow().exponent(gradientExponentScale).clamp(true).range([1,0]);
 var gradientBox, gradientDomain;
 
-var legend, showLegend = 2;
+var legend, showLegend = 1;
 var index = data["INDEX"];
 var startDate, endDate;
 var activeTopicLabels = [], inactiveTopicLabels = [];
@@ -46,12 +46,14 @@ var docMetadata = data["DOC_METADATA"],
     topicProportions,
     topicStdevs;
 
+
+var margin = {top: 20, right: 10, bottom: 20, left: 0};
 var streaming = true,
     stacked = false,
     my,
-    toggleState = categorical ? 3 : 0,
-    width = 960,
-    height = 500,
+    toggleState = categorical ? 3 : 1,
+    width = 960 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom,
     smoothing = "mean",
     windowSize = 2,
     interpolateType = "monotone",
@@ -135,14 +137,11 @@ var sortMetrics = {
 };
 var dateParse = d3.time.format("%Y").parse;
 
-var offsetLeft = 0,
-    marginVertical = 0;
-
 var x = d3.time.scale()
     .range([0, width]);
 
 var xOrdinal = d3.scale.ordinal()
-    .rangePoints([100, width - 100]);
+    .rangePoints([0, width]);
 
 var y = {"domain": function (range) {
   for (var i in graph) {
@@ -161,8 +160,10 @@ createGraphObject(0);
 
 var vis = d3.select("#chart")
   .append("svg:svg")
-    .attr("width", width + offsetLeft + 25)
-    .attr("height", height + 50);
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("svg:g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var defs = vis.append("svg:defs");
 
@@ -172,8 +173,23 @@ vis = vis.append("svg:g")
 var graphGroup = vis.append("svg:g").attr("id", "graphGroup");
 var axesGroup = vis.append("svg:g").attr("id", "axesGroup");
 var legendGroup = vis.append("svg:g").attr("id", "legendGroup");
-var wordCloudGroup = vis.append("svg:g").attr("id", "wordCloudGroup")
-  .attr("transform", "translate(0," + (height - 100) + ")");
+// var wordCloudGroup = vis.append("svg:g").attr("id", "wordCloudGroup");
+  // .attr("transform", "translate(0," + (height + 100) + ")");
+
+var wordCloudMargin = {top: 20, right: 0, bottom: 20, left: 20};
+var wordCloudsHeight = 600 - wordCloudMargin.top - wordCloudMargin.bottom;
+var wordCloudsWidth = 270 - wordCloudMargin.right - wordCloudMargin.left;
+
+var wordCloudGroup = d3.select("body")
+  .append("svg:svg")
+    .attr("width", wordCloudsWidth + wordCloudMargin.top + wordCloudMargin.bottom)
+    .attr("height", wordCloudsHeight + wordCloudMargin.right + wordCloudMargin.left)
+    .style("position", "absolute")
+    .style("top", "0px")
+    .style("right", "0px")
+  .append("svg:g")
+    .attr("id", "wordCloudGroup")
+    .attr("transform", "translate(" + wordCloudMargin.left + "," + wordCloudMargin.top + ")");
 
 binDocsIntoIntervals();
 dataSummed = [];
@@ -337,7 +353,7 @@ function transition() {
   }
 
 
-  if (streaming) {
+  if (streaming && showLegend > 1) {
     createGradientScale();
   } else {
     d3.select("#gradientScale").remove();
@@ -748,7 +764,7 @@ function refreshAxes() {
       if (axesGroup.selectAll("g.y.axis graph" +i.toString()).empty()) {
         axesGroup.append("svg:g")
         .attr("class", "y axis graph" +i.toString())
-        .attr("transform", "translate(-15,0)")
+        // .attr("transform", "translate(-15,0)")
         .call(graph[i].yAxis);        
       } else {
         axesGroup.select("g.y.axis graph" +i.toString()).transition().duration(500).style("fill-opacity", 1).call(graph[i].yAxis);        
@@ -772,7 +788,8 @@ function toggleTopic(d) {
 }
 
 function wordCloudPositions (d, i) {
-  return "translate(" + ((i+1)*310) + ",0)";
+  // return "translate(" + ((i+1)*310) + ",0)";
+  return "translate(0," + ((i)*200) +")";
 }
 
 function displayFullTopic(d) {
@@ -785,7 +802,7 @@ function displayFullTopic(d) {
     delete wordClouds[d.topic]
   } else {
     wordClouds[d.topic] = topicCloud(d.topic, wordCloudGroup);  
-    wordCloudGroup.selectAll("g").attr("transform", wordCloudPositions)
+    wordCloudGroup.selectAll("g.cloud").attr("transform", wordCloudPositions)
   }
 }
 
@@ -813,7 +830,7 @@ function updateLegend() {
       .attr("id", "legend")
       // .attr("transform", "translate(" + (width/2 - 230 ) + ", 10)")
       .attr("transform", "translate(230,10)")
-      .style("visibility", showLegend > 1 ? "visible" : "hidden");
+      .style("visibility", showLegend > 0 ? "visible" : "hidden");
   }
 
   var topics = [];
@@ -1248,15 +1265,14 @@ function createGraphObject(i) {
 }
 
 function setGraphPositions() {
-  var totalHeight = height - (marginVertical * 2.0);
   var graphs_active = [];
   for (var i in graph) {
     if (graph[i].active) graphs_active.push(i);
   }
 
   for (var i = 0, n = graphs_active.length; i < n; i++) {
-    var my_ambit = (totalHeight / n);
-    var my_top = marginVertical + (my_ambit * i);
+    var my_ambit = (height / n);
+    var my_top = my_ambit * i;
     var my_bottom = my_top + my_ambit;
     graph[graphs_active[i]].y.range([my_bottom, my_top]);
     graph[graphs_active[i]].baseline = (my_bottom + my_top)/2.0;
@@ -1404,7 +1420,7 @@ function createGradientScale() {
     .attr("id", "gradientScale")
     .attr("width", "200")
     .attr("height", "30")
-    .attr("transform", "translate(10, 450)");
+    .attr("transform", "translate(0, 300)");
 
 //  .attr("transform", "translate(" + ((width/2) - 100) + "," + (height - 100) + ")");
   gradientBox.append("svg:text")
@@ -1471,7 +1487,7 @@ function updateGradient() {
 
 function topicCloud(i, parent) {
   var topicWords = topicLabels[i]["fulltopic"]
-      cloudW = 300,
+      cloudW = 270,
       cloudH = 150,
       cloudFontSize = d3.scale.log().domain(d3.extent(topicWords.map(function (d) { return +d.prob; }))).range([8,32]),
       cloud = d3.layout.cloud()
@@ -1490,8 +1506,9 @@ function topicCloud(i, parent) {
         .attr("height", cloudH);
     }
     parent.append("g")
-        .attr("class", "cloud" + i.toString())
-        .attr("transform", "translate(" + cloudW/2 + "," + cloudH / 2 + ")")
+        .attr("class", "cloud cloud" + i.toString())
+      .append("g")
+        .attr("transform", "translate(" + cloudW/2 + "," + cloudH/2 + ")")
         .style("fill", graphColors(i))
       .selectAll("text")
         .data(words)

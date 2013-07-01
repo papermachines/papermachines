@@ -46,6 +46,9 @@
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines...">
 
+
+<!ENTITY papermachines.collectionmenu.highlight_phrase	"Highlight Phrase...">
+
 <!ENTITY papermachines.collectionmenu.preferences		"Paper Machines Preferences...">
 
 <!ENTITY papermachines.stoplists.en 						"English">

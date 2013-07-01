@@ -26,7 +26,7 @@ class MalletJSTOR(mallet_lda.MalletLDA):
         self.name = 'mallet_lda_jstor'
         self.categorical = False
         self.template_name = 'mallet_lda'
-        self.dry_run = False
+        self.dry_run = True
         self.topics = 50
         self.dfr = True
         self.use_bulkloader = True
@@ -35,9 +35,10 @@ class MalletJSTOR(mallet_lda.MalletLDA):
             if dfr_path.lower().endswith('.zip'):
                 dfr_dir = os.path.basename(dfr_path).replace('.zip', '')
                 this_dfr_dir = os.path.join(self.out_dir, dfr_dir)
-                self._extractAll(dfr_path, this_dfr_dir)
+                if not self.dry_run:
+                    self._extractAll(dfr_path, this_dfr_dir)
                 dfr_dirs.append(this_dfr_dir)
-        if len(dfr_dirs) > 1:
+        if len(dfr_dirs) > 1 and not self.dry_run:
             self.dfr_dir = merge_dfr_dirs(dfr_dirs)
         else:
             self.dfr_dir = dfr_dirs[0]

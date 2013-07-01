@@ -374,6 +374,12 @@ Zotero.PaperMachines = {
 		var pdftotext = Zotero.getZoteroDirectory();
 		pdftotext.append(Zotero.Fulltext.pdfConverterFileName);
 
+		if (!pdftotext.exists()) {
+			Zotero.PaperMachines.alertPrompt("pdftotext missing!",
+				"pdftotext was not found. Please install pdftotext from the " +
+				'"Search"' + " pane of Zotero's preferences.");
+		}
+
 		var path = "zotero://papermachines/extract/" + Zotero.PaperMachines.getItemGroupID(itemGroup) + "/" + encodeURIComponent(pdftotext.path);
 		// this.DB.beginTransaction();
 		this.DB.query("UPDATE processed_collections SET status = 'failed' WHERE processor='extract' AND collection = ?;", [id]);
@@ -853,6 +859,25 @@ Zotero.PaperMachines = {
 			}
 		}
 		return itemGroups;
+	},
+	addHTMLFilesAsNotes: function (dir) {
+		dir = Zotero.PaperMachines._getLocalFile(dir);
+		var files = dir.directoryEntries;
+		while (files.hasMoreElements()) {
+			var f = files.getNext().QueryInterface(Components.interfaces.nsIFile);
+			if (f.isFile()) {
+				var html = '<div class="zotero-note znv1">' + Zotero.File.getContents(f) + '</div>';
+				var parentID = parseInt(f.leafName.replace(".html", ""));
+
+				var item = new Zotero.Item('note');
+				item.libraryID = ZoteroPane.getSelectedLibraryID();
+				item.setNote(html);
+				if (parentID) {
+					item.setSource(parentID);
+				}
+				var newItemID = item.save();
+			}
+		}
 	},
 	showTextInTopicView: function () {
 		var items = ZoteroPane.getSelectedItems();
@@ -1854,6 +1879,11 @@ Zotero.PaperMachines = {
 			Zotero.debug(e);
 		}
 	},
+	alertPrompt: function(title, msg) {
+		var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+		    .getService(Components.interfaces.nsIPromptService);
+		prompts.alert(null, title, msg);
+	}
 	getStringsFromBundle: function () {
 		var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
 		Zotero.PaperMachines.bundle = stringBundleService.createBundle("chrome://papermachines/locale/papermachines.properties");
@@ -1942,10 +1972,8 @@ Zotero.PaperMachines = {
 			if (java_exe) {
 				Preferences.set("extensions.papermachines.general.java_exe", java_exe);
 			} else {
-				var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                        .getService(Components.interfaces.nsIPromptService);
- 
-				prompts.alert(null, "No Java executable found", Zotero.PaperMachines.prompts["no_java"]);
+				Zotero.PaperMachines.alertPrompt("No Java executable found", 
+					Zotero.PaperMachines.prompts["no_java"]);
 				Zotero.PaperMachines.ERROR(Zotero.PaperMachines.prompts["no_java"]);
 			}
 		}

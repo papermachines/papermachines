@@ -51,10 +51,6 @@ class Extract(textprocessor.TextProcessor):
     def _basic_params(self):
         self.name = 'extract'
         self.pdftotext = self.extra_args[0]
-        if not os.path.exists(self.pdftotext):
-            logging.error('pdftotext not found!')
-            sys.exit(1)
-
         self.force_update = False
         if len(self.extra_args) > 1:
             self.force_update = True
@@ -66,6 +62,10 @@ class Extract(textprocessor.TextProcessor):
             self.tika = Tika()
 
     def process(self):
+        if not os.path.exists(self.pdftotext):
+            logging.error('pdftotext not found!')
+            sys.exit(1)
+
         logging.info('starting to process')
 
         itemIDs = defaultdict(list)

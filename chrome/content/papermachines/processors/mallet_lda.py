@@ -6,9 +6,12 @@ import os
 import logging
 import time
 import codecs
+import struct
+import base64
 import traceback
 import xml.etree.ElementTree as et
 from lib.utils import *
+from operator import itemgetter
 
 import mallet
 
@@ -104,16 +107,16 @@ class MalletLDA(mallet.Mallet):
                 logging.error("The error is reproduced below.")
                 logging.error(traceback.format_exc())
 
-        labels = {x[0]: {"label": x[2:5], 
-                         "fulltopic": wordProbs[x[0]],
+        labels = {x[0]: {"words": wordProbs[x[0]],
                          "allocation_ratio": allocationRatios[x[0]]
-                         } 
+                        } 
                   for x in [y.split() for y in 
                             codecs.open(self.mallet_files['topic-keys'],
                                         'r', encoding='utf-8').readlines()
                             ]
                 }
 
+        topics_fmt = '<' + str(self.topics) + 'f'
 
         for line in codecs.open(self.mallet_files['doc-topics'], 'r', 
                                 encoding='utf-8'):
@@ -127,17 +130,14 @@ class MalletLDA(mallet.Mallet):
                 del values[0]
 
                 itemid = self.metadata[filename]["itemID"]
-
-                self.metadata[filename]["topics"] = dict(
-                    (int(y[0]), float(y[1])) 
-                    for y in group_by_n(values))
+                topics = [float(y[1]) for y in sorted(group_by_n(values), 
+                                                      key=itemgetter(0))]
+                topics_str = base64.b64encode(struct.pack(topics_fmt, *topics))
+                self.metadata[filename]["topics"] = topics_str
             except KeyboardInterrupt, SystemExit:
                 sys.exit(1)
             except:
                 logging.error(traceback.format_exc())
-
-        # self.metadata[filename]["main_topic"] = \
-        #   argmax(self.metadata[filename]["topics"])
 
         self.template_filename = os.path.join(self.cwd, "templates", 
                                               self.template_name + ".html")
@@ -151,8 +151,8 @@ class MalletLDA(mallet.Mallet):
         params = {"CATEGORICAL": self.categorical,
                         "TOPIC_LABELS": labels,
                         "TOPIC_COHERENCE": coherence,
-                        "TAGS": getattr(self, "tags", {}),
-                        "INDEX": getattr(self, "index", {})
+                        "TAGS": getattr(self, "tags", {})
+                        # "INDEX": getattr(self, "index", {})
         }
 
         self.write_html(params)

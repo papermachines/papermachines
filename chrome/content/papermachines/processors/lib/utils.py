@@ -48,7 +48,6 @@ def parse_csv(filename, dialect=csv.excel, **kwargs):
                 rowdict = dict(zip(header, row))
                 yield rowdict
 
-
 class memoize(object):
 
     '''Decorator. Caches a function's return value each time it is called.
