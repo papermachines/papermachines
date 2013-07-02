@@ -19,6 +19,7 @@ import platform
 import xml.etree.ElementTree as et
 from lib.stemutil import stem
 from collections import defaultdict, Counter
+from org.papermachines.util import MalletTfIdfPruner
 from mallet_import import MalletImport
 from mallet_dfr_import import MalletDfrImport
 from datetime import datetime
@@ -81,99 +82,6 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
             dmap.writelines([x + u'\n' for x in self.docs])
         self.doc_count = len(self.docs)
 
-    def _tfidf_filter(self, top_terms=None):
-        min_df = getattr(self, 'min_df', 5)
-        vocab = {}
-        inverse_vocab = {}
-        df = {}
-        tf = {}
-        tf_all_docs = {}
-        tfidf = {}
-        self.index = defaultdict(set)
-
-        i = 0
-        with codecs.open(self.texts_file, 'r', encoding='utf-8') as f:
-            for line in f:
-                j = 0
-                filename = ''
-                for part in line.split(u'\t'):
-                    if j == 0:
-                        filename = part
-                    elif j == 2:
-                        tf_for_doc = {}
-                        flen = 0
-                        for word in part.split():
-                            if len(word) < 3:
-                                continue
-                            flen += 1
-                            if word not in vocab:
-                                vocab[word] = i
-                                tf_for_doc[i] = 1
-                                tf[i] = 0
-                                df[i] = 1
-                                i += 1
-                            else:
-                                index = vocab[word]
-                                if index not in tf_for_doc:
-                                    tf_for_doc[index] = 0
-                                    df[index] += 1
-                                tf_for_doc[index] += 1
-                        tf_all_docs[filename] = \
-                            copy.deepcopy(tf_for_doc)
-                        for word_index in tf_for_doc.keys():
-                            tf_val = float(tf_for_doc[word_index]) \
-                                / flen
-                            if tf_val > tf[word_index]:
-                                tf[word_index] = tf_val
-                    j += 1
-            self.tf_all_docs = tf_all_docs
-            for index in vocab.values():
-                tfidf[index] = tf[index] \
-                    * math.log10(float(self.doc_count) / df[index])
-            tfidf_values = tfidf.values()
-
-            if top_terms is None:
-                top_terms = min(int(len(vocab.keys()) * 0.7), 5000)
-            min_score = sorted(tfidf_values,
-                               reverse=True)[min(top_terms,
-                    len(tfidf_values) - 1)]
-
-        os.rename(self.texts_file, self.texts_file + '-pre_tf-idf')
-        inverse_vocab = dict((v, k) for (k, v) in vocab.iteritems())
-        new_vocab = {}
-
-        with codecs.open(self.texts_file, 'w', encoding='utf-8') as f:
-            for (filename, freqs) in tf_all_docs.iteritems():
-                text = u''
-                flen = 0
-                thisfile_vocab = []
-                for (index, count) in freqs.iteritems():
-                    if tfidf[index] < min_score or df[index] < min_df:
-                        continue
-                    word = inverse_vocab[index]
-                    if word in self.stopwords:
-                        continue
-                    if word not in new_vocab:
-                        new_vocab[word] = 0
-                    new_vocab[word] += count
-                    thisfile_vocab.append(word)
-                    text += (word + u' ') * count
-                    flen += count
-                if flen > 25:
-                    f.write(u'\t'.join([filename,
-                            self.metadata[filename]['label'], text])
-                            + u'\n')
-                    for word in thisfile_vocab:
-                        self.index[word].add(self.metadata[filename]['itemID'
-                                ])
-                else:
-                    self.docs.remove(filename)
-        with codecs.open(os.path.join(self.mallet_out_dir, 'dmap'), 'w'
-                         , encoding='utf-8') as dmap:
-            dmap.writelines([x + u'\n' for x in self.docs])
-        logging.info('tf-idf complete; retained {:} of {:} words; minimum tf-idf score: {:}'.format(len(new_vocab.keys()),
-                     len(vocab.keys()), min_score))
-
     def setup_mallet_command(self):
         self.mallet_out_dir = os.path.join(self.out_dir, self.name
                 + self.collection + '-' + self.arg_basename)
@@ -222,10 +130,7 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
 
         # if self.dfr:
         #     self.import_dfr_new(self.dfr_dir, self.dois)
-        # self.write_instances()
-
-        if tfidf and not self.dry_run and not self.use_bulkloader:
-            self._tfidf_filter()
+        # self.write_instances()            
 
         with codecs.open(os.path.join(self.mallet_out_dir, 'metadata.json'), 
                          'w', encoding='utf-8') as meta_file:
@@ -255,6 +160,9 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
                 and not os.path.exists(self.instance_file):
                 from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
                 Csv2Vectors(import_args)
+            pruner = MalletTfIdfPruner(self.instance_file)
+            pruner.prune(5000)
+            self.instance_file = self.instance_file.replace(".mallet", "_pruned.mallet")
         elif not self.dry_run:
             from cc.mallet.util.BulkLoader import main as BulkLoader
             import_args += [

@@ -16,7 +16,8 @@ from datetime import datetime, timedelta
 from lib.utils import *
 import re
 from collections import Counter, defaultdict
-from lib.stemutil import stem
+from lib.stemutil import getStemmer
+from org.papermachines.util import NgramTokenizer
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -123,46 +124,17 @@ class TextProcessor:
     def older(self, old_file, new_file):
         return self.get_mtime(old_file) > self.get_mtime(new_file)
 
-    def _ngrams(self, text, n=1, stemming=False):
-        text = re.sub(r"[^\w ]+", u'', text.lower(), flags=re.UNICODE)
-        if stemming:
-            lang = getattr(self, 'lang', 'en')
-            words = [stem(lang, self.cwd, word)
-                     for word in text.split()
-                     if word not in self.stopwords]
-        else:
-            words = [word for word in text.split()]
-        total_n = len(words)
-        i = 0
-        while i < total_n - (n - 1):
-            ngram = words[i:i + n]
-            if all([word not in self.stopwords and word.isalpha()
-                    for word in ngram]):
-                yield u' '.join(ngram)
-            i += 1
-
     def getNgrams(self, filename, n=1, stemming=False):
-        ext = '_' + ('stemmed' if stemming else '')
-        ext += str(n) + 'grams.pickle'
-        ngram_serialized = filename.replace('.txt', ext)
-        if os.path.exists(ngram_serialized) and not self.older(ngram_serialized,
-                                                               filename):
-            with open(ngram_serialized, 'rb') as ngram_serialized_file:
-                freqs = pickle.load(ngram_serialized_file)
-            for key in freqs.keys():
-                if any([word in self.stopwords or not word.isalpha()
-                       for word in key.split()]):
-                    del freqs[key]
-        else:
-            freqs = Counter()
-            with codecs.open(filename, 'r', encoding='utf8') as f:
-                logging.info('processing ' + filename)
-                freqs.update(self._ngrams(f.read(), n, stemming))
-            freqs = dict(freqs)
-            with open(ngram_serialized, 'wb') as ngram_serialized_file:
-                pickle.dump(freqs, ngram_serialized_file,
-                            protocol=pickle.HIGHEST_PROTOCOL)
-        return freqs
+        tokenizer_name = "tokenizer" + str(n) + ('stemming' if stemming else '')
+        tokenizer = getattr(self, tokenizer_name, None)
+        if tokenizer is None:
+            stemmer = None
+            if stemming:
+                lang_code = getattr(self, "lang", "en")
+                stemmer = getStemmer(lang_code)
+            tokenizer = NgramTokenizer(n, stemmer, self.stopwords)
+            setattr(self, tokenizer_name, tokenizer)
+        return tokenizer.tokenize(filename)
 
     def get_doc_date(self, filename):
         doc_date = None

@@ -1883,7 +1883,7 @@ Zotero.PaperMachines = {
 		var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
 		    .getService(Components.interfaces.nsIPromptService);
 		prompts.alert(null, title, msg);
-	}
+	},
 	getStringsFromBundle: function () {
 		var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
 		Zotero.PaperMachines.bundle = stringBundleService.createBundle("chrome://papermachines/locale/papermachines.properties");
