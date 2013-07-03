@@ -38,8 +38,8 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
     def _output_text_freqs(self, text_freqs, f, filename):
         itemid = self.metadata[filename]['itemID']
         text_freqs = Counter(text_freqs)
-        for word in text_freqs.keys():
-            self.index[word].add(itemid)
+        # for word in text_freqs.keys():
+            # self.index[word].add(itemid)
         f.write(u'\t'.join([filename, self.metadata[filename]['label'],
                 u' '.join(text_freqs.elements())]) + u'\n')
         self.docs.append(filename)
@@ -67,6 +67,8 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
                                   '-- removing...').format(filename))
                     del self.metadata[filename]
                     continue
+                else:
+                    self.metadata[filename]['date'] = date_for_doc.strftime("%Y-%m-%dT%H:%M:%SZ")
                 self._output_text_freqs(self.getNgrams(filename,
                                   stemming=self.stemming), f, filename)
             if self.dfr:
@@ -117,12 +119,12 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
                     filename = fields[0]
                     self.docs.append(filename)
                     itemid = self.metadata[filename]['itemID']
-                    for word in set(fields[2].split()):
-                        self.index[word].add(itemid)
+                    # for word in set(fields[2].split()):
+                        # self.index[word].add(itemid)
             self.doc_count = len(self.docs)
 
     def setup_mallet_instances(self, sequence=True, tfidf=False, stemming=True):
-        self.use_bulkloader = getattr(self, 'use_bulkloader', False)
+        self.use_bulkloader = getattr(self, 'use_bulkloader', True)
 
         self.stemming = stemming
         self.setup_mallet_command()
@@ -161,7 +163,7 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
                 from cc.mallet.classify.tui.Csv2Vectors import main as Csv2Vectors
                 Csv2Vectors(import_args)
             pruner = MalletTfIdfPruner(self.instance_file)
-            pruner.prune(5000)
+            pruner.prune(getattr(self, "top_words", 5000), getattr(self, "min_df", 3))
             self.instance_file = self.instance_file.replace(".mallet", "_pruned.mallet")
         elif not self.dry_run:
             from cc.mallet.util.BulkLoader import main as BulkLoader
@@ -172,7 +174,7 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
                 '--prune-doc-frequency',
                 '0.3',
                 '--prune-count',
-                '3',
+                str(getattr(self, "min_df", 3)),
                 ]
             BulkLoader(import_args)
 

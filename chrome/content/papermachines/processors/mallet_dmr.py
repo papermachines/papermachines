@@ -39,7 +39,7 @@ class MalletDMR(mallet_lda.MalletLDA):
         self.dfr = len(self.extra_args) > 0
         if self.dfr:
             self.dfr_dir = self.extra_args[0]
-        self.features = self.named_args.get('features', 'decade')
+        self.features = self.named_args.get('features', ['decade'])
 
     def metadata_to_feature_string(self, doc):
         my_features = []
@@ -49,6 +49,10 @@ class MalletDMR(mallet_lda.MalletLDA):
             if year != 0:
                 decade = int(round(year, -1))
                 my_features.append(u'decade{:}'.format(decade))
+        if 'year' in self.features:
+            year = int(metadata['year'])
+            if year != 0:
+                my_features.append(u'year{:}'.format(year))
         if 'place' in self.features:
             place = metadata['place']
             my_features.append(self._sanitize_feature(place))
@@ -73,8 +77,6 @@ class MalletDMR(mallet_lda.MalletLDA):
 
         if tfidf and not self.dry_run:
             self._tfidf_filter()
-
-        self.split_into_intervals()
 
         os.rename(self.texts_file, self.texts_file + '-pre_dmr')
 
@@ -264,17 +266,10 @@ class MalletDMR(mallet_lda.MalletLDA):
         self.template_filename = os.path.join(self.cwd, 'templates',
                 self.template_name + '.html')
 
-        # if getattr(self, "index", None) is not None:
-        #     for term in self.index:
-        #         if isinstance(self.index[term], set):
-        #             self.index[term] = list(self.index[term])
-        #     self.index = dict(self.index)
-
         params = {"CATEGORICAL": self.categorical,
                         "TOPIC_LABELS": labels,
                         "TOPIC_COHERENCE": {},
                         "TAGS": getattr(self, "tags", {})
-                        # "INDEX": getattr(self, "index", {})
         }
 
         self.write_html(params)

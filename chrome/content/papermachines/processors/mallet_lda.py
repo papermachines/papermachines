@@ -142,17 +142,10 @@ class MalletLDA(mallet.Mallet):
         self.template_filename = os.path.join(self.cwd, "templates", 
                                               self.template_name + ".html")
 
-        if getattr(self, "index", None) is not None:
-            for term in self.index:
-                if isinstance(self.index[term], set):
-                    self.index[term] = list(self.index[term])
-            self.index = dict(self.index)
-
         params = {"CATEGORICAL": self.categorical,
                         "TOPIC_LABELS": labels,
                         "TOPIC_COHERENCE": coherence,
                         "TAGS": getattr(self, "tags", {})
-                        # "INDEX": getattr(self, "index", {})
         }
 
         self.write_html(params)

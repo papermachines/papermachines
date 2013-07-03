@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from lib.utils import *
 import re
 from collections import Counter, defaultdict
-from lib.stemutil import getStemmer
+from lib.stemutil import getLanguage
 from org.papermachines.util import NgramTokenizer
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -128,11 +128,11 @@ class TextProcessor:
         tokenizer_name = "tokenizer" + str(n) + ('stemming' if stemming else '')
         tokenizer = getattr(self, tokenizer_name, None)
         if tokenizer is None:
-            stemmer = None
+            stem_language = ""
             if stemming:
                 lang_code = getattr(self, "lang", "en")
-                stemmer = getStemmer(lang_code)
-            tokenizer = NgramTokenizer(n, stemmer, self.stopwords)
+                stemLanguage = getLanguage(lang_code)
+            tokenizer = NgramTokenizer(n, stemLanguage, self.stopwords)
             setattr(self, tokenizer_name, tokenizer)
         return tokenizer.tokenize(filename)
 
