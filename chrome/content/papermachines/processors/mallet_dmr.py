@@ -20,7 +20,7 @@ from collections import defaultdict, Counter
 from lib.utils import *
 import gzip
 from lib.stemutil import stem
-from org.papermachines.util import MalletStateReader
+from org.papermachines.util import MalletStateReader, MalletTfIdfPruner
 import mallet_lda
 
 
@@ -40,6 +40,7 @@ class MalletDMR(mallet_lda.MalletLDA):
         if self.dfr:
             self.dfr_dir = self.extra_args[0]
         self.features = self.named_args.get('features', ['decade'])
+        self.date_range = self.named_args.get("date_range", '1820-2000')
 
     def metadata_to_feature_string(self, doc):
         my_features = []
@@ -73,45 +74,49 @@ class MalletDMR(mallet_lda.MalletLDA):
         self.instance_file = os.path.join(self.mallet_out_dir,
                 self.collection + '.mallet')
 
-        logging.info('beginning text import')
+        if not self.dry_run:
+            logging.info('beginning text import')
 
-        if tfidf and not self.dry_run:
-            self._tfidf_filter()
+            os.rename(self.texts_file, self.texts_file + '-pre_dmr')
 
-        os.rename(self.texts_file, self.texts_file + '-pre_dmr')
+            with codecs.open(self.texts_file + '-pre_dmr', 'r',
+                             encoding='utf-8') as texts_file_old:
+                with codecs.open(self.texts_file, 'w', encoding='utf-8') as \
+                    texts_file:
+                    for line in texts_file_old:
+                        parts = line.split(u'\t')
+                        if parts[0] in self.metadata:
+                            texts_file.write(parts[-1])
+                        else:
+                            self.docs.remove(parts[0])
 
-        with codecs.open(self.texts_file + '-pre_dmr', 'r',
-                         encoding='utf-8') as texts_file_old:
-            with codecs.open(self.texts_file, 'w', encoding='utf-8') as \
-                texts_file:
-                for line in texts_file_old:
-                    parts = line.split(u'\t')
-                    if parts[0] in self.metadata:
-                        texts_file.write(parts[-1])
-                    else:
-                        self.docs.remove(parts[0])
+            with codecs.open(os.path.join(self.mallet_out_dir,
+                             'metadata.json'), 'w', encoding='utf-8') as \
+                meta_file:
+                json.dump(self.metadata, meta_file)
 
-        with codecs.open(os.path.join(self.mallet_out_dir,
-                         'metadata.json'), 'w', encoding='utf-8') as \
-            meta_file:
-            json.dump(self.metadata, meta_file)
+            self.features_file = os.path.join(self.mallet_out_dir,
+                    'features.txt')
 
-        self.features_file = os.path.join(self.mallet_out_dir,
-                'features.txt')
+            self.features_list = []
+            for doc in self.docs:
+                self.features_list.append(self.metadata_to_feature_string(doc))
 
-        self.features_list = []
-        for doc in self.docs:
-            self.features_list.append(self.metadata_to_feature_string(doc))
+            with codecs.open(self.features_file, 'w', encoding='utf-8') as \
+                features_file:
+                features_file.writelines([x + u'\n' for x in
+                        self.features_list])
 
-        with codecs.open(self.features_file, 'w', encoding='utf-8') as \
-            features_file:
-            features_file.writelines([x + u'\n' for x in
-                    self.features_list])
+            from cc.mallet.topics.tui.DMRLoader import main as DMRLoader
+            import_args = [self.texts_file, self.features_file, self.instance_file]
 
-        from cc.mallet.topics.tui.DMRLoader import main as DMRLoader
-        import_args = [self.texts_file, self.features_file, self.instance_file]
+            DMRLoader(import_args)
 
-        DMRLoader(import_args)
+            if tfidf and not self.dry_run:
+                MalletTfIdfPruner.prune(self.instance_file, 
+                                        getattr(self, "top_words", 6000),
+                                        getattr(self, "min_df", 3))
+                self.instance_file = self.instance_file.replace(".mallet", "_pruned.mallet")
 
     def process(self):
         """
@@ -177,23 +182,25 @@ class MalletDMR(mallet_lda.MalletLDA):
                     self.topic_features[topic][feature] = \
                         float(this_line[2])
 
-        self.progress_file = file(self.progress_filename, 'r')
-        self.progress_file.seek(0, os.SEEK_SET)
         self.alphas = {}
-        for line in self.progress_file:
-            if re.match('[0-9]+\t[0-9.]+', line) is not None:
-                this_line = line.split('\t')
-                topic = int(this_line[0])
-                alpha = float(this_line[1])
-                tokens = int(this_line[2])
+        for topic, features in self.topic_features.iteritems():
+            self.alphas[topic] = math.exp(features.get('<default>'))
+        # self.progress_file = file(self.progress_filename, 'r')
+        # self.progress_file.seek(0, os.SEEK_SET)
+        # for line in self.progress_file:
+        #     if re.match('[0-9]+\t[0-9.]+', line) is not None:
+        #         this_line = line.split('\t')
+        #         topic = int(this_line[0])
+        #         alpha = float(this_line[1])
+        #         tokens = int(this_line[2])
 
-                self.alphas[topic] = alpha
+        #         self.alphas[topic] = alpha
 
         self.alpha_sum = sum(self.alphas.values())
 
         reader = MalletStateReader(self.state_file)
         self.vocab = reader.getVocab()
-        self.doc_topics = reader.getDocTopicsDict()
+        self.doc_topics = reader.getDocTopicDict()
         self.topic_types = reader.getTopicTypeDict()
         self.topic_words = dict((topic, 
                 dict((self.vocab[i], x) for i, x in enumerate(typecounts)))
@@ -222,8 +229,8 @@ class MalletDMR(mallet_lda.MalletLDA):
                 self.topic_words.keys())
         for doc in self.doc_topics.keys():
             topics = self.doc_topics[doc]
-            doc_length = sum(topics.values())
-            for (topic, count) in topics.iteritems():
+            doc_length = sum(topics)
+            for (topic, count) in enumerate(topics):
                 proportion = (self.alphas[topic] + count) \
                     / (self.alpha_sum + doc_length)
                 self.doc_topics[doc][topic] = proportion
@@ -246,9 +253,9 @@ class MalletDMR(mallet_lda.MalletLDA):
         doc_metadata = {}
 
         topics_fmt = '<' + str(self.topics) + 'f'
-        for (id, topics) in self.doc_topics.iteritems():
+        for (doc, topics) in self.doc_topics.iteritems():
             try:
-                filename = self.docs[int(id)]
+                filename = self.docs[doc]
 
                 itemid = self.metadata[filename]['itemID']
 
@@ -256,12 +263,21 @@ class MalletDMR(mallet_lda.MalletLDA):
                     {'label': self.metadata[filename]['label'],
                      'title': self.metadata[filename]['title']}
 
+                topics = self.doc_topics[doc]
                 topics_str = base64.b64encode(struct.pack(topics_fmt, *topics))
                 self.metadata[filename]["topics"] = topics_str
             except KeyboardInterrupt:
                 sys.exit(1)
             except:
                 logging.error(traceback.format_exc())
+
+        valid_docs = set(self.docs[k] for k in self.doc_topics.keys())
+        for filename in self.docs:
+            if filename not in valid_docs:
+                del self.metadata[filename]
+            else:
+                date_for_doc = self.get_doc_date(filename)
+                self.metadata[filename]['date'] = self.format_date(date_for_doc)
 
         self.template_filename = os.path.join(self.cwd, 'templates',
                 self.template_name + '.html')

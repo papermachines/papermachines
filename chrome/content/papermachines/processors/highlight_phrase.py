@@ -17,7 +17,7 @@ class HighlightPhrase(textprocessor.TextProcessor):
 
     def _basic_params(self):
         self.name = 'highlight_phrase'
-        self.phrase = u'human rights'
+        self.phrase = r'human\s+rights'
 
     def get_containing_paragraph(self, text, match, max_chars_added=500):
         max_length = len(text) - 1

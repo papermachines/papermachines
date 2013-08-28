@@ -139,6 +139,10 @@ class MalletLDA(mallet.Mallet):
             except:
                 logging.error(traceback.format_exc())
 
+        for filename in self.docs:
+            date_for_doc = self.get_doc_date(filename)
+            self.metadata[filename]['date'] = self.format_date(date_for_doc)
+
         self.template_filename = os.path.join(self.cwd, "templates", 
                                               self.template_name + ".html")
 

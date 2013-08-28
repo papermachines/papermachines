@@ -40,13 +40,14 @@ class WordCloud(textprocessor.TextProcessor):
         for filename in self.files:
             flen = 0
             self.tf_by_doc[filename] = self.getNgrams(filename,
-                    n=ngram, stemming=self.stemming)
+                    n=ngram, stemming = self.stemming)
             flen = sum(self.tf_by_doc[filename].values())
-            self.df.update(self.tf_by_doc[filename].keys())
+            this_doc_keys = self.tf_by_doc[filename].keys()
+            self.df.update(this_doc_keys)
 
             self.freqs.update(self.tf_by_doc[filename])
 
-            for stem in self.tf_by_doc[filename].keys():
+            for stem in this_doc_keys:
                 if scale:
                     self.tf_by_doc[filename][stem] /= float(flen)  # max_tf_d
                     this_tf = self.tf_by_doc[filename][stem]

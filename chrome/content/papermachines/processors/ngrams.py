@@ -12,6 +12,7 @@ import math
 import pickle
 import copy
 import itertools
+from datetime import datetime
 from collections import Counter, defaultdict
 import textprocessor
 
@@ -33,12 +34,13 @@ class NGrams(textprocessor.TextProcessor):
         self.end_date = None
 
         for param in ('start_date', 'end_date'):
-            date_str = self.named_args.get(param, '')
+            date_str = self.named_args.get(param, '').strip()
             if date_str != '':
                 try:
                     this_date = datetime.strptime(date_str, '%Y-%m-%d')
                     setattr(self, param, this_date)
                 except:
+                    logging.error(traceback.format_exc())
                     logging.error('Date ' + date_str + ' not valid!' + 
                         'Must be formatted like: 2013-01-05')
 
@@ -66,7 +68,7 @@ class NGrams(textprocessor.TextProcessor):
                 del self.doc_freqs[key]
 
         kept = len(self.doc_freqs.keys())
-        logging.info('{:} ngrams below threshold'.format(len(rejected)))
+        logging.info('{:} ngrams below DF threshold'.format(len(rejected)))
         logging.info(('{:}/{:} = {:.0%} ngrams occurred ' +
                       'in {:} or more documents').format(kept, 
                                                          all_ngrams,
@@ -81,6 +83,34 @@ class NGrams(textprocessor.TextProcessor):
         # rev_enumerate = lambda a: itertools.izip(a, xrange(len(a)))
         # self.num_to_ngram = self.doc_freqs.keys()
         # self.ngram_to_num = dict(rev_enumerate(self.num_to_ngram))
+
+    def _filter_by_tfidf(self):
+        all_ngrams = len(self.doc_freqs.keys())
+        rejected = set()
+        tf_maxima = defaultdict(float)
+        tfidf = {}
+        doc_count = len(self.metadata.keys())
+
+        for interval in self.freqs.keys():
+            for ngram, freq in self.freqs[interval].iteritems():
+                if freq > tf_maxima[ngram]:
+                    tf_maxima[ngram] = freq
+
+        for ngram, tf in tf_maxima.iteritems():
+            tfidf[ngram] = tf * math.log10(float(doc_count) / len(self.doc_freqs[ngram]))
+
+        tfidf_values = tfidf.values()
+        min_score = sorted(tfidf_values, reverse=True)[min(self.top_ngrams, len(tfidf_values) - 1)]
+
+        for key, value in tfidf.iteritems():
+            if value < min_score:
+                rejected.add(key)
+                self.doc_freqs.pop(key, None)
+
+        for interval in self.freqs.keys():
+            for ngram_text in self.freqs[interval].keys():
+                if ngram_text in rejected:
+                    del self.freqs[interval][ngram_text]
 
     def _filter_by_avg_value(self):
         avg_values = {}
@@ -113,6 +143,7 @@ class NGrams(textprocessor.TextProcessor):
         logging.info('ngram counts complete')
 
         self._filter_by_df()
+        self._filter_by_tfidf()
 
         self.ngrams_intervals = {}
 
@@ -125,7 +156,7 @@ class NGrams(textprocessor.TextProcessor):
                                 self.interval_names]
                     self.ngrams_intervals[ngram][i] = value
 
-        self._filter_by_avg_value()
+        # self._filter_by_avg_value()
 
         self.max_freq = max([max(l) for l in
                             self.ngrams_intervals.values()])

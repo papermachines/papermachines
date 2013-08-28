@@ -26,7 +26,7 @@ class MalletJSTOR(mallet_lda.MalletLDA):
         self.name = 'mallet_lda_jstor'
         self.categorical = False
         self.template_name = 'mallet_lda'
-        self.dry_run = True
+        self.dry_run = False
         self.topics = 50
         self.dfr = True
         self.use_bulkloader = True

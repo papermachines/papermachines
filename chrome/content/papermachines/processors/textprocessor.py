@@ -66,6 +66,7 @@ class TextProcessor:
                               codecs.open(self.stoplist, 'r',
                               encoding='utf-8').readlines()
                               if x.strip() != '']
+            self.stopset = set(self.stopwords)
 
         self.out_filename = os.path.join(self.out_dir, self.name
                 + self.collection + '-' + self.arg_basename + '.html')
@@ -131,10 +132,14 @@ class TextProcessor:
             stem_language = ""
             if stemming:
                 lang_code = getattr(self, "lang", "en")
-                stemLanguage = getLanguage(lang_code)
-            tokenizer = NgramTokenizer(n, stemLanguage, self.stopwords)
+                stem_language = getLanguage(lang_code)
+            tokenizer = NgramTokenizer(n, stem_language, self.stopwords)
             setattr(self, tokenizer_name, tokenizer)
-        return tokenizer.tokenize(filename)
+        ngrams = dict(tokenizer.tokenize(filename))
+        termset = set(ngrams.keys())
+        for key in termset.intersection(self.stopset):
+            del ngrams[key]
+        return ngrams
 
     def get_doc_date(self, filename):
         doc_date = None
@@ -148,6 +153,9 @@ class TextProcessor:
             except:
                 pass
         return doc_date
+
+    def format_date(self, date):
+        return re.sub(r'\..+', '', date.isoformat())
 
     def split_into_intervals(self, start_and_end_dates=False):
         self.start_date = getattr(self, "start_date", None)

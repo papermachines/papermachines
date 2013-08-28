@@ -112,8 +112,10 @@
 
 		<menuseparator hidden="false"/>
 <!--		<menuitem id="bulk-import" label="&papermachines.collectionmenu.bulk_import;"
-			oncommand="Zotero.PaperMachines.bulkImport()"/> -->
-<!--		<menuitem id="highlight_phrase" label="Highlight Phrase"
+			oncommand="Zotero.PaperMachines.bulkImport()"/> 
+		<menuitem id="index" label="Index Texts..."
+			oncommand="Zotero.PaperMachines.runProcess('index')"/>
+		<menuitem id="highlight_phrase" label="Highlight Phrase"
 			oncommand="Zotero.PaperMachines.runProcess('highlight_phrase')"/> -->
 		<menuitem id="view-output" label="&papermachines.collectionmenu.view_output;"
 			disabled="true" oncommand="Zotero.PaperMachines.viewOutput()"/>
