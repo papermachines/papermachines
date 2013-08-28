@@ -418,7 +418,7 @@ Zotero.PaperMachines = {
 		alert(label);
 	},
 	_sanitizeFilename: function (filename) {
-		return filename.replace(/_/g,"-").replace(/ /g,"_").replace(/[^-A-Za-z0-9_.]/g,"").substring(0,64);
+		return filename.replace(/_/g,"-").replace(/ /g,"_").replace(/[^-A-Za-z0-9_.]/g,"").substring(0,48);
 	},
 	/**
 	 * Returns an nsIFile object for the requested dir, creating it if necessary
@@ -558,8 +558,9 @@ Zotero.PaperMachines = {
 
 		var classpath = [this.papermachines_jar, this.jython_path];
 
+		classpath = this.mallet_jars.concat(classpath);
+
 		if (processor.indexOf("mallet") != -1) {
-			classpath = this.mallet_jars.concat(classpath);
 			javaArgs.unshift("-Djava.util.logging.config.file="+loggingProperties);
 		}
 
@@ -697,8 +698,8 @@ Zotero.PaperMachines = {
 		var docs = JSON.parse(json_data);
 		for (var i in docs) {
 			var doc = docs[i];
-			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO doc_files (itemID, filename) VALUES (?,?)", [doc.itemID, doc.filename]);
-			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO collection_docs (collection,itemID) VALUES (?,?)", [doc.collection, doc.itemID]);
+			Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO doc_files (itemID, filename) VALUES (?,?)", [doc.itemID, doc.filename]);
+			Zotero.PaperMachines.DB.query("INSERT OR REPLACE INTO collection_docs (collection,itemID) VALUES (?,?)", [doc.collection, doc.itemID]);
 			Zotero.PaperMachines.DB.query("DELETE FROM files_to_extract WHERE itemID = ?;", [doc.itemID]);
 		}
 	},
@@ -1054,13 +1055,13 @@ Zotero.PaperMachines = {
 			var year = this.getYearOfItem(item);
 			year = (year != "" ? year+" - " : "");
 			
-			filename = (item.firstCreator != "" ? item.firstCreator + " - " : "");
-			filename += year;
-			filename += item.getDisplayTitle();
+			filename = year;
+			filename += (item.firstCreator != "" ? item.firstCreator + " - " : "");
+			filename += item.getDisplayTitle() + " - ";
 		} else if (item.isAttachment() && item.attachmentLinkMode != Zotero.Attachments.LINK_MODE_LINKED_URL) {
-			filename = item.getFilename().replace(/\..{3,3}$/,''); // strip extension
+			filename = item.getFilename().replace(/\..{3,4}$/,''); // strip extension
 		}
-		return Zotero.PaperMachines._sanitizeFilename(filename) + ".txt";
+		return Zotero.PaperMachines._sanitizeFilename(filename) + item.key + ".txt";
 	},
 	processItem: function(itemGroupName, item, dir, i, queue) {
 		var percentDone = (parseInt(i)+queue.runningTotal)*100.0/queue.grandTotal;
