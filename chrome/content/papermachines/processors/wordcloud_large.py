@@ -21,6 +21,7 @@ class LargeWordCloud(wordcloud.WordCloud):
         self.fontsize = [10, 72]
         self.name = 'wordcloud_large'
         self.n = 150
+        self.ngram = 1
         self.tfidf_scoring = len(self.extra_args) > 0
 
 

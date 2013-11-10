@@ -19,7 +19,7 @@ import platform
 import xml.etree.ElementTree as et
 from lib.stemutil import stem
 from collections import defaultdict, Counter
-from org.papermachines.util import MalletTfIdfPruner
+from org.papermachines.util import MalletTfIdfPruner, TextList2FeatureSequence
 from mallet_import import MalletImport
 from mallet_dfr_import import MalletDfrImport
 from datetime import datetime
@@ -218,7 +218,16 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
 
         self.stemming = stemming
         self.setup_mallet_command()
-        self.import_texts()
+        if not self.dfr:
+            with codecs.open(os.path.join(self.mallet_out_dir, 'dmap'), 'w'
+                             , encoding='utf-8') as dmap:
+                dmap.writelines([x + u'\n' for x in self.files])
+            TextList2FeatureSequence(self.files, self.instance_file,
+                                     self.stoplist)
+            self.docs = self.files
+            self.instance_file = self.instance_file.replace(".mallet", "_pruned.mallet")
+        else:
+            self.import_texts()
 
         # if self.dfr:
         #     self.import_dfr_new(self.dfr_dir, self.dois)
@@ -227,6 +236,9 @@ class Mallet(textprocessor.TextProcessor, MalletImport, MalletDfrImport):
         with codecs.open(os.path.join(self.mallet_out_dir, 'metadata.json'), 
                          'w', encoding='utf-8') as meta_file:
             json.dump(self.metadata, meta_file)
+        
+        if not self.dfr:
+            return
 
         logging.info('beginning text import')
 

@@ -1132,7 +1132,10 @@ Zotero.PaperMachines = {
 		var outFile = dir.clone();
 		outFile.append(Zotero.PaperMachines.getFilenameForItem(item));
 
-		Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [item.getFile().path, item.id, outFile.path, dir.leafName]);
+		var file = item.getFile();
+		if (file) {
+			Zotero.PaperMachines.DB.query("INSERT OR IGNORE INTO files_to_extract (filename, itemID, outfile, collection) VALUES (?,?,?,?)", [file.path, item.id, outFile.path, dir.leafName]);
+		}
 
 		queue.runningTotal += 1;
 		queue.next();

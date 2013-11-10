@@ -10,7 +10,6 @@ from itertools import izip
 
 def group_by_n(seq, n=2):
     ''' Return seq in chunks of length n (omitting any leftover elements) '''
-
     return izip(*(iter(seq), ) * n)
 
 
