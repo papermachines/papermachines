@@ -117,8 +117,10 @@
 			disabled="true" oncommand="Zotero.PaperMachines.viewOutput()"/>
 		<menuitem id="export-output" label="&papermachines.collectionmenu.export_output;"
 			disabled="true" oncommand="Zotero.PaperMachines.exportOutput()"/>
+		<menuitem id="export-text" label="&papermachines.collectionmenu.export_text;"
+		    disabled="true" oncommand="Zotero.PaperMachines.exportText()"/>					
 		<menuitem id="reset-output" label="&papermachines.collectionmenu.reset_output;"
-			disabled="true" oncommand="Zotero.PaperMachines.resetOutput()"/>
+			disabled="true" oncommand="Zotero.PaperMachines.resetOutput()"/>	
 		<menuitem id="prefs" label="&papermachines.collectionmenu.preferences;"
 			oncommand="Zotero.PaperMachines.openPreferences()"/>
 	</menupopup>

@@ -44,6 +44,8 @@
 <!ENTITY papermachines.collectionmenu.bulk_import			"Periodical PDF Import...">
 <!ENTITY papermachines.collectionmenu.view_output			"View Output of Paper Machines...">
 <!ENTITY papermachines.collectionmenu.export_output			"Export Output of Paper Machines...">
+<!ENTITY papermachines.collectionmenu.export_text
+	"Export Plain Text Files...">
 <!ENTITY papermachines.collectionmenu.reset_output			"Reset Output of Paper Machines...">
 
 <!ENTITY papermachines.collectionmenu.preferences		"Paper Machines Preferences...">
