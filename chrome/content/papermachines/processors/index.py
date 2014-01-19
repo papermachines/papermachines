@@ -25,8 +25,8 @@ class Index(textprocessor.TextProcessor):
                 self.collection + '.mallet')
         TextList2FeatureSequence(self.files, self.instance_file,
                                  self.stoplist)
-        self.instance_file = self.instance_file.replace('.mallet',
-                '_pruned.mallet')
+        # self.instance_file = self.instance_file.replace('.mallet',
+        #         '_pruned.mallet')
 
         itemIDs = [self.metadata[fname]['itemID'] for fname in self.files]
         fs2i = FeatureSequence2Index(self.instance_file, itemIDs)
