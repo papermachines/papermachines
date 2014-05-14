@@ -732,7 +732,7 @@ Zotero.PaperMachines = {
 		}
 
 		var csv_str = "";
-		var header = ["filename", "itemID", "title", "label", "key", "year", "date", "place"];
+		var header = ["filename", "itemID", "title", "label", "key", "libraryKey", "year", "date", "place"];
 		csv_str += header.join(",") + "\n";
 
 		var docs = this.buildDocArray(collection);
@@ -753,6 +753,8 @@ Zotero.PaperMachines = {
 					val = item.getField("place");
 				} else if (header[k] == "key") {
 					val = item.key;
+				} else if (header[k] == "libraryKey") {
+					val = item.libraryKey;
 				} else if (header[k] == "label") {
 					val = this.getCollectionOfItem(item);
 				} else {
