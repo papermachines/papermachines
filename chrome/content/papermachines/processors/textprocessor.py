@@ -214,9 +214,12 @@ class TextProcessor:
                     del freqs[key]
         else:
             freqs = Counter()
-            with codecs.open(filename, 'r', encoding='utf8') as f:
-                logging.info('processing ' + filename)
-                freqs.update(self._ngrams(f.read(), n, stemming))
+            try:
+                with codecs.open(filename, 'r', encoding='utf8') as f:
+                    logging.info('processing ' + filename)
+                    freqs.update(self._ngrams(f.read(), n, stemming))
+            except:
+                logging.error(filename + u' not found!')
             freqs = dict(freqs)
             with open(ngram_serialized, 'wb') as ngram_serialized_file:
                 pickle.dump(freqs, ngram_serialized_file,
