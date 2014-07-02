@@ -1397,6 +1397,8 @@ Zotero.PaperMachines = {
 					}
 				}
 			}
+			var csv_file = Zotero.PaperMachines.buildCSV(thisGroup);
+			csv_file.copyTo(new_dir, "_metadata.csv");
         }
 	},
 	resetOutput: function () {
