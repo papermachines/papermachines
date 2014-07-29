@@ -53,10 +53,6 @@ class Extract(textprocessor.TextProcessor):
     def _basic_params(self):
         self.name = 'extract'
         self.pdftotext = self.extra_args[0]
-        if not os.path.exists(self.pdftotext):
-            logging.error('pdftotext not found!')
-            sys.exit(1)
-
         self.force_update = False
         if len(self.extra_args) > 1:
             self.force_update = True
@@ -68,6 +64,9 @@ class Extract(textprocessor.TextProcessor):
             self.tika = Tika()
 
     def process(self):
+        if not os.path.exists(self.pdftotext):
+            logging.error('pdftotext not found!')
+
         logging.info('starting to process')
 
         itemIDs = {}
@@ -115,11 +114,14 @@ class Extract(textprocessor.TextProcessor):
                                 filename,
                                 '-',
                                 ]
-                            import_proc = subprocess.Popen(import_args,
-                                    stdout=subprocess.PIPE)
-                            text += \
-                                import_proc.communicate()[0].decode('utf-8'
-                                    )
+                            try:
+                                import_proc = subprocess.Popen(import_args,
+                                        stdout=subprocess.PIPE)
+                                text += \
+                                    import_proc.communicate()[0].decode('utf-8'
+                                        )
+                            except:
+                                logging.error(traceback.format_exc())
                     logging.info('processed ' + out_file)
                     with codecs.open(out_file, 'w', encoding='utf-8'
                             ) as f:
