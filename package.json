@@ -1,0 +1,9 @@
+{
+  "name": "papermachines",
+  "title": "Paper Machines",
+  "id": "papermachines@chrisjr.org",
+  "description": "A Zotero extension for text analysis and visualization",
+  "author": "Chris Johnson-Roberson <chris.johnson.roberson@gmail.com>",
+  "license": "BSD 2-clause",
+  "version": "0.5.0pre"
+}
