@@ -41,11 +41,19 @@ exports["test main button added toggleTabTwice async"] = function(assert, done) 
     checkForButton(window, assert, done);
 };
 
+
 exports["test button removed"] = function(assert, done) {
     var window = utils.getWindow();
-    ui.removeButtonFromDocument(window.ZoteroPane.document);
+    try {
+        ui.removeButtonFromDocument(window.ZoteroPane.document);        
+    } catch (e) {
+        console.error(e);
+        assert.fail("button could not be removed");
+    }
     assert.ok(window.document.getElementById("papermachines-button") == null, "Button removed");
+    done();
 };
+
 
 before(exports, function(name, assert) {
     var window = utils.getWindow();
