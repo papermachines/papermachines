@@ -16,6 +16,7 @@ function checkForButton(window, assert, done) {
             }
             i++;
             if (i == maxRetries) {
+                window.clearInterval(interval);
                 assert.fail("did not find button in " + (maxRetries * millis) + " ms.");
                 done();
             }
