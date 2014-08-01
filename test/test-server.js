@@ -4,14 +4,23 @@ var server = require("./server");
 var before = require("sdk/test/utils").before;
 
 var fakeItem = {
-    "id": -1,
     "itemType": "webpage",
+    "file-url": "",
+    "library-key": "-1",
     "last-modified": new Date(1999, 0, 1)
 };
 
-var fakeItemOlder = {
-    "id": -1,
+var fakeItemOnlyOnce = {
     "itemType": "webpage",
+    "file-url": "",
+    "library-key": "-2",
+    "last-modified": new Date(1999, 0, 1)
+};
+
+var fakeItemUpdated = {
+    "itemType": "webpage",
+    "file-url": "",
+    "library-key": "-1",
     "last-modified": new Date()
 };
 
@@ -47,35 +56,35 @@ exports["test add item to corpus"] = function(assert, done) {
     var send = server.sendItemToServer(corpusID, fakeItem);
     send.then(function(result) {
         assert.ok(result, "Item created");
-        done();
-    }, onError(assert, done)).then(null, onError(assert, done));
-};
-
-exports["test add item to corpus"] = function(assert, done) {
-    var corpusID = server.findOrCreateCorpus("Testing", "-1");
-    var send = server.sendItemToServer(corpusID, fakeItem);
-    send.then(function(result) {
-        assert.ok(result, "Item created");
         assert.equal(result.statusText, "Created", "Item was created");
+        assert.equal(result.message, "new", "Item is new");
         done();
     }, onError(assert, done)).then(null, onError(assert, done));
 };
 
 exports["test add item only once"] = function(assert, done) {
     var corpusID = server.findOrCreateCorpus("Testing", "-1");
-    var send = server.sendItemToServer(corpusID, fakeItem);
+    var send = server.sendItemToServer(corpusID, fakeItemOnlyOnce);
     send.then(function(result) {
         assert.ok(result, "Item created");
-        assert.equal(result.statusText, "OK", "Item already existed");
+        assert.equal(result.statusText, "Created", "Item was created");
+    }, onError(assert, done)).then(function() {
+        return server.sendItemToServer(corpusID, fakeItemOnlyOnce)
+    }, onError(assert, done)).then(function(result) {
+        assert.equal(result.statusText, "OK", "Item was found");
+        assert.equal(result.message, "found", "Item already existed");
         done();
     }, onError(assert, done)).then(null, onError(assert, done));
 };
 
 exports["test update item if newer"] = function(assert, done) {
     var corpusID = server.findOrCreateCorpus("Testing", "-1");
-    var send = server.sendItemToServer(corpusID, fakeItemOlder);
+    var send = server.sendItemToServer(corpusID, fakeItem);
     send.then(function(result) {
         assert.ok(result, "Item sent");
+    }, onError(assert, done)).then(function() {
+        return server.sendItemToServer(corpusID, fakeItemUpdated);
+    }, onError(assert, done)).then(function(result) {
         assert.equal(result.statusText, "OK", "Item existed");
         assert.equal(result.message, "updated", "Item was altered");
         done();
