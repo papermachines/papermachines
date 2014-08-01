@@ -1,6 +1,7 @@
 "use strict";
 var main = require("./main");
 var utils = require("./utils");
+var ui = require("./ui");
 var before = require("sdk/test/utils").before;
 
 function checkForButton(window, assert, done) {
@@ -37,6 +38,12 @@ exports["test main button added toggleTabTwice async"] = function(assert, done) 
     window.ZoteroPane.toggleTab();
     window.ZoteroPane.toggleTab();
     checkForButton(window, assert, done);
+};
+
+exports["test button removed"] = function(assert, done) {
+    var window = utils.getWindow();
+    ui.removeButtonFromDocument(window.ZoteroPane.document);
+    assert.ok(window.document.getElementById("papermachines-button") == null, "Button removed");
 };
 
 before(exports, function(name, assert) {
