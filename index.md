@@ -6,7 +6,7 @@ title: Paper Machines
 
 Paper Machines is an open-source extension for the [Zotero](http://www.zotero.org/) bibliographic management software. Its purpose is to allow individual researchers to generate analyses and visualizations of user-provided corpora, without requiring extensive computational resources or technical knowledge.
 
-This project is a collaboration between historian [Jo Guldi](http://www.joguldi.com) and digital ethnomusicologist [Chris Johnson-Roberson](http://www.chrisjr.org), graciously supported by Google Summer of Code, the William F. Milton Fund, and [metaLAB @ Harvard](http://metalab.harvard.edu/).
+This project is a collaboration between historian [Jo Guldi](http://www.joguldi.com) and digital ethnomusicologist [Cora Johnson-Roberson](http://www.corajr.com), graciously supported by Google Summer of Code, the William F. Milton Fund, and [metaLAB @ Harvard](http://metalab.harvard.edu/).
 
 **NOTE:** Paper Machines now bundles Jython to ensure broader compatibility. If you encounter problems using the extension, please create an issue describing what operating system and version of Java you have installed, and the nature of the issue.
 
