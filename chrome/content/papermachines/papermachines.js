@@ -306,7 +306,7 @@ Zotero.PaperMachines = {
 		this.getStringsFromBundle();
 
 		Components.utils.import("resource://gre/modules/AddonManager.jsm");
-		AddonManager.getAddonByID("papermachines@chrisjr.org",
+		AddonManager.getAddonByID("papermachines@papermachines.org",
 			function(addon) {
 				Zotero.PaperMachines._updateBundledFilesCallback(addon.getResourceURI("").QueryInterface(Components.interfaces.nsIFileURL).file);
 			});
