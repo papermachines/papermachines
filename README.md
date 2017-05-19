@@ -1,5 +1,9 @@
 # Paper Machines
 
+# UNMAINTAINED NOTICE
+
+Paper Machines no longer works on the latest versions of Zotero and Firefox, and is not currently being maintained. I suggest [Voyant Tools](http://voyant-tools.org/) as an alternative; if you need help getting your texts out of Zotero and into Voyant, please check out [zotero-voyant-export](https://github.com/corajr/zotero-voyant-export/).
+
 ## Overview
 
 Paper Machines is an open-source extension for the [Zotero](http://www.zotero.org/) bibliographic management software. Its purpose is to allow individual researchers to generate analyses and visualizations of user-provided corpora, without requiring extensive computational resources or technical knowledge.
